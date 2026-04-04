@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Exam Preview Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --purple-deep: #5b21b6;
+      --purple-mid: #7c3aed;
+      --purple-bright: #8b5cf6;
+      --purple-soft: #a78bfa;
+      --purple-pale: #ede9fe;
+      --purple-lightest: #f5f3ff;
+      --white: #ffffff;
+      --off-white: #fafafa;
+      --text-dark: #1e1b4b;
+      --text-mid: #4c1d95;
+      --text-soft: #6d28d9;
+      --text-muted: #6d6a8a;
+      --border-light: rgba(139, 92, 246, 0.15);
+      --border-mid: rgba(139, 92, 246, 0.3);
+      --shadow-sm: 0 2px 8px rgba(109, 40, 217, 0.08);
+      --shadow-md: 0 8px 32px rgba(109, 40, 217, 0.12);
+      --shadow-lg: 0 24px 64px rgba(109, 40, 217, 0.18);
+
+      /* Analysis card accent */
+      --teal-deep: #0f766e;
+      --teal-mid: #0d9488;
+      --teal-bright: #14b8a6;
+      --teal-soft: #5eead4;
+      --teal-pale: #ccfbf1;
+      --teal-lightest: #f0fdfa;
+      --border-teal: rgba(20, 184, 166, 0.25);
+      --border-teal-mid: rgba(20, 184, 166, 0.45);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--off-white);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND ── */
+    .bg-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      overflow: hidden; pointer-events: none;
+    }
+
+    .bg-canvas::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% -10%, rgba(139,92,246,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 110%, rgba(167,139,250,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(221,214,254,0.1) 0%, transparent 70%);
+      animation: bg-breathe 12s ease-in-out infinite;
+    }
+
+    @keyframes bg-breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(1.03); }
+    }
+
+    .orb { position: absolute; border-radius: 50%; filter: blur(60px); }
+    .orb-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #c4b5fd 0%, #8b5cf6 60%, transparent 100%);
+      top: -15%; left: -10%; opacity: 0.3;
+      animation: orb1 18s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, #ddd6fe 0%, #7c3aed 60%, transparent 100%);
+      bottom: -10%; right: -8%; opacity: 0.2;
+      animation: orb2 22s ease-in-out infinite;
+    }
+
+    @keyframes orb1 {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(30px, 40px); }
+    }
+    @keyframes orb2 {
+      0%,100% { transform: translate(0,0); }
+      50% { transform: translate(-30px,-30px); }
+    }
+
+    .bg-dots {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(109,40,217,0.1) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%;
+      background: radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%);
+      animation: particle-rise linear infinite;
+    }
+    @keyframes particle-rise {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.5; }
+      100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: relative; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700; font-size: 1.15rem;
+      color: var(--text-dark); text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--purple-bright), var(--purple-deep));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(139,92,246,0.35);
+      animation: logo-pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes logo-pulse {
+      0%,100% { box-shadow: 0 4px 12px rgba(139,92,246,0.35); }
+      50% { box-shadow: 0 4px 20px rgba(139,92,246,0.55); }
+    }
+
+    .nav-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+    .nav-btn {
+      text-decoration: none;
+      font-size: 0.85rem; font-weight: 600;
+      padding: 0.48rem 1.1rem;
+      border-radius: 20px;
+      transition: all 0.25s;
+      border: 1px solid var(--border-light);
+    }
+
+    .nav-btn.outline {
+      color: var(--text-soft);
+      background: var(--purple-lightest);
+    }
+    .nav-btn.outline:hover {
+      background: var(--purple-pale);
+      border-color: var(--border-mid);
+      color: var(--purple-deep);
+    }
+
+    .nav-btn.filled {
+      color: white;
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-deep));
+      border-color: transparent;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+    }
+    .nav-btn.filled:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124,58,237,0.4);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 6rem 1.5rem 3.5rem;
+      animation: page-enter 0.8s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    @keyframes page-enter {
+      from { opacity: 0; transform: translateY(28px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--purple-lightest);
+      border: 1px solid var(--border-mid);
+      color: var(--purple-mid);
+      font-size: 0.76rem; font-weight: 600;
+      padding: 0.38rem 1rem; border-radius: 50px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 1.8rem;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--text-dark);
+      margin-bottom: 1.2rem;
+      max-width: 700px; margin-left: auto; margin-right: auto;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1rem; line-height: 1.75;
+      max-width: 500px; margin: 0 auto 2.5rem;
+    }
+
+    .hero-ctas {
+      display: flex; gap: 1rem;
+      justify-content: center; flex-wrap: wrap;
+    }
+
+    .btn-hero {
+      padding: 0.88rem 2rem; border-radius: 50px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; transition: all 0.3s;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+    }
+
+    .btn-hero.main {
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-deep));
+      color: white;
+      box-shadow: 0 6px 24px rgba(124,58,237,0.35);
+    }
+    .btn-hero.main:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(124,58,237,0.45);
+    }
+
+    .btn-hero.ghost {
+      background: var(--purple-lightest);
+      color: var(--text-soft);
+      border: 1px solid var(--border-light);
+    }
+    .btn-hero.ghost:hover {
+      background: var(--purple-pale);
+      border-color: var(--border-mid);
+      transform: translateY(-2px);
+    }
+
+    /* ── STATS ── */
+    .stats-row {
+      position: relative; z-index: 1;
+      display: flex; justify-content: center;
+      gap: 0; flex-wrap: wrap;
+      padding: 0 1.5rem 4rem;
+      max-width: 700px; margin: 0 auto;
+    }
+
+    .stat-item {
+      flex: 1; min-width: 130px;
+      text-align: center;
+      padding: 1.5rem 1rem;
+      border-right: 1px solid var(--border-light);
+    }
+    .stat-item:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 800;
+      color: var(--text-dark); line-height: 1;
+    }
+    .stat-num em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 0.75rem; color: var(--text-muted);
+      margin-top: 0.3rem; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+
+    /* ── PORTAL CARDS ── */
+    .portals {
+      position: relative; z-index: 1;
+      max-width: 1050px; margin: 0 auto;
+      padding: 0 1.5rem 5rem;
+    }
+
+    .portals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Base card */
+    .portal-card {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border-light);
+      border-radius: 28px;
+      padding: 2.4rem 2rem;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column;
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-md);
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      position: relative; overflow: hidden;
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--purple-mid), var(--purple-soft), var(--purple-mid));
+      background-size: 200% 100%;
+      animation: shimmer-line 4s ease infinite;
+    }
+
+    @keyframes shimmer-line {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .portal-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-mid);
+    }
+
+    /* ── ANALYSIS CARD OVERRIDE ── */
+    .portal-card.analysis-card {
+      border-color: var(--border-teal);
+      background: rgba(240, 253, 250, 0.92);
+    }
+
+    .portal-card.analysis-card::before {
+      background: linear-gradient(90deg, var(--teal-mid), var(--teal-soft), var(--teal-mid));
+      background-size: 200% 100%;
+      animation: shimmer-teal 4s ease infinite;
+    }
+
+    @keyframes shimmer-teal {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .portal-card.analysis-card:hover {
+      border-color: var(--border-teal-mid);
+      box-shadow: 0 24px 64px rgba(20,184,166,0.18);
+    }
+
+    .portal-card.analysis-card .portal-icon {
+      background: linear-gradient(135deg, var(--teal-pale), #99f6e4);
+    }
+
+    .portal-card.analysis-card .portal-features li::before {
+      background: var(--teal-pale);
+      color: var(--teal-mid);
+    }
+
+    .portal-card.analysis-card .portal-cta {
+      background: linear-gradient(135deg, var(--teal-mid), var(--teal-deep));
+      box-shadow: 0 4px 16px rgba(20,184,166,0.3);
+    }
+
+    .portal-card.analysis-card:hover .portal-cta {
+      box-shadow: 0 6px 22px rgba(20,184,166,0.42);
+    }
+
+    /* NEW badge on analysis card */
+    .new-badge {
+      position: absolute;
+      top: 1.1rem; right: 1.2rem;
+      background: linear-gradient(135deg, var(--teal-mid), var(--teal-deep));
+      color: #fff;
+      font-size: 0.62rem; font-weight: 700;
+      letter-spacing: 0.09em; text-transform: uppercase;
+      padding: 0.22rem 0.65rem;
+      border-radius: 50px;
+      box-shadow: 0 2px 8px rgba(13,148,136,0.35);
+      animation: badge-pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes badge-pulse {
+      0%,100% { box-shadow: 0 2px 8px rgba(13,148,136,0.35); }
+      50%      { box-shadow: 0 2px 14px rgba(13,148,136,0.6); }
+    }
+
+    /* ── SHARED CARD INTERNALS ── */
+    .portal-icon {
+      width: 60px; height: 60px; border-radius: 18px;
+      background: linear-gradient(135deg, var(--purple-pale), #ddd6fe);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .portal-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.35rem; font-weight: 800;
+      color: var(--text-dark); margin-bottom: 0.6rem;
+    }
+
+    .portal-card p {
+      font-size: 0.88rem; color: var(--text-muted);
+      line-height: 1.7; margin-bottom: 1.6rem;
+      flex: 1;
+    }
+
+    .portal-features {
+      list-style: none; margin-bottom: 2rem;
+    }
+    .portal-features li {
+      font-size: 0.82rem; color: #6d6a8a;
+      padding: 0.32rem 0;
+      display: flex; align-items: center; gap: 0.55rem;
+    }
+    .portal-features li::before {
+      content: '✓';
+      width: 17px; height: 17px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700;
+      background: var(--purple-pale);
+      color: var(--purple-mid);
+    }
+
+    .portal-cta {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.75rem 1.4rem; border-radius: 12px;
+      font-size: 0.88rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-deep));
+      color: white;
+      box-shadow: 0 4px 16px rgba(124,58,237,0.3);
+      transition: all 0.3s;
+      align-self: flex-start;
+    }
+
+    .portal-cta .arrow { transition: transform 0.3s; }
+    .portal-card:hover .portal-cta .arrow { transform: translateX(4px); }
+    .portal-card:hover .portal-cta {
+      box-shadow: 0 6px 22px rgba(124,58,237,0.4);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border-light);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(12px);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    footer span {
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-soft));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.2rem; }
+      .nav-logo { font-size: 1rem; }
+      .nav-btn { font-size: 0.78rem; padding: 0.4rem 0.85rem; }
+
+      .hero { padding: 4rem 1.2rem 2.5rem; }
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 0.9rem; }
+
+      .stats-row { padding-bottom: 3rem; }
+      .stat-item { min-width: 100px; padding: 1rem 0.5rem; border-right: none; border-bottom: 1px solid var(--border-light); }
+      .stat-item:last-child { border-bottom: none; }
+      .stat-num { font-size: 1.6rem; }
+
+      .portals { padding: 0 1rem 3.5rem; }
+      .portals-grid { grid-template-columns: 1fr; }
+
+      .portal-card { padding: 2rem 1.4rem; border-radius: 22px; }
+      .portal-icon { width: 50px; height: 50px; font-size: 1.5rem; border-radius: 14px; }
+      .portal-card h3 { font-size: 1.2rem; }
+    }
+
+    @media (max-width: 400px) {
+      .hero-ctas { flex-direction: column; align-items: center; }
+      .btn-hero { width: 100%; justify-content: center; }
+      .nav-btn.outline { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-canvas">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="bg-dots"></div>
+  </div>
+  <div class="particles" id="particles"></div>
+
+  <!-- Nav -->
+  <nav>
+    <a href="index.html" class="nav-logo">
+      <div class="logo-mark">✦</div>
+      Exam Preview Portal
+    </a>
+    <div class="nav-actions">
+      <a href="student-login.html" class="nav-btn outline">Student Login</a>
+      <a href="admin-login.html" class="nav-btn filled">Admin Panel</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">🎓 Academic Document Verification</div>
+    <h1>Verify &amp; Confirm Your<br/><span>Academic Records</span></h1>
+    <p>A secure portal for students to access, review and confirm their academic documents — powered by Google Sheets.</p>
+    <div class="hero-ctas">
+      <a href="student-login.html" class="btn-hero main">Student Login <span>→</span></a>
+      <a href="admin-login.html" class="btn-hero ghost">Admin Panel</a>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="stat-num">100<em>%</em></div>
+      <div class="stat-label">Secure</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">24<em>/7</em></div>
+      <div class="stat-label">Available</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num"><em>∞</em></div>
+      <div class="stat-label">Documents</div>
+    </div>
+  </div>
+
+  <!-- Portal Cards -->
+  <div class="portals">
+    <div class="portals-grid">
+
+      <a href="student-login.html" class="portal-card">
+        <div class="portal-icon">🎓</div>
+        <h3>Student Panel</h3>
+        <p>Access your academic documents, review your course entries, and submit confirmations or corrections.</p>
+        <ul class="portal-features">
+          <li>Login with Register No. &amp; Date of Birth</li>
+          <li>View your assigned PDF document</li>
+          <li>Review &amp; confirm course entries</li>
+          <li>Submit correction details</li>
+        </ul>
+        <div class="portal-cta">Enter Student Portal <span class="arrow">→</span></div>
+      </a>
+
+      <a href="admin-login.html" class="portal-card">
+        <div class="portal-icon">🛡️</div>
+        <h3>Admin Panel</h3>
+        <p>Manage student data, track confirmations and corrections, and generate department-wise reports.</p>
+        <ul class="portal-features">
+          <li>Upload student details via Google Sheets</li>
+          <li>Department &amp; year-wise tracking</li>
+          <li>Generate PDF &amp; Excel reports</li>
+          <li>Monitor correction submissions</li>
+        </ul>
+        <div class="portal-cta">Enter Admin Panel <span class="arrow">→</span></div>
+      </a>
+
+      <a href="PageNo.html" class="portal-card analysis-card">
+        <span class="new-badge">✦ New</span>
+        <div class="portal-icon">📊</div>
+        <h3>Preview Form Analysis</h3>
+        <p>Get a complete bird's-eye view of all student submission data — track pending, confirmed, and correction counts across departments in real time.</p>
+        <ul class="portal-features">
+          <li>Department &amp; year-wise summary</li>
+          <li>Pending vs confirmed vs correction stats</li>
+          <li>Student-level submission drill-down</li>
+          <li>Export &amp; filter analysis reports</li>
+        </ul>
+        <div class="portal-cta">Open Analysis <span class="arrow">→</span></div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    Exam Preview Portal &copy; 2025 — Built with <span>♥</span> for seamless academic document verification
+  </footer>
+
+  <script>
+    (function spawnParticles() {
+      const container = document.getElementById('particles');
+      const count = window.innerWidth < 600 ? 8 : 15;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 6 + 3;
+        p.style.cssText = `
+          width:${size}px; height:${size}px;
+          left:${Math.random()*100}%;
+          animation-duration:${Math.random()*18+12}s;
+          animation-delay:${Math.random()*12}s;
+        `;
+        container.appendChild(p);
+      }
+    })();
+  </script>
+</body>
+</html>

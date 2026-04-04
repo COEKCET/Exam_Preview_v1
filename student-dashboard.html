@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Student Dashboard — Hall Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --p1:#3b0764; --p2:#5b21b6; --p3:#7c3aed; --p4:#a78bfa;
+      --p5:#ddd6fe; --p6:#ede9fe; --p7:#f5f3ff;
+      --white:#ffffff;
+      --ink:#1e1030; --ink2:#3d2b6b; --ink3:#7c6faa;
+      --border:rgba(124,58,237,0.14);
+      --border2:rgba(124,58,237,0.30);
+      --ok:#059669; --ok-bg:#d1fae5; --ok-b:#34d399;
+      --err:#dc2626; --err-bg:#fee2e2; --err-b:#f87171;
+      --warn:#b45309; --warn-bg:#fef3c7; --warn-b:#f59e0b;
+      --shadow:0 4px 24px rgba(91,33,182,0.10);
+      --shadow-lg:0 12px 40px rgba(91,33,182,0.18);
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:'Plus Jakarta Sans',sans-serif;
+      background:var(--white);
+      color:var(--ink);
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    body::before{
+      content:'';
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, rgba(124,58,237,0.10) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 90% 110%, rgba(167,139,250,0.09) 0%, transparent 55%),
+        linear-gradient(180deg, var(--p7) 0%, var(--white) 40%);
+    }
+
+    /* ══════════════════════════════
+       INSTRUCTION OVERLAY
+    ══════════════════════════════ */
+    .overlay {
+      position:fixed;inset:0;z-index:999;
+      display:flex;align-items:center;justify-content:center;
+      padding:0.75rem;
+      background:rgba(20,8,50,0.72);
+      backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      animation:overlayIn 0.5s ease both;
+      overflow-y:auto;
+    }
+    @keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+
+    .overlay-box{
+      background:var(--white);
+      border-radius:24px;
+      max-width:560px;width:100%;
+      box-shadow:0 30px 80px rgba(59,7,100,0.45);
+      overflow:hidden;
+      animation:boxIn 0.5s cubic-bezier(0.22,1,0.36,1) both;
+      max-height:calc(100vh - 1.5rem);
+      display:flex;flex-direction:column;
+    }
+    @keyframes boxIn{from{transform:translateY(30px) scale(0.96);opacity:0;}to{transform:none;opacity:1;}}
+
+    .overlay-header{
+      background:linear-gradient(135deg,var(--p1),var(--p3));
+      padding:1.1rem 1.4rem 1rem;
+      display:flex;align-items:center;justify-content:space-between;gap:0.75rem;
+      flex-shrink:0;
+    }
+    .overlay-header-left{display:flex;align-items:center;gap:0.75rem;}
+    .overlay-icon{
+      width:44px;height:44px;border-radius:12px;
+      background:rgba(255,255,255,0.18);
+      display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+      flex-shrink:0;
+    }
+    .overlay-title{
+      font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:800;color:#fff;
+    }
+    .overlay-sub{font-size:0.74rem;color:rgba(255,255,255,0.72);margin-top:0.15rem;}
+
+    .countdown-ring{
+      position:relative;width:54px;height:54px;flex-shrink:0;
+    }
+    .countdown-ring svg{transform:rotate(-90deg);width:54px;height:54px;}
+    .ring-bg{fill:none;stroke:rgba(255,255,255,0.2);stroke-width:4;}
+    .ring-fg{
+      fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;
+      stroke-dasharray:138.23;stroke-dashoffset:0;
+      transition:stroke-dashoffset 1s linear;
+    }
+    .ring-num{
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      font-size:1rem;font-weight:800;color:#fff;
+    }
+
+    .overlay-body{padding:1.2rem 1.4rem 1.4rem;overflow-y:auto;flex:1;}
+
+    .instr-title{
+      font-size:0.68rem;font-weight:700;color:var(--p3);
+      text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.85rem;
+    }
+
+    .instr-list{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem;}
+
+    .instr-item{
+      display:flex;align-items:flex-start;gap:0.65rem;
+      padding:0.6rem 0.8rem;
+      border-radius:12px;
+      background:var(--p7);
+      border:1px solid var(--border);
+      animation:instrSlide 0.4s ease both;
+    }
+    .instr-item:nth-child(1){animation-delay:0.1s;}
+    .instr-item:nth-child(2){animation-delay:0.2s;}
+    .instr-item:nth-child(3){animation-delay:0.3s;}
+    .instr-item:nth-child(4){animation-delay:0.4s;}
+    @keyframes instrSlide{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:none;}}
+
+    .instr-dot{
+      width:26px;height:26px;border-radius:8px;flex-shrink:0;
+      background:linear-gradient(135deg,var(--p3),var(--p4));
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.8rem;
+    }
+    .instr-text{font-size:0.79rem;color:var(--ink2);line-height:1.5;}
+    .instr-text strong{color:var(--p2);}
+
+    .alert-arrear{
+      background:linear-gradient(135deg,#fffbeb,#fef3c7);
+      border:1.5px solid var(--warn-b);border-radius:12px;
+      padding:0.65rem 0.85rem;margin-bottom:1rem;
+      display:flex;gap:0.6rem;align-items:flex-start;
+    }
+    .alert-arrear .ai{font-size:1rem;flex-shrink:0;margin-top:0.05rem;}
+    .alert-arrear p{font-size:0.77rem;color:var(--warn);line-height:1.5;font-weight:500;}
+
+    .overlay-proceed{
+      width:100%;padding:0.9rem;
+      background:linear-gradient(135deg,var(--p1),var(--p3));
+      color:#fff;border:none;border-radius:13px;
+      font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;
+      cursor:pointer;transition:all 0.28s;
+      box-shadow:0 6px 22px rgba(91,33,182,0.32);
+      display:flex;align-items:center;justify-content:center;gap:0.6rem;
+    }
+    .overlay-proceed:not(:disabled):hover{
+      background:linear-gradient(135deg,var(--p2),var(--p4));
+      transform:translateY(-2px);box-shadow:0 10px 30px rgba(91,33,182,0.42);
+    }
+    .overlay-proceed:disabled{
+      background:linear-gradient(135deg,#c4b5fd,#ddd6fe);
+      color:#a78bfa;cursor:not-allowed;transform:none;box-shadow:none;
+    }
+    .proceed-lock{font-size:1rem;}
+
+    /* ════ NAV ════ */
+    nav{
+      position:sticky;top:0;z-index:300;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 1.5rem;height:60px;
+      background:rgba(255,255,255,0.90);
+      backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      box-shadow:0 1px 12px rgba(91,33,182,0.08);
+    }
+    .nav-l{display:flex;align-items:center;gap:0.75rem;}
+    .logo{
+      font-family:'Playfair Display',serif;font-weight:800;font-size:1.2rem;
+      background:linear-gradient(135deg,var(--p1),var(--p3));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .nav-chip{
+      background:linear-gradient(135deg,var(--p3),var(--p4));
+      color:#fff;font-size:0.63rem;font-weight:700;
+      padding:0.18rem 0.6rem;border-radius:50px;
+      letter-spacing:0.06em;text-transform:uppercase;
+    }
+    .nav-r{display:flex;align-items:center;gap:0.8rem;}
+    .nav-info .ni-name{font-weight:700;font-size:0.82rem;color:var(--ink);text-align:right;}
+    .nav-info .ni-reg {font-size:0.7rem;color:var(--ink3);text-align:right;}
+    .btn-logout{
+      padding:0.38rem 0.9rem;border-radius:8px;
+      border:1.5px solid var(--border2);background:transparent;
+      color:var(--ink3);font-size:0.74rem;font-weight:600;
+      cursor:pointer;transition:all 0.2s;font-family:'Plus Jakarta Sans',sans-serif;
+    }
+    .btn-logout:hover{border-color:var(--err);color:var(--err);background:var(--err-bg);}
+
+    /* ════ MAIN ════ */
+    .main{
+      position:relative;z-index:1;
+      max-width:1080px;margin:0 auto;
+      padding:1.5rem 1rem 3rem;
+    }
+
+    /* ════ STEPS ════ */
+    .steps-card{
+      background:var(--white);border:1px solid var(--border);
+      border-radius:16px;padding:1rem 1.5rem;margin-bottom:1.5rem;
+      box-shadow:var(--shadow);overflow-x:auto;
+    }
+    .steps{display:flex;align-items:center;min-width:320px;}
+    .step-item{display:flex;align-items:center;flex-shrink:0;}
+    .step-dot{
+      width:30px;height:30px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.74rem;font-weight:700;
+      border:2px solid var(--border2);color:var(--ink3);
+      transition:all 0.3s;
+    }
+    .step-dot.active{
+      background:linear-gradient(135deg,var(--p3),var(--p4));
+      border-color:transparent;color:#fff;
+      box-shadow:0 0 0 4px rgba(124,58,237,0.18);
+    }
+    .step-dot.done{background:var(--ok-bg);border-color:var(--ok-b);color:var(--ok);}
+    .step-lbl{font-size:0.74rem;color:var(--ink3);margin-left:0.45rem;white-space:nowrap;font-weight:500;}
+    .step-lbl.active{color:var(--p3);font-weight:700;}
+    .step-line{flex:1;min-width:20px;height:2px;background:var(--border);margin:0 0.6rem;border-radius:2px;}
+    .step-line.done{background:linear-gradient(90deg,var(--ok),var(--ok-b));}
+
+    /* ════ INFO CARD ════ */
+    .info-card{
+      background:linear-gradient(135deg,var(--white) 0%,var(--p7) 100%);
+      border:1px solid var(--border);border-radius:16px;
+      padding:1.25rem 1.5rem;margin-bottom:1.5rem;
+      display:flex;gap:1rem;align-items:center;flex-wrap:wrap;
+      box-shadow:var(--shadow);
+    }
+    .avatar{
+      width:52px;height:52px;border-radius:14px;flex-shrink:0;
+      background:linear-gradient(135deg,var(--p5),var(--p6));
+      border:1.5px solid var(--border2);
+      display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+    }
+    .info-body{flex:1;min-width:0;}
+    .info-body h2{
+      font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
+      color:var(--ink);margin-bottom:0.45rem;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    }
+    .tags{display:flex;flex-wrap:wrap;gap:0.4rem;}
+    .tag{
+      font-size:0.69rem;font-weight:600;padding:0.18rem 0.6rem;
+      border-radius:50px;background:var(--p6);
+      border:1px solid var(--border2);color:var(--p2);
+      white-space:nowrap;
+    }
+    .sbadge{
+      padding:0.35rem 0.9rem;border-radius:50px;
+      font-size:0.73rem;font-weight:700;white-space:nowrap;flex-shrink:0;
+    }
+    .s-pend{background:var(--warn-bg);border:1.5px solid var(--warn-b);color:var(--warn);}
+    .s-ok  {background:var(--ok-bg);  border:1.5px solid var(--ok-b);  color:var(--ok);}
+    .s-fix {background:var(--err-bg); border:1.5px solid var(--err-b); color:var(--err);}
+
+    /* ════ PANELS ════ */
+    .panel{display:none;}
+    .panel.active{display:block;animation:fadeUp 0.35s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+    .sec-title{
+      font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;
+      color:var(--ink);margin-bottom:1rem;
+      display:flex;align-items:center;gap:0.45rem;
+    }
+
+    /* ════ REVIEW BUTTON BANNER ════ */
+    .review-banner{
+      margin-bottom:1.2rem;
+      background:linear-gradient(135deg,var(--p1) 0%,var(--p3) 60%,var(--p4) 100%);
+      border-radius:16px;
+      padding:1rem 1.4rem;
+      display:flex;align-items:center;justify-content:space-between;
+      gap:1rem;flex-wrap:wrap;
+      box-shadow:0 8px 28px rgba(91,33,182,0.30);
+      position:relative;overflow:hidden;
+    }
+    .review-banner::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(circle at 80% 50%,rgba(255,255,255,0.08) 0%,transparent 60%);
+      pointer-events:none;
+    }
+    .rb-left{display:flex;flex-direction:column;gap:0.2rem;}
+    .rb-left span{font-size:0.73rem;color:rgba(255,255,255,0.7);font-weight:500;}
+    .rb-left strong{font-family:'Playfair Display',serif;font-size:1rem;color:#fff;font-weight:700;}
+
+    .btn-review{
+      padding:0.7rem 1.5rem;border-radius:12px;border:none;
+      background:#fff;color:var(--p2);
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:0.84rem;font-weight:800;
+      cursor:pointer;white-space:nowrap;
+      box-shadow:0 4px 16px rgba(0,0,0,0.18);
+      display:flex;align-items:center;gap:0.5rem;
+      transition:all 0.25s;
+      animation:reviewPulse 2.5s ease-in-out infinite;
+    }
+    .btn-review:hover{
+      background:var(--p7);color:var(--p1);
+      transform:scale(1.05) translateY(-2px);
+      box-shadow:0 8px 24px rgba(0,0,0,0.22);
+      animation:none;
+    }
+    @keyframes reviewPulse{
+      0%,100%{box-shadow:0 4px 16px rgba(0,0,0,0.18),0 0 0 0 rgba(255,255,255,0.5);}
+      50%{box-shadow:0 4px 16px rgba(0,0,0,0.18),0 0 0 8px rgba(255,255,255,0);}
+    }
+    .btn-review .arrow{display:inline-block;transition:transform 0.22s;}
+    .btn-review:hover .arrow{transform:translateX(4px) scale(1.2);}
+
+    /* ════ PDF CARD ════ */
+    .pdf-card{
+      background:var(--white);border:1px solid var(--border);
+      border-radius:16px;overflow:hidden;margin-bottom:1.5rem;
+      box-shadow:var(--shadow);
+    }
+    .pdf-bar{
+      padding:0.7rem 1.2rem;
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(135deg,var(--p7),var(--white));
+      display:flex;align-items:center;justify-content:flex-end;
+      gap:0.6rem;flex-wrap:wrap;
+    }
+    .zoom-bar{display:flex;align-items:center;gap:0.4rem;}
+    .zoom-btn{
+      width:28px;height:28px;border-radius:7px;border:none;
+      background:var(--p6);color:var(--p2);
+      font-size:1rem;font-weight:700;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      transition:all 0.18s;flex-shrink:0;
+    }
+    .zoom-btn:hover{background:var(--p5);color:var(--p1);}
+    .zoom-pct{font-size:0.73rem;font-weight:700;color:var(--p2);min-width:38px;text-align:center;}
+
+    .pdf-area{
+      background:#e8e4f3;
+      display:flex;flex-direction:column;
+      align-items:center;
+      padding:1.5rem 0.75rem;gap:1.5rem;
+      user-select:none;-webkit-user-select:none;
+      -webkit-touch-callout:none;
+      touch-action:pan-y pinch-zoom;
+    }
+
+    .page-wrap{
+      position:relative;background:#fff;
+      box-shadow:0 6px 32px rgba(0,0,0,0.18),0 1px 4px rgba(0,0,0,0.06);
+      border-radius:3px;overflow:hidden;
+      display:inline-block;
+    }
+    canvas.pdf-cv{display:block;max-width:100%;}
+
+    .pg-wm{
+      position:absolute;inset:0;z-index:5;
+      display:flex;align-items:center;justify-content:center;
+      pointer-events:none;overflow:hidden;
+    }
+    .pg-wm span{
+      font-size:clamp(0.9rem,3vw,1.6rem);font-weight:800;
+      color:rgba(124,58,237,0.055);
+      transform:rotate(-35deg);white-space:nowrap;
+      letter-spacing:0.12em;text-transform:uppercase;
+    }
+
+    .pdf-load{
+      display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:1rem;padding:3rem 1.5rem;
+      color:var(--ink3);text-align:center;min-height:260px;width:100%;
+    }
+    .pdf-load .li{font-size:2.2rem;opacity:0.4;}
+    .pdf-load p{font-size:0.83rem;line-height:1.7;max-width:300px;}
+    .prog-w{width:200px;height:5px;background:var(--border);border-radius:99px;overflow:hidden;}
+    .prog-b{height:100%;width:0%;background:linear-gradient(90deg,var(--p3),var(--p4));border-radius:99px;transition:width 0.3s;}
+
+    /* ════ BUTTONS ════ */
+    .btn{
+      padding:0.44rem 1rem;border-radius:9px;font-size:0.77rem;
+      font-weight:700;cursor:pointer;transition:all 0.2s;border:none;
+      font-family:'Plus Jakarta Sans',sans-serif;
+    }
+    .btn-outline{background:var(--white);border:1.5px solid var(--border2);color:var(--ink2);}
+    .btn-outline:hover{border-color:var(--p3);color:var(--p3);background:var(--p7);}
+    .btn-purple{
+      background:linear-gradient(135deg,var(--p3),var(--p4));
+      color:#fff;box-shadow:0 4px 14px rgba(124,58,237,0.28);
+    }
+    .btn-purple:hover{
+      background:linear-gradient(135deg,var(--p2),var(--p3));
+      box-shadow:0 6px 20px rgba(124,58,237,0.38);transform:translateY(-1px);
+    }
+
+    /* ════ CONFIRM PANEL ════ */
+    .conf-card{
+      background:var(--white);border:1px solid var(--border);
+      border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;
+      box-shadow:var(--shadow);
+    }
+    .conf-notice{
+      background:linear-gradient(135deg,var(--p7),var(--p6));
+      border:1px solid var(--border2);border-radius:11px;
+      padding:0.9rem 1.1rem;margin-bottom:1.4rem;
+      font-size:0.82rem;color:var(--ink2);line-height:1.7;
+    }
+    .conf-notice strong{color:var(--p3);}
+
+    .conf-opts{display:flex;flex-direction:column;gap:0.85rem;}
+    .copt{
+      display:flex;align-items:flex-start;gap:0.85rem;
+      padding:1.1rem 1.2rem;border-radius:13px;
+      border:2px solid var(--border);cursor:pointer;
+      transition:all 0.22s;background:var(--white);
+    }
+    .copt:hover{border-color:var(--p4);background:var(--p7);}
+    .copt.sel-ok {border-color:var(--ok);background:linear-gradient(135deg,#f0fdf8,var(--ok-bg));}
+    .copt.sel-fix{border-color:var(--err);background:linear-gradient(135deg,#fff5f5,var(--err-bg));}
+
+    .copt-radio{
+      width:18px;height:18px;border-radius:50%;flex-shrink:0;margin-top:3px;
+      border:2px solid var(--border2);transition:all 0.2s;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .copt.sel-ok  .copt-radio{border-color:var(--ok); background:var(--ok);}
+    .copt.sel-fix .copt-radio{border-color:var(--err);background:var(--err);}
+    .copt-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff;display:none;}
+    .copt.sel-ok  .copt-radio::after,
+    .copt.sel-fix .copt-radio::after{display:block;}
+
+    .copt-body h4{font-size:0.87rem;font-weight:700;color:var(--ink);margin-bottom:0.25rem;}
+    .copt-body p {font-size:0.77rem;color:var(--ink3);line-height:1.5;}
+
+    .fix-form{display:none;margin-top:1.3rem;}
+    .fix-form.show{display:block;animation:fadeUp 0.28s ease both;}
+    .fgrp{margin-bottom:1rem;}
+    .fgrp label{
+      display:block;font-size:0.68rem;font-weight:700;color:var(--ink3);
+      letter-spacing:0.07em;text-transform:uppercase;margin-bottom:0.4rem;
+    }
+    input[type="text"],textarea{
+      width:100%;padding:0.75rem 0.9rem;
+      background:var(--p7);border:1.5px solid var(--border);
+      border-radius:10px;color:var(--ink);
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:0.87rem;
+      transition:all 0.2s;outline:none;resize:vertical;
+    }
+    input[type="text"]:focus,textarea:focus{
+      border-color:var(--p3);background:var(--white);
+      box-shadow:0 0 0 3px rgba(124,58,237,0.12);
+    }
+    textarea{min-height:90px;}
+
+    .btn-submit{
+      width:100%;padding:0.95rem;margin-top:1.4rem;
+      background:linear-gradient(135deg,var(--p1),var(--p3));
+      color:#fff;border:none;border-radius:13px;
+      font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;
+      cursor:pointer;transition:all 0.25s;
+      box-shadow:0 6px 20px rgba(91,33,182,0.28);
+    }
+    .btn-submit:hover:not(:disabled){
+      background:linear-gradient(135deg,var(--p2),var(--p4));
+      transform:translateY(-2px);box-shadow:0 10px 28px rgba(91,33,182,0.38);
+    }
+    .btn-submit:disabled{
+      background:linear-gradient(135deg,#c4b5fd,#ddd6fe);
+      color:#a78bfa;cursor:not-allowed;transform:none;box-shadow:none;
+    }
+
+    /* ════ DONE ════ */
+    .done-panel{text-align:center;padding:3rem 1.5rem;}
+    .done-icon{
+      width:76px;height:76px;border-radius:50%;
+      background:linear-gradient(135deg,var(--ok-bg),#a7f3d0);
+      border:2px solid var(--ok-b);font-size:2rem;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 1.4rem;
+      animation:pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(5,150,105,0.3);}
+      50%{transform:scale(1.04);box-shadow:0 0 0 12px rgba(5,150,105,0);}
+    }
+    .done-panel h2{
+      font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;
+      color:var(--ink);margin-bottom:0.5rem;
+    }
+    .done-panel>p{color:var(--ink3);font-size:0.88rem;margin-bottom:1.8rem;}
+    .done-details{
+      background:linear-gradient(135deg,var(--white),var(--p7));
+      border:1px solid var(--border);border-radius:14px;
+      padding:1.2rem 1.5rem;max-width:400px;margin:0 auto 1.8rem;
+      text-align:left;box-shadow:var(--shadow);
+    }
+    .drow{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:0.5rem 0;border-bottom:1px solid var(--border);
+      font-size:0.83rem;gap:0.5rem;flex-wrap:wrap;
+    }
+    .drow:last-child{border-bottom:none;}
+    .drow .dk{color:var(--ink3);}
+    .drow .dv{font-weight:700;color:var(--ink);text-align:right;}
+
+    /* ── DONE ACTION BUTTONS ── */
+    .done-actions{
+      display:flex;flex-direction:column;align-items:center;gap:0.75rem;
+      max-width:400px;margin:0 auto;
+    }
+
+    /* Download PDF button */
+    .btn-download-pdf{
+      width:100%;padding:0.85rem 1.4rem;border-radius:13px;border:none;
+      background:linear-gradient(135deg,#0f4c81,#1a73e8);
+      color:#fff;
+      font-family:'Plus Jakarta Sans',sans-serif;font-size:0.9rem;font-weight:700;
+      cursor:pointer;transition:all 0.25s;
+      box-shadow:0 6px 20px rgba(26,115,232,0.32);
+      display:flex;align-items:center;justify-content:center;gap:0.55rem;
+    }
+    .btn-download-pdf:hover:not(:disabled){
+      background:linear-gradient(135deg,#0a3560,#1558c0);
+      transform:translateY(-2px);box-shadow:0 10px 28px rgba(26,115,232,0.42);
+    }
+    .btn-download-pdf:disabled{
+      background:#c5d8f5;color:#7aa9e8;cursor:not-allowed;transform:none;box-shadow:none;
+    }
+    .btn-download-pdf .dl-icon{font-size:1.1rem;}
+    .btn-download-pdf .spinner-blue{
+      display:inline-block;width:14px;height:14px;
+      border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;
+      border-radius:50%;animation:spin 0.7s linear infinite;
+      vertical-align:middle;margin-right:0.3rem;
+    }
+
+    /* ════ MISC ════ */
+    .msg{
+      padding:0.75rem 0.9rem;border-radius:9px;
+      font-size:0.82rem;margin-bottom:1rem;display:none;font-weight:500;
+    }
+    .msg.err{background:var(--err-bg);border:1px solid var(--err-b);color:var(--err);display:block;}
+    .msg.suc{background:var(--ok-bg); border:1px solid var(--ok-b); color:var(--ok); display:block;}
+
+    .spinner{
+      display:inline-block;width:14px;height:14px;
+      border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;
+      border-radius:50%;animation:spin 0.7s linear infinite;
+      vertical-align:middle;margin-right:0.4rem;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .back-row{text-align:center;margin-top:-0.5rem;margin-bottom:1rem;}
+
+    /* ════ MOBILE ════ */
+    @media(max-width:600px){
+      nav{padding:0 0.85rem;height:54px;}
+      .nav-info{display:none;}
+      .logo{font-size:1.05rem;}
+      .main{padding:1rem 0.65rem 2rem;}
+      .info-card{flex-direction:column;align-items:flex-start;gap:0.75rem;}
+      .info-body h2{font-size:0.95rem;white-space:normal;}
+      .conf-card{padding:1rem;}
+      .done-panel{padding:2rem 0.75rem;}
+      .done-details{padding:1rem;}
+      .steps-card{padding:0.8rem 0.85rem;}
+      .overlay-box{border-radius:18px;margin:auto;}
+      .overlay-header{padding:0.9rem 1rem 0.85rem;}
+      .overlay-title{font-size:1rem;}
+      .overlay-body{padding:0.9rem 1rem 1.1rem;}
+      .countdown-ring{width:46px;height:46px;}
+      .countdown-ring svg{width:46px;height:46px;}
+      .ring-num{font-size:0.85rem;}
+      .review-banner{flex-direction:column;align-items:flex-start;gap:0.85rem;}
+      .btn-review{width:100%;justify-content:center;}
+      .zoom-btn{width:34px;height:34px;font-size:1.1rem;}
+      .zoom-pct{font-size:0.78rem;min-width:42px;}
+    }
+    @media(max-width:380px){
+      .overlay-header-left{gap:0.5rem;}
+      .overlay-icon{width:36px;height:36px;font-size:1.1rem;}
+      .instr-item{padding:0.5rem 0.65rem;gap:0.5rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- INSTRUCTION OVERLAY -->
+<div class="overlay" id="instructOverlay">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <div class="overlay-header-left">
+        <div class="overlay-icon">📋</div>
+        <div>
+          <div class="overlay-title">Verification Instructions</div>
+          <div class="overlay-sub">Read carefully before proceeding</div>
+        </div>
+      </div>
+      <div class="countdown-ring" id="countdownRing">
+        <svg viewBox="0 0 54 54">
+          <circle class="ring-bg" cx="27" cy="27" r="22"/>
+          <circle class="ring-fg" id="ringFg" cx="27" cy="27" r="22"/>
+        </svg>
+        <div class="ring-num" id="ringNum">30</div>
+      </div>
+    </div>
+
+    <div class="overlay-body">
+      <div class="instr-title">✅ Please verify the following in your document</div>
+
+      <div class="instr-list">
+        <div class="instr-item">
+          <div class="instr-dot">👤</div>
+          <div class="instr-text">Verify your <strong>Name</strong>, <strong>Register Number</strong>, <strong>Gender</strong>, and <strong>Date of Birth</strong> are correct.</div>
+        </div>
+        <div class="instr-item">
+          <div class="instr-dot">📚</div>
+          <div class="instr-text">Check all <strong>current semester courses</strong> — confirm each <strong>Course Code</strong>, <strong>Course Name</strong>, and <strong>Credit</strong> value.</div>
+        </div>
+        <div class="instr-item">
+          <div class="instr-dot">🔍</div>
+          <div class="instr-text">After viewing your document, click <strong>Review Courses</strong> to confirm or report any issue.</div>
+        </div>
+        <div class="instr-item">
+          <div class="instr-dot">⚠️</div>
+          <div class="instr-text">Once submitted, your response <strong>cannot be changed</strong>. Please be sure before confirming.</div>
+        </div>
+      </div>
+
+      <div class="alert-arrear">
+        <span class="ai">🎓</span>
+        <p><strong>Arrear Students:</strong> Carefully verify your <strong>arrear course details</strong> in addition to the current semester courses. Ensure all arrear course codes, names, and credits are accurate.</p>
+      </div>
+
+      <button class="overlay-proceed" id="proceedBtn" onclick="closeOverlay()" disabled>
+        <span class="proceed-lock" id="proceedLockIcon">🔒</span>
+        <span id="proceedText">Please wait… 30s</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-l">
+    <div class="logo">Exam Preview</div>
+    <div class="nav-chip">Student</div>
+  </div>
+  <div class="nav-r">
+    <div class="nav-info">
+      <div class="ni-name" id="navName">—</div>
+      <div class="ni-reg"  id="navReg">—</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- STEPS -->
+  <div class="steps-card">
+    <div class="steps">
+      <div class="step-item"><div class="step-dot active" id="sd1">1</div><div class="step-lbl active" id="sl1">View Document</div></div>
+      <div class="step-line" id="sln1"></div>
+      <div class="step-item"><div class="step-dot" id="sd2">2</div><div class="step-lbl" id="sl2">Review Courses</div></div>
+      <div class="step-line" id="sln2"></div>
+      <div class="step-item"><div class="step-dot" id="sd3">3</div><div class="step-lbl" id="sl3">Confirm</div></div>
+      <div class="step-line" id="sln3"></div>
+      <div class="step-item"><div class="step-dot" id="sd4">4</div><div class="step-lbl" id="sl4">Done</div></div>
+    </div>
+  </div>
+
+  <!-- STUDENT INFO -->
+  <div class="info-card">
+    <div class="avatar">🎓</div>
+    <div class="info-body">
+      <h2 id="cName">Loading…</h2>
+      <div class="tags">
+        <span class="tag" id="cRoll">—</span>
+        <span class="tag" id="cProg">—</span>
+        <span class="tag" id="cYear">—</span>
+      </div>
+    </div>
+    <div class="sbadge s-pend" id="statusBadge">⏳ Pending</div>
+  </div>
+
+  <!-- PANEL 1: PDF -->
+  <div class="panel active" id="panelPDF">
+    <div class="sec-title">📄 Your Academic Document</div>
+
+    <div class="pdf-card">
+      <div class="pdf-bar">
+        <div class="zoom-bar">
+          <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+          <span class="zoom-pct" id="zoomPct">100%</span>
+          <button class="zoom-btn" onclick="zoomIn()"  title="Zoom In">+</button>
+          <button class="zoom-btn" onclick="zoomReset()" title="Reset Zoom" style="font-size:0.65rem;width:auto;padding:0 0.5rem;">FIT</button>
+        </div>
+      </div>
+
+      <div class="pdf-area" id="pdfArea"
+           oncontextmenu="return false;"
+           ondragstart="return false;">
+        <div class="pdf-load" id="pdfLoad">
+          <div class="li">📄</div>
+          <p id="pdfMsg">Preparing your secure document…</p>
+          <div class="prog-w" id="progW" style="display:none">
+            <div class="prog-b" id="progB"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-banner">
+      <div class="rb-left">
+        <span>Done reviewing your document?</span>
+        <strong>Proceed to confirm or report a correction</strong>
+      </div>
+      <button class="btn-review" onclick="goStep2()">
+        Review Courses <span class="arrow">→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: CONFIRM -->
+  <div class="panel" id="panelConf">
+    <div class="sec-title">✅ Confirm Your Records</div>
+    <div class="conf-card">
+      <div class="conf-notice">
+        <strong>📋 Instructions:</strong> Carefully review all your course details above.
+        Once submitted you <strong>cannot</strong> change your response.
+        If anything is wrong, choose "Correction Required" and describe the issue.
+      </div>
+      <div id="confMsg" class="msg"></div>
+      <div class="conf-opts">
+        <div class="copt" id="optOk" onclick="pickOpt('ok')">
+          <div class="copt-radio"></div>
+          <div class="copt-body">
+            <h4>✅ All details are correct — No Correction Required</h4>
+            <p>I have reviewed all my course entries and confirm everything is accurate.</p>
+          </div>
+        </div>
+        <div class="copt" id="optFix" onclick="pickOpt('fix')">
+          <div class="copt-radio"></div>
+          <div class="copt-body">
+            <h4>⚠️ Correction Required</h4>
+            <p>There are discrepancies. I will describe the corrections needed below.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="fix-form" id="fixForm">
+        <div class="fgrp">
+          <label>Subject</label>
+          <input type="text" id="fixCourse" placeholder="e.g. Enter Your Correction Short Form"/>
+        </div>
+        <div class="fgrp">
+          <label>Describe the Correction in Detail</label>
+          <textarea id="fixDetails" placeholder="Enter your corrections in Detail"></textarea>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="doSubmit()" disabled>
+        Select an option above to continue
+      </button>
+    </div>
+    <div class="back-row">
+      <button class="btn btn-outline" onclick="goStep1()">← Back to Document</button>
+    </div>
+  </div>
+
+  <!-- PANEL 3: DONE -->
+  <div class="panel" id="panelDone">
+    <div class="done-panel">
+      <div class="done-icon">✅</div>
+      <h2>Submission Complete!</h2>
+      <p id="doneMsg">Your confirmation has been recorded successfully.</p>
+      <div class="done-details">
+        <div class="drow"><span class="dk">Student Name</span><span class="dv" id="ddName">—</span></div>
+        <div class="drow"><span class="dk">Register No</span> <span class="dv" id="ddReg">—</span></div>
+        <div class="drow"><span class="dk">Response</span>    <span class="dv" id="ddResp">—</span></div>
+        <div class="drow"><span class="dk">Submitted At</span><span class="dv" id="ddTime">—</span></div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="done-actions">
+        <button class="btn-download-pdf" id="btnDownloadPDF" onclick="downloadReceiptPDF()">
+          <span class="dl-icon">⬇️</span> Download Confirmation PDF
+        </button>
+        <button class="btn btn-outline" onclick="logout()">🚪 Logout</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .main -->
+
+<!-- pdf-lib for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxcKOVe7jl5C43kTLBpt9ieuJ3bbV8DNTSIUOQRNYGEcCWUYolaSpT_vqkQZmTRF_ER/exec';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ════ STATE ════
+let student          = null;
+let chosenOpt        = null;
+let submitted        = false;
+let pdfDoc           = null;
+let pdfBytes         = null;
+let renderedPages    = [];
+let zoomLevel        = 1.0;
+let baseScale        = 1.0;
+let submittedPayload = null;
+
+// NEW: tracks whether PDF bytes are ready for download
+let pdfBytesReady    = false;   // true once pdfBytes + pdfDoc are populated
+let pdfBytesLoading  = false;   // true while fetch is in progress
+let pdfLibBytes      = null;   // ← ADD THIS LINE (clean copy reserved for pdf-lib only)
+
+const ZOOM_STEP = 0.15;
+const ZOOM_MIN  = 0.5;
+const ZOOM_MAX  = 5.0;
+
+// ════════════════════════════════════════════
+//  COUNTDOWN OVERLAY
+// ════════════════════════════════════════════
+const TOTAL_SEC = 30;
+const CIRCUMF   = 2 * Math.PI * 22;
+let countLeft   = TOTAL_SEC;
+let countTimer  = null;
+
+
+function findField(obj, ...hints) {
+  if (!obj) return '';
+  // Direct key match first
+  for (const h of hints) {
+    const v = obj[h];
+    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  }
+  // Normalized match (remove spaces, underscores, dashes, lowercase)
+  const keys = Object.keys(obj);
+  for (const h of hints) {
+    const norm = h.toLowerCase().replace(/[\s_\-]/g, '');
+    const match = keys.find(k => k.toLowerCase().replace(/[\s_\-]/g, '') === norm);
+    if (match) {
+      const v = obj[match];
+      if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+    }
+  }
+  return '';
+}
+
+function startCountdown() {
+  const ringFg   = document.getElementById('ringFg');
+  const ringNum  = document.getElementById('ringNum');
+  const btn      = document.getElementById('proceedBtn');
+  const txt      = document.getElementById('proceedText');
+  const lockIcon = document.getElementById('proceedLockIcon');
+
+  ringFg.style.strokeDashoffset = 0;
+
+  countTimer = setInterval(() => {
+    countLeft--;
+    ringNum.textContent = countLeft;
+    txt.textContent     = countLeft > 0 ? `Please wait… ${countLeft}s` : 'Proceed to Document';
+
+    const offset = CIRCUMF * (1 - countLeft / TOTAL_SEC);
+    ringFg.style.strokeDashoffset = offset;
+
+    if (countLeft <= 0) {
+      clearInterval(countTimer);
+      btn.disabled         = false;
+      lockIcon.textContent = '✅';
+      btn.style.background = 'linear-gradient(135deg,#059669,#34d399)';
+    }
+  }, 1000);
+}
+
+function closeOverlay() {
+  const ov = document.getElementById('instructOverlay');
+  ov.style.animation = 'overlayOut 0.4s ease forwards';
+  ov.addEventListener('animationend', () => ov.remove(), { once: true });
+}
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `@keyframes overlayOut{from{opacity:1;}to{opacity:0;pointer-events:none;}}`;
+document.head.appendChild(styleSheet);
+
+// ════ INIT ════
+window.onload = async () => {
+  const raw = sessionStorage.getItem('studentData');
+  if (!raw) { location.href = 'student-login.html'; return; }
+  student = JSON.parse(raw);
+
+  const name = student.studentName || '';
+  const reg  = student.registerNo  || '';
+  const roll = student.rollNumber  || '—';
+  const prog = student.programme   || '';
+  const year = student.year        || '—';
+
+  $('navName').textContent = name;
+  $('navReg').textContent  = reg;
+  $('cName').textContent   = name;
+  $('cRoll').textContent   = 'Roll: ' + roll;
+  $('cProg').textContent   = prog || '—';
+  $('cYear').textContent   = 'Year: ' + year;
+
+  const flag = (student.correctionFlag || student.correction || '').toUpperCase();
+
+  if (flag === 'YES' || flag === 'NO') {
+    const overlay = document.getElementById('instructOverlay');
+    if (overlay) overlay.remove();
+
+    // ── Hide all panels IMMEDIATELY to prevent flash ──
+    document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+    setStep(4);
+
+    // Show a loading state on the done panel right away
+    $('panelDone').classList.add('active');
+    $('ddName').textContent = student.studentName || '—';
+    $('ddReg').textContent  = student.registerNo  || '—';
+    $('ddResp').textContent = flag === 'YES' ? '⚠️ Correction Submitted' : '✅ Confirmed Correct';
+    $('ddTime').textContent = '⏳ Loading…';
+    $('btnDownloadPDF').disabled  = true;
+    $('btnDownloadPDF').innerHTML = '<span class="spinner-blue"></span> Loading…';
+
+    const badge       = $('statusBadge');
+    badge.className   = 'sbadge ' + (flag === 'YES' ? 's-fix' : 's-ok');
+    badge.textContent = flag === 'YES' ? '⚠️ Correction' : '✅ Confirmed';
+
+    if (flag === 'YES')
+      $('doneMsg').textContent = 'Your correction request has been recorded and will be reviewed by admin.';
+
+    // ── Now fetch fresh data in background ──
+    try {
+      const dob = student.dob || student.dateOfBirth || '';
+      if (reg && dob) {
+        const freshUrl  = `${GAS_URL}?action=login&regNo=${encodeURIComponent(reg)}&dob=${encodeURIComponent(dob)}`;
+        const freshResp = await fetch(freshUrl);
+        const freshData = await freshResp.json();
+        if (freshData.success && freshData.student) {
+          const fresh = freshData.student;
+          student.correctionCourse  = fresh.correctionCourse  || fresh.correctioncourse  || '';
+          student.correctionDetails = fresh.correctionDetails || fresh.correctiondetails || '';
+          student.submittedAt       = fresh.submittedAt       || fresh.submittedat       || '';
+          sessionStorage.setItem('studentData', JSON.stringify({ ...student, ...fresh }));
+          console.log('[onload] Fresh ✅ cc='+student.correctionCourse+' cd='+student.correctionDetails+' sat='+student.submittedAt);
+        }
+      }
+    } catch (fetchErr) {
+      console.warn('[onload] Fresh fetch failed:', fetchErr);
+    }
+
+    const cc  = student.correctionCourse  || '';
+    const cd  = student.correctionDetails || '';
+    const sat = student.submittedAt       || '';
+
+    console.log('[onload] FINAL cc='+cc+' cd='+cd+' sat='+sat);
+
+    // Update timestamp now that we have real data
+    const ts = sat.trim() || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    $('ddTime').textContent = ts;
+
+    submittedPayload = { response: flag, correctionCourse: cc, correctionDetails: cd, submittedAt: ts };
+    submittedPayload.submittedAt = ts;
+
+    loadPDFForDownload();
+
+  } else {
+    startCountdown();
+    loadPDF();
+  }
+};
+
+// ════════════════════════════════════════════
+//  LOAD PDF FOR DOWNLOAD ONLY (no UI rendering)
+//  Called when student lands on done panel directly.
+// ════════════════════════════════════════════
+async function loadPDFForDownload() {
+  if (pdfBytesLoading || pdfBytesReady) return;
+  pdfBytesLoading = true;
+
+  const btn = $('btnDownloadPDF');
+
+  // Show loading state on button
+  if (btn) {
+    btn.disabled     = true;
+    btn.innerHTML    = '<span class="spinner-blue"></span> Loading document…';
+  }
+
+  const fileId   = student.driveFileId || student.drive_file_id || '';
+  const regNo    = student.registerNo  || '';
+  const rawPages = student.pageNumber  || student.page_number   ||
+                   student.pageNo      || student.page          || '';
+  const pages    = parsePages(rawPages);
+
+  if (!fileId) {
+    console.warn('[loadPDFForDownload] No driveFileId on student record.');
+    pdfBytesLoading = false;
+    if (btn) {
+      btn.disabled  = false;
+      btn.innerHTML = '<span class="dl-icon">⚠️</span> No file assigned';
+    }
+    return;
+  }
+
+  if (!pages.length) {
+    console.warn('[loadPDFForDownload] No page numbers assigned.');
+    pdfBytesLoading = false;
+    if (btn) {
+      btn.disabled  = false;
+      btn.innerHTML = '<span class="dl-icon">⚠️</span> No pages assigned';
+    }
+    return;
+  }
+
+  try {
+    console.log('[loadPDFForDownload] Fetching PDF…');
+    const url  = `${GAS_URL}?action=pdfProxy&fileId=${encodeURIComponent(fileId)}&regNo=${encodeURIComponent(regNo)}`;
+    const resp = await fetch(url);
+    const json = await resp.json();
+
+    if (!json.success) {
+      throw new Error(json.message || 'pdfProxy returned failure');
+    }
+
+    const bin = atob(json.data);
+    pdfBytes  = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) pdfBytes[i] = bin.charCodeAt(i);
+    pdfLibBytes = pdfBytes.slice();   // ← ADDED: clean copy for pdf-lib
+
+    pdfDoc = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+
+    pdfBytesReady   = true;
+    pdfBytesLoading = false;
+    console.log('[loadPDFForDownload] ✅ PDF ready, pages:', pdfDoc.numPages);
+
+    if (btn) {
+      btn.disabled  = false;
+      btn.innerHTML = '<span class="dl-icon">⬇️</span> Download Confirmation PDF';
+    }
+
+  } catch (e) {
+    pdfBytesLoading = false;
+    console.error('[loadPDFForDownload] Error:', e);
+    if (btn) {
+      btn.disabled  = false;
+      btn.innerHTML = '<span class="dl-icon">⚠️</span> Retry Download';
+    }
+  }
+}
+
+// ════ PDF LOADER (for view panel) ════
+async function loadPDF() {
+  const area   = $('pdfArea');
+  const loadEl = $('pdfLoad');
+  const msgEl  = $('pdfMsg');
+  const progW  = $('progW');
+  const progB  = $('progB');
+
+  const fileId   = student.driveFileId || student.drive_file_id || '';
+  const regNo    = student.registerNo  || '';
+  const rawPages = student.pageNumber  || student.page_number   ||
+                   student.pageNo      || student.page          || '';
+  const pages    = parsePages(rawPages);
+
+  if (!fileId)       { msgEl.textContent = '⚠️ No Drive File ID. Contact admin.'; return; }
+  if (!pages.length) { msgEl.textContent = '⚠️ No page assigned. Contact admin.'; return; }
+
+  msgEl.textContent   = 'Fetching your document securely…';
+  progW.style.display = 'block';
+  setP(progB, 10);
+
+  try {
+    const url  = `${GAS_URL}?action=pdfProxy&fileId=${encodeURIComponent(fileId)}&regNo=${encodeURIComponent(regNo)}`;
+    const resp = await fetch(url);
+    const json = await resp.json();
+    if (!json.success) { msgEl.textContent = '❌ ' + (json.message || 'Document fetch failed.'); return; }
+
+    const bin = atob(json.data);
+    pdfBytes  = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) pdfBytes[i] = bin.charCodeAt(i);
+    pdfLibBytes   = pdfBytes.slice();   // ← ADDED: clean copy for pdf-lib
+    pdfBytesReady = true;
+    setP(progB, 40);
+  } catch (e) {
+    msgEl.textContent = '❌ Network error. Please refresh.'; console.error(e); return;
+  }
+
+  try {
+    pdfDoc = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    setP(progB, 60);
+  } catch (e) {
+    msgEl.textContent = '❌ Could not read PDF. Contact admin.'; console.error(e); return;
+  }
+
+  const firstPage = await pdfDoc.getPage(pages[0]);
+  baseScale = calcBaseScale(firstPage);
+  zoomLevel = 1.0;
+  updateZoomUI();
+
+  loadEl.style.display = 'none';
+  renderedPages = [];
+
+  const label = (student.studentName || '').toUpperCase();
+  for (let pi = 0; pi < pages.length; pi++) {
+    const pn = pages[pi];
+    if (pn < 1 || pn > pdfDoc.numPages) continue;
+    const canvas = await renderPage(pdfDoc, pn, label, area);
+    renderedPages.push({ pageNum: pn, canvas });
+    setP(progB, 60 + Math.round(((pi + 1) / pages.length) * 38));
+  }
+  setP(progB, 100);
+}
+
+// Render a single page → returns canvas
+async function renderPage(pdf, pageNum, label, area) {
+  const page  = await pdf.getPage(pageNum);
+  const scale = baseScale * zoomLevel;
+  const vp    = page.getViewport({ scale });
+
+  const wrap       = document.createElement('div');
+  wrap.className   = 'page-wrap';
+  wrap.dataset.page = pageNum;
+
+  const canvas     = document.createElement('canvas');
+  canvas.className = 'pdf-cv';
+  canvas.width     = vp.width;
+  canvas.height    = vp.height;
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  const wm  = document.createElement('div'); wm.className = 'pg-wm';
+  const wms = document.createElement('span'); wms.textContent = label || 'CONFIDENTIAL';
+  wm.appendChild(wms);
+
+  wrap.appendChild(canvas);
+  wrap.appendChild(wm);
+  area.appendChild(wrap);
+
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+  return canvas;
+}
+
+// Re-render all pages at new zoom
+async function reRenderAll() {
+  if (!pdfDoc) return;
+  const area     = $('pdfArea');
+  const existing = area.querySelectorAll('.page-wrap');
+  const label    = (student.studentName || '').toUpperCase();
+  const pageNums = Array.from(existing).map(w => parseInt(w.dataset.page));
+  existing.forEach(w => w.remove());
+  renderedPages = [];
+  for (const pn of pageNums) {
+    const canvas = await renderPage(pdfDoc, pn, label, area);
+    renderedPages.push({ pageNum: pn, canvas });
+  }
+}
+
+// ════ ZOOM ════
+function zoomIn()    { if (zoomLevel >= ZOOM_MAX) return; zoomLevel = Math.min(ZOOM_MAX, +(zoomLevel+ZOOM_STEP).toFixed(2)); updateZoomUI(); reRenderAll(); }
+function zoomOut()   { if (zoomLevel <= ZOOM_MIN) return; zoomLevel = Math.max(ZOOM_MIN, +(zoomLevel-ZOOM_STEP).toFixed(2)); updateZoomUI(); reRenderAll(); }
+function zoomReset() { zoomLevel = 1.0; updateZoomUI(); reRenderAll(); }
+function updateZoomUI() { $('zoomPct').textContent = Math.round(zoomLevel * 100) + '%'; }
+
+// ════════════════════════════════════════════
+//  DOWNLOAD RECEIPT PDF
+//  Stamps the assigned student page(s) with a
+//  confirmation banner + correction details.
+//  No separate page is created.
+// ════════════════════════════════════════════
+async function downloadReceiptPDF() {
+  const btn = $('btnDownloadPDF');
+  if (!btn) return;
+
+  if (pdfBytesLoading) {
+    btn.innerHTML = '<span class="spinner-blue"></span> Still loading…';
+    let waited = 0;
+    while (pdfBytesLoading && waited < 30000) {
+      await new Promise(r => setTimeout(r, 500));
+      waited += 500;
+    }
+  }
+
+  if (!pdfBytesReady || !pdfBytes || !pdfDoc) {
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="spinner-blue"></span> Fetching document…';
+    await loadPDFForDownload();
+    if (!pdfBytesReady || !pdfBytes || !pdfDoc) {
+      btn.disabled  = false;
+      btn.innerHTML = '<span class="dl-icon">⚠️</span> Retry Download';
+      alert('Could not load the PDF from the server. Check your connection and try again.');
+      return;
+    }
+  }
+
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner-blue"></span> Generating PDF…';
+
+  try {
+    if (typeof PDFLib === 'undefined') throw new Error('pdf-lib library not loaded.');
+
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+
+    const payload = submittedPayload || {};
+    const isCorr  = payload.response === 'YES';
+    const name    = (student && student.studentName) || '—';
+    const reg     = (student && student.registerNo)  || '—';
+
+    // ── FIX: Pull correction details from ALL possible sources ──
+    const corrCourse = (payload.correctionCourse  && payload.correctionCourse.trim())
+      || findField(student, 'correctionCourse', 'correctioncourse', 'Correction Course', 'correction_course')
+      || '';
+    const corrDetails = (payload.correctionDetails && payload.correctionDetails.trim())
+      || findField(student, 'correctionDetails', 'correctiondetails', 'Correction Details', 'correction_details')
+      || '';
+
+    // Use the stored submitted timestamp, not current time
+// Always use stored submittedAt, never new Date()
+const ts = (submittedPayload && submittedPayload.submittedAt && String(submittedPayload.submittedAt).trim())
+  ? String(submittedPayload.submittedAt).trim()
+  : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const respLabel = isCorr ? 'CORRECTION SUBMITTED' : 'ALL DETAILS CONFIRMED CORRECT';
+
+    const rawPages = student.pageNumber || student.page_number ||
+                     student.pageNo     || student.page        || '';
+    const pageNums = parsePages(rawPages);
+    if (!pageNums.length) throw new Error('No page numbers assigned to this student.');
+
+    if (!pdfLibBytes || pdfLibBytes.length < 100) {
+      btn.innerHTML = '<span class="spinner-blue"></span> Re-fetching document…';
+      await loadPDFForDownload();
+      if (!pdfLibBytes || pdfLibBytes.length < 100)
+        throw new Error('PDF source bytes are empty or could not be loaded. Please refresh the page.');
+    }
+
+    let srcDoc;
+    try {
+      srcDoc = await PDFDocument.load(pdfLibBytes, { ignoreEncryption: true });
+    } catch (parseErr) {
+      console.warn('[downloadReceiptPDF] First parse failed, retrying…', parseErr);
+      btn.innerHTML = '<span class="spinner-blue"></span> Retrying…';
+      pdfBytesReady = false; pdfLibBytes = null;
+      await loadPDFForDownload();
+      if (!pdfLibBytes || pdfLibBytes.length < 100)
+        throw new Error('PDF could not be parsed after retry. Contact admin.');
+      srcDoc = await PDFDocument.load(pdfLibBytes, { ignoreEncryption: true });
+    }
+
+    const totalSrcPages = srcDoc.getPageCount();
+    const validPages    = pageNums.filter(p => p >= 1 && p <= totalSrcPages);
+    if (!validPages.length)
+      throw new Error(`Pages [${pageNums}] are out of range. PDF has ${totalSrcPages} pages.`);
+
+    const outDoc = await PDFDocument.create();
+    const copied = await outDoc.copyPages(srcDoc, validPages.map(p => p - 1));
+    copied.forEach(p => outDoc.addPage(p));
+
+    const fontBold = await outDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontNorm = await outDoc.embedFont(StandardFonts.Helvetica);
+
+    const green    = rgb(0.024, 0.588, 0.416);
+    const greenBg  = rgb(0.816, 0.976, 0.914);
+    const red      = rgb(0.855, 0.149, 0.149);
+    const redBg    = rgb(1.000, 0.894, 0.894);
+    const redLight = rgb(1.000, 0.970, 0.970);
+    const purple   = rgb(0.486, 0.435, 0.667);
+    const inkDark  = rgb(0.118, 0.063, 0.188);
+    const black    = rgb(0, 0, 0);
+
+    const bannerColor = isCorr ? redBg  : greenBg;
+    const bannerText  = isCorr ? red    : green;
+
+    function wrapText(text, maxW, font, size) {
+      const words = String(text || '').split(' ');
+      const lines = []; let line = '';
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        let tw = 0;
+        try { tw = font.widthOfTextAtSize(test, size); } catch {}
+        if (tw > maxW && line) { lines.push(line); line = w; }
+        else { line = test; }
+      }
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    for (const page of outDoc.getPages()) {
+      const { width, height } = page.getSize();
+      const PAD = 20;
+
+      // ── Top status banner ──
+      const BH = 26;
+      page.drawRectangle({ x: 0, y: height - BH, width, height: BH, color: bannerColor });
+      page.drawText(respLabel, {
+        x: PAD, y: height - BH + 8,
+        font: fontBold, size: 8.5, color: bannerText
+      });
+      const meta = name + '  |  Reg: ' + reg;
+      let metaW = 0;
+      try { metaW = fontNorm.widthOfTextAtSize(meta, 7.5); } catch {}
+      page.drawText(meta, {
+        x: width - metaW - PAD, y: height - BH + 9,
+        font: fontNorm, size: 7.5, color: bannerText
+      });
+
+      // ── Bottom block ──
+      if (isCorr) {
+        const LH = 13, BP = 10;
+
+        // Pre-wrap lines to calculate height
+        const courseLabel   = 'Subject:';
+        const detailsLabel  = 'Correction Details:';
+        const contentWidth  = width - PAD * 2 - BP * 2;
+        const courseLabelW  = fontBold.widthOfTextAtSize(courseLabel, 8.5) + 6;
+        const cLines        = wrapText(corrCourse  || '—', contentWidth - courseLabelW, fontNorm, 8.5);
+        const dLines        = wrapText(corrDetails || '—', contentWidth - 10,            fontNorm, 8.5);
+
+        // Signature row height
+        const SIG_H = 38;
+
+        // Calculate total box height
+        let bH = BP * 2 + 14;                         // header row
+        bH += 4;                                       // divider
+        bH += LH;                                      // "Course / Subject:" row start
+        bH += LH * Math.max(cLines.length - 1, 0);    // extra course lines
+        bH += 8;                                       // gap
+        bH += LH;                                      // "Correction Details:" label
+        bH += LH * dLines.length;                      // detail lines
+        bH += 12;                                      // gap before timestamp
+        bH += LH;                                      // timestamp
+        bH += 10;                                      // gap before signature
+        bH += SIG_H;                                   // signature row
+
+        page.drawRectangle({
+          x: PAD, y: PAD,
+          width: width - PAD * 2, height: bH,
+          color: redLight,
+          borderColor: red, borderWidth: 1
+        });
+
+        let ty = PAD + bH - BP - 10;
+
+        // Title
+        page.drawText('CORRECTION REQUEST', {
+          x: PAD + BP, y: ty,
+          font: fontBold, size: 9, color: red
+        });
+        ty -= 5;
+
+        // Divider
+        page.drawLine({
+          start: { x: PAD + BP, y: ty },
+          end:   { x: width - PAD - BP, y: ty },
+          thickness: 0.5, color: red
+        });
+        ty -= LH;
+
+        // ── Course / Subject ──
+        page.drawText(courseLabel, {
+          x: PAD + BP, y: ty,
+          font: fontBold, size: 8.5, color: purple
+        });
+        cLines.forEach((ln, idx) => {
+          page.drawText(ln, {
+            x: PAD + BP + courseLabelW, y: ty,
+            font: fontNorm, size: 8.5, color: inkDark
+          });
+          ty -= LH;
+        });
+        ty -= 8;
+
+        // ── Correction Details ──
+        page.drawText(detailsLabel, {
+          x: PAD + BP, y: ty,
+          font: fontBold, size: 8.5, color: purple
+        });
+        ty -= LH;
+        dLines.forEach(ln => {
+          page.drawText(ln, {
+            x: PAD + BP + 10, y: ty,
+            font: fontNorm, size: 8.5, color: inkDark
+          });
+          ty -= LH;
+        });
+
+        ty -= 12;
+
+        // ── Timestamp ──
+        page.drawText('Submitted: ' + ts + '   Reg: ' + reg, {
+          x: PAD + BP, y: ty,
+          font: fontNorm, size: 7, color: purple
+        });
+
+        ty -= 10;
+
+        // ── Signature Row ──
+        const sigY       = PAD + BP;       // bottom of box + padding
+        const sigLineY   = sigY + 18;      // where the line sits
+        const sigLabelY  = sigY + 6;       // label below line
+        const sigLineLen = 100;
+
+        // Left: Signature of the Candidate
+        const leftX = PAD + BP + 10;
+        page.drawLine({
+          start: { x: leftX, y: sigLineY },
+          end:   { x: leftX + sigLineLen, y: sigLineY },
+          thickness: 0.8, color: black
+        });
+        page.drawText('Signature of the Candidate', {
+          x: leftX, y: sigLabelY,
+          font: fontNorm, size: 7, color: inkDark
+        });
+
+        // Right: Signature of the HOD
+        const rightLineEnd = width - PAD - BP - 10;
+        const rightX       = rightLineEnd - sigLineLen;
+        page.drawLine({
+          start: { x: rightX, y: sigLineY },
+          end:   { x: rightLineEnd, y: sigLineY },
+          thickness: 0.8, color: black
+        });
+        const hodLabelText = 'Signature of the HOD';
+        let hodLabelW = 0;
+        try { hodLabelW = fontNorm.widthOfTextAtSize(hodLabelText, 7); } catch {}
+        page.drawText(hodLabelText, {
+          x: rightLineEnd - hodLabelW, y: sigLabelY,
+          font: fontNorm, size: 7, color: inkDark
+        });
+
+      } else {
+        // Confirmed OK — slim green footer
+        const FH = 18;
+        page.drawRectangle({
+          x: PAD, y: PAD,
+          width: width - PAD * 2, height: FH,
+          color: greenBg,
+          borderColor: green, borderWidth: 0.8
+        });
+        page.drawText('Confirmed by student: ' + ts + '   Reg: ' + reg, {
+          x: PAD + 10, y: PAD + 5,
+          font: fontNorm, size: 7.5, color: green
+        });
+      }
+    }
+
+    const outBytes = await outDoc.save();
+    const blob     = new Blob([outBytes], { type: 'application/pdf' });
+    const a        = document.createElement('a');
+    a.href         = URL.createObjectURL(blob);
+    a.download     = `Confirmation_${reg}_${name.replace(/\s+/g, '_')}.pdf`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 8000);
+
+    btn.disabled  = false;
+    btn.innerHTML = '<span class="dl-icon">✅</span> Downloaded!';
+    setTimeout(() => { btn.innerHTML = '<span class="dl-icon">⬇️</span> Download Confirmation PDF'; }, 3500);
+
+  } catch (err) {
+    console.error('[downloadReceiptPDF]', err);
+    btn.disabled  = false;
+    btn.innerHTML = '<span class="dl-icon">❌</span> Failed — Retry';
+    alert('PDF generation failed:\n\n' + (err.message || err));
+    setTimeout(() => { btn.innerHTML = '<span class="dl-icon">⬇️</span> Download Confirmation PDF'; }, 3500);
+  }
+}
+
+// ════ HELPERS ════
+function parsePages(raw) {
+  if (raw === null || raw === undefined || raw === '') return [];
+  const s = String(raw).trim();
+  if (!s || s === '0') return [];
+  const out = [];
+  s.split(',').forEach(part => {
+    part = part.trim();
+    if (part.includes('-')) {
+      const [a, b] = part.split('-').map(n => parseInt(n, 10));
+      if (!isNaN(a) && !isNaN(b) && b >= a)
+        for (let i = a; i <= b; i++) out.push(i);
+    } else {
+      const n = parseInt(part, 10);
+      if (!isNaN(n) && n > 0) out.push(n);
+    }
+  });
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+function calcBaseScale(page) {
+  const nv  = page.getViewport({ scale: 1 });
+  const pad = window.innerWidth < 600 ? 32 : 80;
+  return Math.min(window.innerWidth - pad, 960) / nv.width;
+}
+function setP(bar, pct) { bar.style.width = pct + '%'; }
+function $(id) { return document.getElementById(id); }
+
+// ════ STEP NAVIGATION ════
+function goStep2() {
+  $('panelPDF').classList.remove('active');
+  $('panelConf').classList.add('active');
+  setStep(3);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goStep1() {
+  $('panelConf').classList.remove('active');
+  $('panelPDF').classList.add('active');
+  setStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    $(`sd${i}`).className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+    $(`sl${i}`).className = 'step-lbl' + (i === n ? ' active' : '');
+    if (i <= 3) $(`sln${i}`).className = 'step-line' + (i < n ? ' done' : '');
+  }
+}
+
+// ════ OPTION PICK ════
+function pickOpt(opt) {
+  chosenOpt = opt;
+  $('optOk').classList.remove('sel-ok','sel-fix');
+  $('optFix').classList.remove('sel-ok','sel-fix');
+  $(opt === 'ok' ? 'optOk' : 'optFix').classList.add(opt === 'ok' ? 'sel-ok' : 'sel-fix');
+  $('fixForm').classList.toggle('show', opt === 'fix');
+  const btn = $('submitBtn');
+  btn.disabled    = false;
+  btn.textContent = opt === 'ok'
+    ? '✅ Confirm — All Details Are Correct'
+    : '⚠️ Submit Correction Request';
+}
+
+// ════ SUBMIT ════
+async function doSubmit() {
+  if (!chosenOpt || submitted) return;
+  if (chosenOpt === 'fix' && !$('fixDetails').value.trim()) {
+    showMsg('confMsg', 'Please describe the correction required.', 'err');
+    return;
+  }
+
+  submitted = true;
+  const btn = $('submitBtn');
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span>Submitting…';
+
+  const payload = {
+  action:            'submit',
+  registerNo:        student.registerNo  || '',
+  studentName:       student.studentName || '',
+  rollNumber:        student.rollNumber  || '',
+  programme:         student.programme   || '',
+  response:          chosenOpt === 'ok' ? 'NO' : 'YES',
+  correctionCourse:  chosenOpt === 'fix' ? $('fixCourse').value.trim() : '',
+  correctionDetails: chosenOpt === 'fix' ? $('fixDetails').value.trim() : '',
+  submittedAt:       new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }), // ← ADD
+  timestamp:         new Date().toISOString()
+};
+
+  try {
+    const res  = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      submittedPayload = payload;
+      showDone(payload);
+    } else {
+      showMsg('confMsg', '❌ ' + (data.message || 'Submission failed. Try again.'), 'err');
+      submitted = false;
+      btn.disabled    = false;
+      btn.textContent = chosenOpt === 'ok' ? '✅ Confirm' : '⚠️ Submit Correction';
+    }
+  } catch (err) {
+    // Network error — still show done (offline-tolerant)
+    submittedPayload = payload;
+    showDone(payload);
+  }
+}
+
+// ════ DONE PANEL ════
+function showDone(payload) {
+  const p  = payload || {};
+
+  // Use backend submittedAt if present, else current time
+  const ts = (p.submittedAt && String(p.submittedAt).trim())
+    ? String(p.submittedAt).trim()
+    : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  $('ddName').textContent = student.studentName || '—';
+  $('ddReg').textContent  = student.registerNo  || '—';
+  $('ddResp').textContent = p.response === 'YES' ? '⚠️ Correction Submitted' : '✅ Confirmed Correct';
+  $('ddTime').textContent = ts;
+
+  if (p.response === 'YES')
+    $('doneMsg').textContent = 'Your correction request has been recorded and will be reviewed by admin.';
+
+  const badge       = $('statusBadge');
+  badge.className   = 'sbadge ' + (p.response === 'YES' ? 's-fix' : 's-ok');
+  badge.textContent = p.response === 'YES' ? '⚠️ Correction' : '✅ Confirmed';
+
+  if (!submittedPayload) submittedPayload = payload;
+  // Always sync ts into submittedPayload so PDF uses same timestamp
+  submittedPayload.submittedAt = ts;
+
+  document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+  $('panelDone').classList.add('active');
+  setStep(4);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showMsg(id, text, type) {
+  const el = $(id); el.textContent = text; el.className = `msg ${type}`;
+}
+function logout() { sessionStorage.clear(); location.href = 'student-login.html'; }
+
+// Block print/save shortcuts
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && ['s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+window.onbeforeprint = () => { $('pdfArea').style.visibility = 'hidden'; };
+window.onafterprint  = () => { $('pdfArea').style.visibility = 'visible'; };
+
+// ════ TOUCH PINCH-ZOOM ════
+(function() {
+  let initDist = 0, initZoom = 1.0, pinching = false;
+  function dist(t) {
+    const dx = t[0].clientX - t[1].clientX;
+    const dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) { pinching = true; initDist = dist(e.touches); initZoom = zoomLevel; }
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!pinching || e.touches.length !== 2) return;
+    let newZoom = +(initZoom * (dist(e.touches) / initDist)).toFixed(2);
+    newZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, newZoom));
+    if (Math.abs(newZoom - zoomLevel) > 0.05) { zoomLevel = newZoom; updateZoomUI(); }
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (pinching && e.touches.length < 2) { pinching = false; reRenderAll(); }
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>

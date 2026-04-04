@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — Exam Preview Form</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    :root {
+      --bg:#faf8ff; --surface:#fff; --surface2:#f5f3ff;
+      --p900:#2e1065;--p800:#3b0764;--p700:#4c1d95;--p600:#6d28d9;
+      --p500:#7c3aed;--p400:#8b5cf6;--p300:#a78bfa;--p200:#c4b5fd;
+      --p100:#ede9fe;--p50:#f5f3ff;
+      --text:#1a0a3c;--muted:#6b5fa8;--border:#e4deff;
+      --ok:#059669;--okBg:#ecfdf5;--okB:#a7f3d0;
+      --warn:#d97706;--warnBg:#fffbeb;--warnB:#fde68a;
+      --err:#dc2626;--errBg:#fef2f2;--errB:#fecaca;
+      --info:#2563eb;--infoBg:#eff6ff;--infoB:#bfdbfe;
+      --sidebar:260px;--topbar:60px;--r:14px;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 60% 40% at 0% 0%,rgba(139,92,246,.07) 0%,transparent 60%),
+                 radial-gradient(ellipse 50% 50% at 100% 100%,rgba(109,40,217,.06) 0%,transparent 60%);}
+
+    /* ── TOPBAR ── */
+    .topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--topbar);
+      display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;
+      background:rgba(255,255,255,.93);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);box-shadow:0 1px 12px rgba(109,40,217,.06);}
+    .topbar-l{display:flex;align-items:center;gap:.75rem;}
+    .hamburger{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:4px;}
+    .hamburger span{display:block;width:20px;height:2px;background:var(--muted);border-radius:2px;transition:all .2s;}
+    .brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1.05rem;
+      letter-spacing:-.02em;color:var(--text);text-decoration:none;}
+    .brand-mark{width:32px;height:32px;border-radius:10px;
+      background:linear-gradient(135deg,var(--p600),var(--p400));
+      display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff;
+      box-shadow:0 3px 10px rgba(109,40,217,.25);}
+    .admin-chip{background:var(--p100);color:var(--p700);font-size:.68rem;font-weight:700;
+      letter-spacing:.08em;padding:.2rem .65rem;border-radius:50px;border:1px solid var(--p200);}
+    .topbar-r{display:flex;align-items:center;gap:.9rem;}
+    .user-pill{display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:50px;
+      background:var(--p50);border:1px solid var(--p100);font-size:.82rem;font-weight:600;color:var(--p700);}
+    .user-avatar{width:24px;height:24px;border-radius:50%;
+      background:linear-gradient(135deg,var(--p500),var(--p300));
+      display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:700;}
+    .btn-logout{padding:.38rem .9rem;border-radius:8px;border:1px solid var(--border);
+      background:var(--surface);color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .btn-logout:hover{border-color:var(--err);color:var(--err);background:var(--errBg);}
+
+    /* ── LAYOUT ── */
+    .layout{display:flex;padding-top:var(--topbar);min-height:100vh;}
+    .sidebar{position:fixed;top:var(--topbar);left:0;bottom:0;width:var(--sidebar);
+      background:var(--surface);border-right:1px solid var(--border);
+      overflow-y:auto;overflow-x:hidden;padding:1.25rem .75rem;
+      display:flex;flex-direction:column;gap:.25rem;z-index:200;
+      transition:transform .28s cubic-bezier(.4,0,.2,1);}
+    .sidebar-ovl{display:none;position:fixed;inset:0;z-index:190;
+      background:rgba(46,16,101,.35);backdrop-filter:blur(2px);}
+    .sidebar-ovl.show{display:block;}
+    .sg{margin-bottom:.5rem;}
+    .sg-lbl{font-size:.68rem;font-weight:700;color:var(--p300);letter-spacing:.12em;text-transform:uppercase;
+      padding:.3rem .6rem .5rem;display:block;}
+    .ni{display:flex;align-items:center;gap:.65rem;padding:.65rem .8rem;border-radius:10px;
+      font-size:.88rem;font-weight:500;color:var(--muted);border:none;background:none;
+      width:100%;text-align:left;cursor:pointer;transition:all .18s;position:relative;}
+    .ni .ico{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
+    .ni .lbl{flex:1;}
+    .ni .nbadge{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:50px;
+      background:var(--errBg);color:var(--err);border:1px solid var(--errB);}
+    .ni .nbadge.blue{background:var(--p50);color:var(--p600);border-color:var(--p100);}
+    .ni:hover{background:var(--p50);color:var(--p700);}
+    .ni.active{background:var(--p100);color:var(--p700);font-weight:700;box-shadow:inset 3px 0 0 var(--p500);}
+
+    .main{margin-left:var(--sidebar);flex:1;padding:2rem;min-height:calc(100vh - var(--topbar));position:relative;z-index:1;}
+    .sec{display:none;} .sec.active{display:block;animation:fadeUp .3s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+
+    /* ── PAGE HEADERS ── */
+    .ph{margin-bottom:1.8rem;}
+    .ph h1{font-size:1.65rem;font-weight:900;letter-spacing:-.03em;
+      background:linear-gradient(135deg,var(--p900),var(--p500));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.3rem;}
+    .ph p{color:var(--muted);font-size:.88rem;}
+    .ph-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.8rem;}
+
+    /* ── STATS ── */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.8rem;}
+    .sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+      padding:1.3rem 1.2rem;transition:all .2s;position:relative;overflow:hidden;cursor:default;}
+    .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--p500),var(--p300));border-radius:3px 3px 0 0;}
+    .sc.green::before{background:linear-gradient(90deg,var(--ok),#34d399);}
+    .sc.red::before{background:linear-gradient(90deg,var(--err),#f87171);}
+    .sc.orange::before{background:linear-gradient(90deg,var(--warn),#fbbf24);}
+    .sc.blue::before{background:linear-gradient(90deg,#2563eb,#60a5fa);}
+    .sc.teal::before{background:linear-gradient(90deg,#0d9488,#2dd4bf);}
+    .sc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(109,40,217,.1);}
+    .sc-lbl{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.7rem;}
+    .sc-val{font-size:2rem;font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:.3rem;color:var(--p700);}
+    .sc-val.green{color:var(--ok);} .sc-val.red{color:var(--err);} .sc-val.orange{color:var(--warn);} .sc-val.blue{color:#2563eb;} .sc-val.teal{color:#0d9488;}
+    .sc-sub{font-size:.75rem;color:var(--muted);}
+    .sc-trend{font-size:.72rem;margin-top:.4rem;font-weight:600;}
+    .sc-trend.up{color:var(--ok);} .sc-trend.down{color:var(--err);}
+
+    /* ── CARDS ── */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.6rem;margin-bottom:1.25rem;position:relative;}
+    .ct{font-size:.95rem;font-weight:800;letter-spacing:-.01em;
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;color:var(--p900);}
+    .ct span{font-size:.78rem;color:var(--muted);font-weight:400;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
+
+    /* ── PROGRESS BARS ── */
+    .pi{margin-bottom:1rem;}
+    .pi-hdr{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:.4rem;font-weight:500;}
+    .pb{height:8px;background:var(--p50);border-radius:50px;overflow:hidden;border:1px solid var(--p100);}
+    .pf{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--p600),var(--p300));transition:width .7s ease;}
+    .pf.green{background:linear-gradient(90deg,var(--ok),#34d399);}
+    .pf.red{background:linear-gradient(90deg,var(--err),#f87171);}
+    .pf.orange{background:linear-gradient(90deg,var(--warn),#fbbf24);}
+
+    /* ── MINI BAR CHART ── */
+    .bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:4px 0;}
+    .bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+    .bar-seg-wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;width:100%;gap:1px;}
+    .bar-seg{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .6s ease;}
+    .bar-lbl{font-size:.6rem;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;}
+
+    /* ── DONUT CHART ── */
+    .donut-wrap{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+    .donut-svg{flex-shrink:0;}
+    .donut-legend{display:flex;flex-direction:column;gap:.55rem;}
+    .dl-item{display:flex;align-items:center;gap:.55rem;font-size:.82rem;}
+    .dl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .dl-lbl{color:var(--muted);} .dl-val{font-weight:700;color:var(--text);margin-left:auto;padding-left:.5rem;}
+
+    /* ── TABLE ── */
+    .tw{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:.84rem;}
+    thead th{padding:.65rem 1rem;text-align:left;font-size:.7rem;font-weight:700;
+      letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+      border-bottom:1px solid var(--border);background:var(--p50);white-space:nowrap;}
+    thead th:first-child{border-radius:var(--r) 0 0 0;} thead th:last-child{border-radius:0 var(--r) 0 0;}
+    tbody td{padding:.8rem 1rem;border-bottom:1px solid rgba(228,222,255,.5);vertical-align:middle;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover td{background:var(--p50);}
+
+    /* ── BADGES ── */
+    .badge{display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:50px;
+      font-size:.73rem;font-weight:700;white-space:nowrap;}
+    .b-ok{background:var(--okBg);color:var(--ok);border:1px solid var(--okB);}
+    .b-corr{background:var(--errBg);color:var(--err);border:1px solid var(--errB);}
+    .b-pend{background:var(--warnBg);color:var(--warn);border:1px solid var(--warnB);}
+    .b-year{background:var(--p50);color:var(--p700);border:1px solid var(--p100);}
+    .b-info{background:var(--infoBg);color:var(--info);border:1px solid var(--infoB);}
+
+    /* ── FILTERS ── */
+    .filters{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center;}
+    select,input[type="text"],input[type="date"],input[type="password"]{
+      padding:.6rem .9rem;background:var(--surface);border:1.5px solid var(--border);
+      border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;
+      font-size:.85rem;outline:none;transition:all .2s;font-weight:500;}
+    select:focus,input:focus{border-color:var(--p400);box-shadow:0 0 0 3px rgba(139,92,246,.1);}
+
+    /* ── BUTTONS ── */
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;border-radius:10px;
+      font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;border:none;cursor:pointer;
+      transition:all .2s;white-space:nowrap;}
+    .btn-primary{background:linear-gradient(135deg,var(--p600),var(--p400));color:#fff;box-shadow:0 3px 12px rgba(109,40,217,.22);}
+    .btn-primary:hover{box-shadow:0 6px 18px rgba(109,40,217,.32);transform:translateY(-1px);}
+    .btn-ghost{background:var(--p50);color:var(--p700);border:1px solid var(--p100);}
+    .btn-ghost:hover{background:var(--p100);}
+    .btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+    .btn-outline:hover{border-color:var(--p300);color:var(--p600);}
+    .btn-danger{background:var(--errBg);color:var(--err);border:1px solid var(--errB);}
+    .btn-success{background:var(--okBg);color:var(--ok);border:1px solid var(--okB);}
+    .btn-sm{padding:.35rem .75rem;font-size:.78rem;border-radius:8px;}
+    .btns-row{display:flex;gap:.6rem;flex-wrap:wrap;}
+
+    /* ── FORM ── */
+    .fg{margin-bottom:1.1rem;}
+    .fl{display:block;font-size:.73rem;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem;}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
+    .full{width:100%;}
+
+    /* ── DROP ZONE ── */
+    .dz{border:2px dashed var(--p200);border-radius:var(--r);padding:2.5rem;text-align:center;
+      cursor:pointer;transition:all .25s;background:var(--p50);}
+    .dz:hover,.dz.dragover{border-color:var(--p400);background:var(--p100);}
+    .dz-icon{font-size:2.8rem;margin-bottom:.8rem;}
+    .dz p{color:var(--muted);font-size:.88rem;}
+
+    /* ── MESSAGES ── */
+    .msg{padding:.8rem 1rem;border-radius:10px;font-size:.86rem;margin-bottom:1rem;display:none;}
+    .msg.success{background:var(--okBg);border:1px solid var(--okB);color:var(--ok);display:block;}
+    .msg.error{background:var(--errBg);border:1px solid var(--errB);color:var(--err);display:block;}
+    .msg.info{background:var(--infoBg);border:1px solid var(--infoB);color:var(--info);display:block;}
+
+    /* ── DATA BANNER ── */
+    .dbanner{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-radius:10px;
+      font-size:.8rem;font-weight:600;margin-bottom:1.2rem;}
+    .dbanner.live{background:var(--okBg);color:var(--ok);border:1px solid var(--okB);}
+    .dbanner.demo{background:var(--warnBg);color:var(--warn);border:1px solid var(--warnB);}
+    .dbanner.loading{background:var(--infoBg);color:var(--info);border:1px solid var(--infoB);}
+
+    /* ── HEATMAP ── */
+    .heatmap{display:flex;gap:4px;flex-wrap:wrap;}
+    .hm-cell{width:22px;height:22px;border-radius:4px;cursor:pointer;transition:transform .15s;position:relative;}
+    .hm-cell:hover{transform:scale(1.3);z-index:5;}
+    .hm-cell[title]:hover::after{content:attr(title);position:absolute;bottom:125%;left:50%;
+      transform:translateX(-50%);background:var(--p900);color:#fff;
+      font-size:.68rem;padding:.25rem .5rem;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:10;}
+
+    /* ── TIMELINE ── */
+    .timeline{display:flex;flex-direction:column;gap:.6rem;}
+    .tl-item{display:flex;gap:.85rem;align-items:flex-start;}
+    .tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:.3rem;}
+    .tl-dot.ok{background:var(--ok);}
+    .tl-dot.corr{background:var(--err);}
+    .tl-dot.pend{background:var(--warn);}
+    .tl-content{flex:1;}
+    .tl-name{font-weight:600;font-size:.84rem;}
+    .tl-meta{font-size:.76rem;color:var(--muted);margin-top:.1rem;}
+    .tl-time{font-size:.73rem;color:var(--muted);flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+
+    /* ── INSIGHT CARDS ── */
+    .insight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:1.25rem;}
+    .ic{background:linear-gradient(135deg,var(--surface),var(--p50));border:1px solid var(--border);
+      border-radius:var(--r);padding:1.2rem 1.3rem;}
+    .ic-emoji{font-size:1.6rem;margin-bottom:.6rem;}
+    .ic-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.07em;margin-bottom:.3rem;}
+    .ic-value{font-size:1.3rem;font-weight:900;color:var(--p700);letter-spacing:-.02em;}
+    .ic-desc{font-size:.77rem;color:var(--muted);margin-top:.25rem;line-height:1.5;}
+
+    /* ── MODAL ── */
+    .modal-bg{display:none;position:fixed;inset:0;z-index:500;
+      background:rgba(46,16,101,.3);backdrop-filter:blur(4px);
+      align-items:center;justify-content:center;padding:1rem;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+      padding:2rem;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;
+      box-shadow:0 24px 60px rgba(46,16,101,.2);}
+    .modal h3{font-size:1.1rem;font-weight:800;margin-bottom:1.3rem;color:var(--p900);}
+    .mr{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;
+      border-bottom:1px solid var(--border);font-size:.87rem;}
+    .mr:last-child{border:none;}
+    .mr .lbl{color:var(--muted);font-weight:500;} .mr .val{font-weight:600;color:var(--text);text-align:right;max-width:65%;}
+    .ma{display:flex;gap:.7rem;justify-content:flex-end;margin-top:1.4rem;}
+    .cb{background:var(--errBg);border:1px solid var(--errB);border-radius:10px;
+      padding:.9rem 1rem;font-size:.86rem;line-height:1.6;color:var(--err);margin-top:.5rem;}
+
+    /* ── SETUP STEPS ── */
+    .setup-step{display:flex;gap:1rem;padding:.9rem;background:var(--p50);border:1px solid var(--p100);border-radius:10px;margin-bottom:.7rem;}
+    .sn{width:28px;height:28px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,var(--p600),var(--p400));
+      color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;}
+    .st{font-size:.85rem;line-height:1.55;color:var(--text);}
+
+    /* ── MISC ── */
+    .spin{display:inline-block;width:16px;height:16px;
+      border:2px solid var(--p100);border-top-color:var(--p500);
+      border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+    .empty .ei{font-size:2.5rem;margin-bottom:.8rem;}
+    #toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
+      background:var(--p800);color:#fff;padding:.8rem 1.3rem;border-radius:12px;
+      font-size:.85rem;font-weight:500;box-shadow:0 8px 24px rgba(46,16,101,.3);
+      transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);
+      pointer-events:none;max-width:300px;}
+    #toast.show{transform:translateY(0);opacity:1;}
+
+    /* ── STACKED NUMBERS ── */
+    .num-animate{transition:all .4s ease;}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px){
+      .hamburger{display:flex;}
+      .sidebar{transform:translateX(calc(-1 * var(--sidebar)));}
+      .sidebar.open{transform:translateX(0);}
+      .main{margin-left:0;padding:1.25rem;}
+      .two-col,.three-col{grid-template-columns:1fr;}
+      .stats-grid{grid-template-columns:repeat(2,1fr);}
+    }
+    @media(max-width:560px){
+      .stats-grid{grid-template-columns:1fr 1fr;gap:.75rem;}
+      .sc-val{font-size:1.6rem;}
+      .card{padding:1.1rem;}
+      thead th,tbody td{padding:.6rem .65rem;font-size:.78rem;}
+      .topbar{padding:0 1rem;}
+      .up-name{display:none;}
+      .ph h1{font-size:1.35rem;}
+      .btns-row{gap:.4rem;}
+      .btn{padding:.5rem .85rem;font-size:.8rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-l">
+    <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+    <a class="brand" href="#"><span class="brand-mark">🎓</span><span>Exam Preview</span></a>
+    <span class="admin-chip">ADMIN</span>
+  </div>
+  <div class="topbar-r">
+    <div class="user-pill">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <span class="up-name" id="userLabel">admin</span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</header>
+
+<div class="sidebar-ovl" id="sidebarOvl" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sg">
+      <span class="sg-lbl">Overview</span>
+      <button class="ni active" onclick="go('dashboard',this)">
+        <span class="ico">📊</span><span class="lbl">Dashboard</span>
+      </button>
+      <button class="ni" onclick="go('analytics',this)">
+        <span class="ico">📈</span><span class="lbl">Analytics</span>
+      </button>
+    </div>
+    <div class="sg">
+      <span class="sg-lbl">Records</span>
+      <button class="ni" onclick="go('students',this)">
+        <span class="ico">👥</span><span class="lbl">All Students</span>
+        <span class="nbadge blue" id="sb-students">0</span>
+      </button>
+      <button class="ni" onclick="go('corrections',this)">
+        <span class="ico">⚠️</span><span class="lbl">Corrections</span>
+        <span class="nbadge" id="sb-corrections">0</span>
+      </button>
+    </div>
+    <div class="sg">
+      <span class="sg-lbl">Management</span>
+      <button class="ni" onclick="go('upload',this)">
+        <span class="ico">📤</span><span class="lbl">Upload Data</span>
+      </button>
+      <button class="ni" onclick="go('files',this)">
+        <span class="ico">📁</span><span class="lbl">Manage Files</span>
+      </button>
+    </div>
+    <div class="sg">
+      <span class="sg-lbl">Reports</span>
+      <button class="ni" onclick="go('reports',this)">
+        <span class="ico">📋</span><span class="lbl">Reports</span>
+      </button>
+    </div>
+    <div class="sg">
+      <span class="sg-lbl">System</span>
+      <button class="ni" onclick="go('config',this)">
+        <span class="ico">⚙️</span><span class="lbl">Configuration</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ══════════ DASHBOARD ══════════ -->
+    <div class="sec active" id="sec-dashboard">
+      <div class="ph-row">
+        <div class="ph" style="margin:0"><h1>Dashboard</h1><p>Real-time verification overview</p></div>
+        <div class="btns-row">
+          <button class="btn btn-ghost" onclick="refreshData()">↻ Refresh</button>
+          <button class="btn btn-primary" onclick="go('analytics',document.querySelectorAll('.ni')[1])">📈 Analytics →</button>
+        </div>
+      </div>
+
+      <div id="dataBanner" class="dbanner loading">
+        <span class="spin"></span> Connecting to Google Sheets backend…
+      </div>
+
+      <div class="stats-grid">
+        <div class="sc"><div class="sc-lbl">Total Students</div><div class="sc-val" id="st-total">—</div><div class="sc-sub">All departments</div></div>
+        <div class="sc green"><div class="sc-lbl">Confirmed OK</div><div class="sc-val green" id="st-ok">—</div><div class="sc-sub">No corrections</div></div>
+        <div class="sc red"><div class="sc-lbl">Corrections</div><div class="sc-val red" id="st-corr">—</div><div class="sc-sub">Need attention</div></div>
+        <div class="sc orange"><div class="sc-lbl">Pending</div><div class="sc-val orange" id="st-pend">—</div><div class="sc-sub">Not yet verified</div></div>
+        <div class="sc blue"><div class="sc-lbl">Completion</div><div class="sc-val blue" id="st-pct">—%</div><div class="sc-sub">Overall progress</div></div>
+        <div class="sc teal"><div class="sc-lbl">Response Rate</div><div class="sc-val teal" id="st-resp">—%</div><div class="sc-sub">Responded students</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="ct">Department Progress <span id="deptTotal"></span></div>
+          <div id="deptChart"><div class="empty"><div class="ei">📊</div><p>Loading…</p></div></div>
+        </div>
+        <div class="card">
+          <div class="ct">Year-wise Breakdown</div>
+          <div id="yearChart"><div class="empty"><div class="ei">📈</div><p>Loading…</p></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Recent Submissions <span>Last 10</span></div>
+        <div id="recentActivity"><div class="empty"><div class="ei">🕐</div><p>No activity yet</p></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════ ANALYTICS ══════════ -->
+    <div class="sec" id="sec-analytics">
+      <div class="ph"><h1>Analytics</h1><p>Deep insights into verification progress</p></div>
+
+      <!-- Key Insights Row -->
+      <div class="insight-grid" id="insightGrid"></div>
+
+      <div class="two-col">
+        <!-- Donut chart: status distribution -->
+        <div class="card">
+          <div class="ct">Status Distribution</div>
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 120 120" width="120" height="120" id="donutSvg">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#f5f3ff" stroke-width="18"/>
+            </svg>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+        <!-- Stacked bar: dept breakdown -->
+        <div class="card">
+          <div class="ct">Department Breakdown <span>OK / Correction / Pending</span></div>
+          <div id="stackedBar"></div>
+        </div>
+      </div>
+
+      <!-- Correction Analysis -->
+      <div class="two-col">
+        <div class="card">
+          <div class="ct">Top Correction Reasons</div>
+          <div id="corrReasons"></div>
+        </div>
+        <div class="card">
+          <div class="ct">Submission Activity <span>by hour</span></div>
+          <div id="hourlyChart"></div>
+        </div>
+      </div>
+
+      <!-- Year × Dept Heatmap -->
+      <div class="card">
+        <div class="ct">Completion Heatmap <span>Year × Department (% complete)</span></div>
+        <div id="heatmapContainer" style="overflow-x:auto;padding:0.5rem 0;"></div>
+      </div>
+
+      <!-- Pending deep-dive -->
+      <div class="card">
+        <div class="ct">Pending Students by Department <span>Who hasn't responded</span></div>
+        <div id="pendingBreakdown"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ STUDENTS ══════════ -->
+    <div class="sec" id="sec-students">
+      <div class="ph-row">
+        <div class="ph" style="margin:0"><h1>All Students</h1><p>Browse, filter and manage records</p></div>
+        <div class="btns-row">
+          <button class="btn btn-ghost" onclick="refreshData()">↻ Refresh</button>
+          <button class="btn btn-primary" onclick="go('upload',document.querySelectorAll('.ni')[4])">+ Add Students</button>
+        </div>
+      </div>
+      <div class="filters">
+        <select id="f-dept" onchange="applyFilters()"><option value="">All Departments</option></select>
+        <select id="f-year" onchange="applyFilters()">
+          <option value="">All Years</option>
+          <option>I</option><option>II</option><option>III</option><option>IV</option>
+        </select>
+        <select id="f-status" onchange="applyFilters()">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="OK">Confirmed OK</option>
+          <option value="Correction">Correction</option>
+        </select>
+        <input type="text" id="f-search" placeholder="🔍  Search name / reg no…" oninput="applyFilters()" style="min-width:190px"/>
+        <button class="btn btn-ghost btn-sm" onclick="exportFiltered()">⬇ Export filtered</button>
+      </div>
+      <div class="card">
+        <div class="ct" id="studCount">Students</div>
+        <div class="tw">
+          <table id="studTable">
+            <thead><tr>
+              <th>#</th><th>Roll No</th><th>Reg No</th><th>Name</th>
+              <th>Programme</th><th>Year</th><th>File</th>
+              <th>Status</th><th>Correction Notes</th><th>Submitted</th>
+            </tr></thead>
+            <tbody id="studBody">
+              <tr><td colspan="10"><div class="empty"><div class="ei">⏳</div><p>Loading…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ CORRECTIONS ══════════ -->
+    <div class="sec" id="sec-corrections">
+      <div class="ph-row">
+        <div class="ph" style="margin:0"><h1>Corrections Inbox</h1><p>Students who flagged issues</p></div>
+        <div class="btns-row">
+          <button class="btn btn-ghost" onclick="exportCorrections()">⬇ Export CSV</button>
+        </div>
+      </div>
+
+      <!-- Summary mini-cards -->
+      <div class="stats-grid" style="margin-bottom:1.25rem" id="corrStats"></div>
+
+      <div class="card">
+        <div class="ct" id="corrCount">Corrections</div>
+        <div class="tw">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Reg No</th><th>Name</th><th>Roll No</th>
+              <th>Programme</th><th>Year</th><th>Course / Field</th><th>Details</th>
+              <th>Submitted</th><th>Action</th>
+            </tr></thead>
+            <tbody id="corrBody">
+              <tr><td colspan="10"><div class="empty"><div class="ei">✅</div><p>No corrections reported</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ UPLOAD ══════════ -->
+    <div class="sec" id="sec-upload">
+      <div class="ph"><h1>Upload Data</h1><p>Import student records or add individually</p></div>
+
+      <div class="card">
+        <div class="ct">📤 Bulk Upload — CSV / Excel</div>
+        <div id="uploadMsg" class="msg"></div>
+        <div class="dz" id="dropZone" onclick="document.getElementById('fileInput').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <div class="dz-icon">📁</div>
+          <p><strong>Click to browse</strong> or drag & drop</p>
+          <p style="margin-top:.4rem;font-size:.77rem">Supports .csv and .xlsx — max 10 MB</p>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(event)"/>
+        <div id="uploadPreview" style="display:none;margin-top:1.3rem">
+          <div class="ct" style="margin-bottom:.8rem">Preview — first 5 rows</div>
+          <div class="tw" id="previewTable"></div>
+          <div class="btns-row" style="margin-top:1rem">
+            <button class="btn btn-primary" onclick="pushToSheets()">Push to Google Sheets →</button>
+            <button class="btn btn-outline" onclick="document.getElementById('uploadPreview').style.display='none'">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">➕ Add Single Student</div>
+        <div id="singleMsg" class="msg"></div>
+        <div class="form-grid">
+          <div class="fg"><label class="fl">S.No</label><input type="text" class="full" id="s-sno" placeholder="1"/></div>
+          <div class="fg"><label class="fl">Roll Number</label><input type="text" class="full" id="s-roll" placeholder="24UCI004"/></div>
+          <div class="fg"><label class="fl">Register No</label><input type="text" class="full" id="s-reg" placeholder="920424103001"/></div>
+          <div class="fg"><label class="fl">Student Name</label><input type="text" class="full" id="s-name" placeholder="ADHITHYA P"/></div>
+          <div class="fg"><label class="fl">Programme</label><input type="text" class="full" id="s-prog" placeholder="CIVIL ENGINEERING"/></div>
+          <div class="fg"><label class="fl">Date of Birth</label><input type="date" class="full" id="s-dob"/></div>
+          <div class="fg"><label class="fl">File Group</label><input type="text" class="full" id="s-file" placeholder="II CIVIL"/></div>
+          <div class="fg"><label class="fl">Year</label>
+            <select class="full" id="s-year"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addSingleStudent()">Add Student</button>
+      </div>
+
+      <div class="card">
+        <div class="ct">🔗 Link PDF Files to Groups</div>
+        <p style="color:var(--muted);font-size:.86rem;margin-bottom:1.2rem">Connect file group names to Google Drive File IDs.</p>
+        <div id="fileLinksDisplay"></div>
+        <div style="display:flex;gap:.7rem;margin-top:1rem;flex-wrap:wrap">
+          <input type="text" id="link-group" placeholder="Group name (e.g. II CIVIL)" style="flex:1;min-width:140px"/>
+          <input type="text" id="link-id" placeholder="Google Drive File ID" style="flex:2;min-width:160px"/>
+          <button class="btn btn-ghost" onclick="addLink()">Link</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ FILES ══════════ -->
+    <div class="sec" id="sec-files">
+      <div class="ph"><h1>Manage Files</h1><p>Linked PDF groups and Google Drive connections</p></div>
+      <div class="card">
+        <div class="ct">Linked PDF Files</div>
+        <div class="tw">
+          <table>
+            <thead><tr><th>File Group</th><th>Drive File ID</th><th>Drive Link</th><th>Students</th><th>Action</th></tr></thead>
+            <tbody id="fileLinksTable">
+              <tr><td colspan="5"><div class="empty"><p>No files linked yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ REPORTS ══════════ -->
+    <div class="sec" id="sec-reports">
+      <div class="ph"><h1>Generate Reports</h1><p>Export verification data in multiple formats</p></div>
+      <div class="two-col" style="margin-bottom:1.25rem">
+        <div class="card">
+          <div class="ct">📋 Report Filters</div>
+          <div class="fg"><label class="fl">Department</label><select class="full" id="r-dept"><option value="">All Departments</option></select></div>
+          <div class="fg"><label class="fl">Year</label>
+            <select class="full" id="r-year"><option value="">All Years</option><option>I</option><option>II</option><option>III</option><option>IV</option></select>
+          </div>
+          <div class="fg"><label class="fl">Status</label>
+            <select class="full" id="r-status"><option value="">All</option><option value="Pending">Pending Only</option><option value="OK">Confirmed OK</option><option value="Correction">Corrections Only</option></select>
+          </div>
+          <div class="fg"><label class="fl">Report Type</label>
+            <select class="full" id="r-type">
+              <option value="full">Full Data Report</option>
+              <option value="corrections">Corrections Detail</option>
+              <option value="summary">Summary by Department</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">⬇️ Export</div>
+          <div style="display:flex;flex-direction:column;gap:.8rem">
+            <button class="btn btn-primary" onclick="doReport('pdf')" style="justify-content:center;padding:.9rem">📄 Download as PDF</button>
+            <button class="btn btn-ghost" onclick="doReport('excel')" style="justify-content:center;padding:.9rem">📊 Download as Excel (.xlsx)</button>
+            <button class="btn btn-outline" onclick="doReport('csv')" style="justify-content:center;padding:.9rem">📋 Download as CSV</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Report Preview</div>
+        <div id="reportPreview"><div class="empty"><div class="ei">📋</div><p>Generate a report to preview here</p></div></div>
+      </div>
+    </div>
+
+    <!-- ══════════ CONFIG ══════════ -->
+    <div class="sec" id="sec-config">
+      <div class="ph"><h1>Configuration</h1><p>Backend integration settings</p></div>
+      <div class="card" style="margin-bottom:1.25rem">
+        <div class="ct">🔧 Google Sheets Integration</div>
+        <div id="configMsg" class="msg"></div>
+        <div class="fg"><label class="fl">Apps Script Web App URL</label><input type="text" class="full" id="cfg-url" placeholder="https://script.google.com/macros/s/…" style="width:100%"/></div>
+        <div class="fg"><label class="fl">Google Sheet ID</label><input type="text" class="full" id="cfg-sheet" style="width:100%"/></div>
+        <div class="fg"><label class="fl">Drive Folder ID (for PDFs)</label><input type="text" class="full" id="cfg-drive" style="width:100%"/></div>
+        <div class="btns-row">
+          <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
+          <button class="btn btn-ghost" onclick="testConnection()">🔌 Test Connection</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">📋 Setup Guide</div>
+        <div id="setupSteps"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CORRECTION MODAL -->
+<div class="modal-bg" id="corrModal">
+  <div class="modal">
+    <h3>⚠️ Correction Details</h3>
+    <div id="corrModalBody"></div>
+    <div class="ma">
+      <button class="btn btn-outline" onclick="closeModal()">Close</button>
+      <button class="btn btn-success" onclick="markResolved()">✓ Mark Resolved</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  AUTH GUARD — redirect if not logged in
+// ══════════════════════════════════════════════════
+(function(){
+  const auth = sessionStorage.getItem('adminAuth');
+  if (!auth) { window.location.href = 'admin-login.html'; }
+})();
+
+// ══════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════
+const GAS_URL = "https://script.google.com/macros/s/AKfycbw9pUQDVhovphH3euw5p0QewcljDz5xvrw9CoXQIPsbPFBKOsCBEd-vpGkNAgG9bc55/exec";
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let students = [], fileLinks = {}, activeCorrIdx = -1, dataSource = 'loading';
+
+// ══════════════════════════════════════════════════
+//  DEMO DATA
+// ══════════════════════════════════════════════════
+function getDemoStudents() {
+  const progs = ['CIVIL ENGINEERING','COMPUTER SCIENCE','MECHANICAL ENGINEERING','ELECTRICAL ENGINEERING','ELECTRONICS & COMMUNICATION'];
+  const years = ['I','II','III','IV'];
+  const stats = ['Pending','OK','OK','OK','Correction'];
+  const corrections = [
+    {course:'Mathematics III', details:'Grade entry mismatch — shows B+ but transcript shows A'},
+    {course:'Engineering Drawing', details:'Missing internal marks for Unit 2 assessment'},
+    {course:'Physics Lab', details:'Attendance percentage shown as 72% (actual: 81%)'},
+    {course:'Environmental Science', details:'Course credit listed as 2, should be 3'},
+    {course:'Programming in C', details:'Name misspelled in register — shows PRIYA R instead of PRIYA S'},
+  ];
+  const out = [];
+  const now = new Date('2025-01-20');
+  for (let i = 0; i < 60; i++) {
+    const prog = progs[i % progs.length];
+    const year = years[i % years.length];
+    const st   = stats[i % stats.length];
+    const corr = st === 'Correction' ? corrections[i % corrections.length] : null;
+    // random submission hour for hourly chart demo
+    const hr   = [8,9,9,10,10,10,11,11,12,14,15,15,16,17][i % 14];
+    const dd   = String(1 + (i % 19)).padStart(2,'0');
+    out.push({
+      sNo: String(i+1), rollNumber: `24${prog.slice(0,2).toUpperCase()}${String(i+1).padStart(3,'0')}`,
+      registerNo: `9204241${String(i+1).padStart(5,'0')}`,
+      studentName: `STUDENT ${String.fromCharCode(65+(i%26))} ${String.fromCharCode(65+(i%20))}`,
+      programme: prog, year, fileName: `${year} ${prog.split(' ')[0]}`,
+      status: st, correctionFlag: st==='Correction'?'YES':st==='OK'?'NO':'',
+      correctionCourse: corr?.course||'', correctionDetails: corr?.details||'',
+      submittedAt: st!=='Pending'?`2025-01-${dd} ${String(hr).padStart(2,'0')}:${String(i%60).padStart(2,'0')}:00`:'',
+      dob:`200${2+(i%3)}-${String(1+(i%12)).padStart(2,'0')}-${String(1+(i%28)).padStart(2,'0')}`,
+      driveFileId:''
+    });
+  }
+  return out;
+}
+
+// ══════════════════════════════════════════════════
+//  FETCH HELPERS
+// ══════════════════════════════════════════════════
+async function gasGet(params={}, ms=8000) {
+  const url = new URL(GAS_URL);
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  try {
+    const r = await fetch(url.toString(), {signal:ctrl.signal});
+    clearTimeout(t);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e){ clearTimeout(t); throw e; }
+}
+async function gasPost(body, ms=10000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms);
+  try {
+    const r = await fetch(GAS_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(body), signal:ctrl.signal});
+    clearTimeout(t); return await r.json();
+  } catch(e){ clearTimeout(t); throw e; }
+}
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+window.onload = async () => {
+  const auth = JSON.parse(sessionStorage.getItem('adminAuth') || '{"username":"admin"}');
+  const name = auth.username || 'admin';
+  document.getElementById('userLabel').textContent = name;
+  document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+
+  const cfg = getConfig();
+  document.getElementById('cfg-url').value   = cfg.apiUrl || GAS_URL;
+  document.getElementById('cfg-sheet').value = cfg.sheetId || '';
+  document.getElementById('cfg-drive').value = cfg.driveFolderId || '';
+
+  try { fileLinks = JSON.parse(localStorage.getItem('eduFileLinks')||'{}'); } catch {}
+  buildSetupGuide();
+  renderFileLinksDisplay();
+  await refreshData();
+};
+
+// ══════════════════════════════════════════════════
+//  REFRESH
+// ══════════════════════════════════════════════════
+async function refreshData() {
+  setBanner('loading','<span class="spin"></span> Fetching from Google Sheets…');
+  toast('Fetching data…');
+  try {
+    const data = await gasGet({action:'getAll'});
+    if (data?.success && Array.isArray(data.students) && data.students.length) {
+      students = data.students; dataSource = 'live';
+      setBanner('live', `✅ Live data — ${students.length} students loaded`);
+      toast(`✅ ${students.length} students loaded!`);
+    } else {
+      students = getDemoStudents(); dataSource = 'demo';
+      setBanner('demo', `⚠️ No data from backend — showing ${students.length} demo records`);
+      toast('Demo mode active');
+    }
+  } catch {
+    students = getDemoStudents(); dataSource = 'demo';
+    setBanner('demo', `⚠️ Backend unreachable — demo mode (${students.length} records)`);
+    toast('⚠️ Backend offline — demo mode');
+  }
+  updateDashboard(); populateFilters();
+  if (document.getElementById('sec-students').classList.contains('active')) renderStudents(students);
+  if (document.getElementById('sec-analytics').classList.contains('active')) renderAnalytics();
+  if (document.getElementById('sec-corrections').classList.contains('active')) renderCorrections();
+}
+
+function setBanner(type, html) {
+  const el = document.getElementById('dataBanner');
+  el.className = `dbanner ${type}`; el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════
+function updateDashboard() {
+  const total = students.length;
+  const ok    = students.filter(s=>s.status==='OK').length;
+  const corr  = students.filter(s=>s.status==='Correction').length;
+  const pend  = students.filter(s=>s.status==='Pending').length;
+  const resp  = ok + corr;
+  const pct   = total ? Math.round((resp/total)*100) : 0;
+  const rRate = total ? Math.round((resp/total)*100) : 0;
+
+  animateNum('st-total', total);
+  animateNum('st-ok',    ok);
+  animateNum('st-corr',  corr);
+  animateNum('st-pend',  pend);
+  document.getElementById('st-pct').textContent  = pct+'%';
+  document.getElementById('st-resp').textContent = rRate+'%';
+  document.getElementById('sb-students').textContent    = total;
+  document.getElementById('sb-corrections').textContent = corr;
+
+  renderDeptChart(); renderYearChart(); renderRecent();
+}
+
+function animateNum(id, target) {
+  const el = document.getElementById(id);
+  const start = parseInt(el.textContent) || 0;
+  const dur = 600, t0 = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now-t0)/dur);
+    el.textContent = Math.round(start + (target-start) * (1-(1-p)**3));
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderDeptChart() {
+  const map = {};
+  students.forEach(s => {
+    const d = s.programme||'Unknown';
+    if (!map[d]) map[d]={t:0,ok:0,c:0,p:0};
+    map[d].t++;
+    if (s.status==='OK') map[d].ok++;
+    else if (s.status==='Correction') map[d].c++;
+    else map[d].p++;
+  });
+  const entries = Object.entries(map);
+  document.getElementById('deptTotal').textContent = `${entries.length} departments`;
+  if (!entries.length) { document.getElementById('deptChart').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
+  const html = entries.map(([dept,v])=>{
+    const pct = v.t ? Math.round((v.ok+v.c)/v.t*100) : 0;
+    const lbl = dept.length>22 ? dept.slice(0,20)+'…' : dept;
+    return `<div class="pi">
+      <div class="pi-hdr">
+        <span title="${dept}">${lbl}</span>
+        <span style="color:var(--muted)">${v.ok+v.c}/${v.t} <strong>${pct}%</strong></span>
+      </div>
+      <div class="pb"><div class="pf" style="width:${pct}%"></div></div>
+      <div style="display:flex;gap:.4rem;margin-top:.3rem;flex-wrap:wrap">
+        <span class="badge b-ok" style="font-size:.65rem">✅ ${v.ok}</span>
+        <span class="badge b-corr" style="font-size:.65rem">⚠️ ${v.c}</span>
+        <span class="badge b-pend" style="font-size:.65rem">⏳ ${v.p}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('deptChart').innerHTML = html;
+}
+
+function renderYearChart() {
+  const map = {};
+  students.forEach(s => {
+    const y = s.year||'?';
+    if (!map[y]) map[y]={t:0,d:0};
+    map[y].t++; if (s.status!=='Pending') map[y].d++;
+  });
+  const entries = Object.entries(map).sort();
+  if (!entries.length) { document.getElementById('yearChart').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
+  const html = entries.map(([yr,v])=>{
+    const pct = v.t?Math.round(v.d/v.t*100):0;
+    return `<div class="pi">
+      <div class="pi-hdr"><span>Year ${yr}</span><span style="color:var(--muted)">${v.d}/${v.t} <strong>${pct}%</strong></span></div>
+      <div class="pb"><div class="pf green" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('yearChart').innerHTML = html;
+}
+
+function renderRecent() {
+  const recent = [...students].filter(s=>s.submittedAt).sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt)).slice(0,10);
+  if (!recent.length) { document.getElementById('recentActivity').innerHTML='<div class="empty"><div class="ei">🕐</div><p>No submissions yet</p></div>'; return; }
+  let html = `<div class="timeline">`;
+  recent.forEach(s => {
+    html += `<div class="tl-item">
+      <div class="tl-dot ${s.status==='OK'?'ok':s.status==='Correction'?'corr':'pend'}"></div>
+      <div class="tl-content">
+        <div class="tl-name">${s.studentName} <span class="badge ${s.status==='OK'?'b-ok':s.status==='Correction'?'b-corr':'b-pend'}" style="font-size:.65rem">${s.status}</span></div>
+        <div class="tl-meta">${s.programme} · Year ${s.year} · ${s.registerNo}</div>
+      </div>
+      <div class="tl-time">${s.submittedAt?.slice(11,16)||''}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('recentActivity').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+//  ANALYTICS
+// ══════════════════════════════════════════════════
+function renderAnalytics() {
+  renderInsights();
+  renderDonut();
+  renderStackedBar();
+  renderCorrReasons();
+  renderHourlyChart();
+  renderHeatmap();
+  renderPendingBreakdown();
+}
+
+function renderInsights() {
+  const total = students.length, ok = students.filter(s=>s.status==='OK').length;
+  const corr = students.filter(s=>s.status==='Correction').length;
+  const pend = students.filter(s=>s.status==='Pending').length;
+  const corrRate = total ? (corr/total*100).toFixed(1) : 0;
+  const pendRate = total ? (pend/total*100).toFixed(1) : 0;
+  // Fastest dept
+  const dmap = {};
+  students.forEach(s=>{ if(!dmap[s.programme])dmap[s.programme]={t:0,d:0}; dmap[s.programme].t++; if(s.status!=='Pending')dmap[s.programme].d++; });
+  const bestDept = Object.entries(dmap).sort(([,a],[,b])=>(b.d/b.t)-(a.d/a.t))[0];
+  const avgSubmit = (() => {
+    const hrs = students.filter(s=>s.submittedAt).map(s=>parseInt(s.submittedAt.split(' ')[1]?.split(':')[0]||'0'));
+    return hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : 0;
+  })();
+  document.getElementById('insightGrid').innerHTML = [
+    {e:'🎯', t:'Correction Rate',    v:`${corrRate}%`,  d:`${corr} of ${total} students flagged issues`},
+    {e:'⏳', t:'Pending Rate',       v:`${pendRate}%`,  d:`${pend} students haven't responded yet`},
+    {e:'🏆', t:'Best Department',    v: bestDept?bestDept[0].split(' ')[0]:'—', d: bestDept?`${Math.round(bestDept[1].d/bestDept[1].t*100)}% completion rate`:'No data'},
+    {e:'🕐', t:'Avg Submission Hour',v:`${avgSubmit}:00`,d:'Most students submit mid-morning'},
+  ].map(i=>`<div class="ic"><div class="ic-emoji">${i.e}</div><div class="ic-title">${i.t}</div><div class="ic-value">${i.v}</div><div class="ic-desc">${i.d}</div></div>`).join('');
+}
+
+function renderDonut() {
+  const ok = students.filter(s=>s.status==='OK').length;
+  const corr = students.filter(s=>s.status==='Correction').length;
+  const pend = students.filter(s=>s.status==='Pending').length;
+  const total = ok + corr + pend || 1;
+  const segments = [
+    {v:ok,   c:'#059669', l:'Confirmed OK'},
+    {v:corr, c:'#dc2626', l:'Correction'},
+    {v:pend, c:'#d97706', l:'Pending'},
+  ];
+  const r = 50, cx = 60, cy = 60;
+  const circ = 2*Math.PI*r;
+  let offset = 0;
+  let paths = '';
+  segments.forEach(s=>{
+    const pct = s.v/total;
+    const dash = pct*circ;
+    if (dash > 0) {
+      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.c}" stroke-width="18"
+        stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" opacity="0.9"/>`;
+      offset += dash;
+    }
+  });
+  // center text
+  paths += `<text x="60" y="56" text-anchor="middle" font-size="13" font-weight="900" fill="#2e1065" font-family="Outfit">${total}</text>
+    <text x="60" y="70" text-anchor="middle" font-size="7" fill="#6b5fa8" font-family="Outfit">STUDENTS</text>`;
+  document.getElementById('donutSvg').innerHTML = `<circle cx="60" cy="60" r="50" fill="none" stroke="#f5f3ff" stroke-width="18"/>` + paths;
+  document.getElementById('donutLegend').innerHTML = segments.map(s=>`
+    <div class="dl-item">
+      <div class="dl-dot" style="background:${s.c}"></div>
+      <span class="dl-lbl">${s.l}</span>
+      <span class="dl-val">${s.v} <span style="font-size:.72rem;color:var(--muted)">(${Math.round(s.v/total*100)}%)</span></span>
+    </div>`).join('');
+}
+
+function renderStackedBar() {
+  const map = {};
+  students.forEach(s=>{
+    const d = s.programme||'Unknown';
+    if(!map[d])map[d]={t:0,ok:0,c:0,p:0};
+    map[d].t++; if(s.status==='OK')map[d].ok++; else if(s.status==='Correction')map[d].c++; else map[d].p++;
+  });
+  const entries = Object.entries(map);
+  if (!entries.length) { document.getElementById('stackedBar').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
+  const maxT = Math.max(...entries.map(([,v])=>v.t));
+  const bars = entries.map(([dept,v])=>{
+    const h = 80, hScale = maxT ? h*(v.t/maxT) : 0;
+    const hOk   = hScale * (v.ok/v.t);
+    const hCorr = hScale * (v.c/v.t);
+    const hPend = hScale * (v.p/v.t);
+    const lbl   = dept.split(' ')[0].slice(0,4).toUpperCase();
+    return `<div class="bar-col" title="${dept}: ${v.ok} OK, ${v.c} Correction, ${v.p} Pending">
+      <div class="bar-seg-wrap" style="height:${h}px">
+        <div class="bar-seg" style="height:${hPend}px;background:#d97706;opacity:.8"></div>
+        <div class="bar-seg" style="height:${hCorr}px;background:#dc2626;opacity:.85"></div>
+        <div class="bar-seg" style="height:${hOk}px;background:#059669;opacity:.9"></div>
+      </div>
+      <div class="bar-lbl">${lbl}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('stackedBar').innerHTML = `
+    <div style="margin-bottom:.6rem;display:flex;gap:.8rem;font-size:.72rem;flex-wrap:wrap">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#059669;border-radius:2px;margin-right:3px"></span>OK</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#dc2626;border-radius:2px;margin-right:3px"></span>Correction</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#d97706;border-radius:2px;margin-right:3px"></span>Pending</span>
+    </div>
+    <div class="bar-chart">${bars}</div>`;
+}
+
+function renderCorrReasons() {
+  const corrStudents = students.filter(s=>s.status==='Correction'&&s.correctionCourse);
+  if (!corrStudents.length) { document.getElementById('corrReasons').innerHTML='<div class="empty"><p>No corrections yet</p></div>'; return; }
+  const map = {};
+  corrStudents.forEach(s=>{ const k=s.correctionCourse||'Other'; map[k]=(map[k]||0)+1; });
+  const entries = Object.entries(map).sort(([,a],[,b])=>b-a).slice(0,6);
+  const maxV = entries[0][1];
+  document.getElementById('corrReasons').innerHTML = entries.map(([course,cnt])=>`
+    <div class="pi">
+      <div class="pi-hdr"><span style="font-size:.82rem">${course}</span><span class="badge b-corr" style="font-size:.65rem">${cnt}</span></div>
+      <div class="pb"><div class="pf red" style="width:${Math.round(cnt/maxV*100)}%"></div></div>
+    </div>`).join('');
+}
+
+function renderHourlyChart() {
+  const hrs = Array(24).fill(0);
+  students.filter(s=>s.submittedAt).forEach(s=>{
+    const h = parseInt(s.submittedAt.split(' ')[1]?.split(':')[0]||'0');
+    hrs[h]++;
+  });
+  const peak = Math.max(...hrs,1);
+  // show only 7am–8pm for readability
+  const slots = Array.from({length:14},(_,i)=>i+7);
+  const bars = slots.map(h=>{
+    const cnt = hrs[h];
+    const ht  = Math.round(cnt/peak*70);
+    return `<div class="bar-col" title="${h}:00 — ${cnt} submissions">
+      <div class="bar-seg-wrap" style="height:70px">
+        <div class="bar-seg" style="height:${ht}px;background:linear-gradient(to top,var(--p600),var(--p300))"></div>
+      </div>
+      <div class="bar-lbl">${h}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('hourlyChart').innerHTML = `<div class="bar-chart" style="align-items:flex-end">${bars}</div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:.4rem;text-align:center">Hour of day (7am–8pm)</div>`;
+}
+
+function renderHeatmap() {
+  const years = ['I','II','III','IV'];
+  const depts = [...new Set(students.map(s=>s.programme).filter(Boolean))];
+  if (!depts.length) { document.getElementById('heatmapContainer').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
+
+  const map = {};
+  students.forEach(s=>{
+    const k = `${s.year}||${s.programme}`;
+    if(!map[k])map[k]={t:0,d:0};
+    map[k].t++; if(s.status!=='Pending')map[k].d++;
+  });
+
+  const cellColor = pct => {
+    if (pct >= 80) return '#059669';
+    if (pct >= 60) return '#34d399';
+    if (pct >= 40) return '#fbbf24';
+    if (pct >= 20) return '#f87171';
+    return '#e5e7eb';
+  };
+
+  let html = `<div style="display:inline-block;min-width:100%">
+    <div style="display:grid;grid-template-columns:120px ${depts.map(()=>'36px').join(' ')};gap:4px;margin-bottom:4px;align-items:center">
+      <div style="font-size:.68rem;color:var(--muted);font-weight:700">YEAR \\ DEPT</div>
+      ${depts.map(d=>`<div style="font-size:.62rem;color:var(--muted);font-weight:700;text-align:center;overflow:hidden;white-space:nowrap;width:36px" title="${d}">${d.split(' ').map(w=>w[0]).join('').slice(0,3)}</div>`).join('')}
+    </div>`;
+  years.forEach(yr=>{
+    html += `<div style="display:grid;grid-template-columns:120px ${depts.map(()=>'36px').join(' ')};gap:4px;align-items:center;margin-bottom:4px">
+      <div style="font-size:.78rem;font-weight:600;color:var(--text)">Year ${yr}</div>`;
+    depts.forEach(dept=>{
+      const k = `${yr}||${dept}`;
+      const v = map[k];
+      const pct = v ? Math.round(v.d/v.t*100) : 0;
+      const count = v ? `${v.d}/${v.t}` : '0/0';
+      html += `<div class="hm-cell" style="background:${cellColor(pct)};opacity:${v?1:.25}" title="${dept} Y${yr}: ${count} (${pct}%)"></div>`;
+    });
+    html += `</div>`;
+  });
+  html += `<div style="display:flex;align-items:center;gap:.6rem;margin-top:.8rem;font-size:.72rem;color:var(--muted)">
+    <span>0%</span>
+    <div style="display:flex;gap:2px">
+      ${['#e5e7eb','#f87171','#fbbf24','#34d399','#059669'].map(c=>`<div style="width:16px;height:10px;background:${c};border-radius:2px"></div>`).join('')}
+    </div>
+    <span>100%</span>
+  </div></div>`;
+  document.getElementById('heatmapContainer').innerHTML = html;
+}
+
+function renderPendingBreakdown() {
+  const pend = students.filter(s=>s.status==='Pending');
+  if (!pend.length) { document.getElementById('pendingBreakdown').innerHTML='<div class="empty"><p>🎉 No pending students!</p></div>'; return; }
+  const map = {};
+  pend.forEach(s=>{ const k=s.programme||'Unknown'; if(!map[k])map[k]=[]; map[k].push(s); });
+  const rows = Object.entries(map).sort(([,a],[,b])=>b.length-a.length)
+    .map(([dept,list],i)=>`<tr>
+      <td>${i+1}</td>
+      <td><strong>${dept}</strong></td>
+      <td><span class="badge b-pend">${list.length}</span></td>
+      <td style="font-size:.82rem;color:var(--muted)">${[...new Set(list.map(s=>s.year))].sort().map(y=>`Year ${y}`).join(', ')}</td>
+      <td style="font-size:.8rem;color:var(--muted)">${list.slice(0,2).map(s=>s.studentName).join(', ')}${list.length>2?` +${list.length-2} more`:''}</td>
+    </tr>`).join('');
+  document.getElementById('pendingBreakdown').innerHTML = `
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Department</th><th>Pending Count</th><th>Years</th><th>Students (preview)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  STUDENTS TABLE
+// ══════════════════════════════════════════════════
+function populateFilters() {
+  const depts = [...new Set(students.map(s=>s.programme).filter(Boolean))];
+  ['f-dept','r-dept'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML='<option value="">All Departments</option>';
+    depts.forEach(d=>sel.innerHTML+=`<option>${d}</option>`);
+  });
+}
+function applyFilters() {
+  const dept=document.getElementById('f-dept').value, year=document.getElementById('f-year').value,
+        status=document.getElementById('f-status').value, q=document.getElementById('f-search').value.toLowerCase();
+  renderStudents(students.filter(s=>{
+    if(dept&&s.programme!==dept)return false;
+    if(year&&s.year!==year)return false;
+    if(status&&s.status!==status)return false;
+    if(q&&!String(s.studentName||'').toLowerCase().includes(q)&&!String(s.registerNo||'').includes(q))return false;
+    return true;
+  }));
+}
+function getFilteredStudents() {
+  const dept=document.getElementById('f-dept').value, year=document.getElementById('f-year').value,
+        status=document.getElementById('f-status').value, q=document.getElementById('f-search').value.toLowerCase();
+  return students.filter(s=>{
+    if(dept&&s.programme!==dept)return false;
+    if(year&&s.year!==year)return false;
+    if(status&&s.status!==status)return false;
+    if(q&&!String(s.studentName||'').toLowerCase().includes(q)&&!String(s.registerNo||'').includes(q))return false;
+    return true;
+  });
+}
+function renderStudents(list) {
+  document.getElementById('studCount').innerHTML = `Students <span>(${list.length})</span>`;
+  const tbody = document.getElementById('studBody');
+  if (!list.length) { tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="ei">🔍</div><p>No records match</p></div></td></tr>'; return; }
+  tbody.innerHTML = list.map((s,i)=>`<tr>
+    <td style="color:var(--muted);font-size:.8rem">${i+1}</td>
+    <td><strong style="font-size:.84rem">${s.rollNumber||'—'}</strong></td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${s.registerNo||'—'}</span></td>
+    <td style="font-weight:600">${s.studentName||'—'}</td>
+    <td style="color:var(--muted);font-size:.82rem">${s.programme||'—'}</td>
+    <td><span class="badge b-year">${s.year||'?'}</span></td>
+    <td style="font-size:.81rem;color:var(--muted)">${s.fileName||'—'}</td>
+    <td>${mkBadge(s.status)}</td>
+    <td style="font-size:.8rem;color:var(--muted);max-width:180px">
+      ${s.correctionDetails?`<span title="${s.correctionDetails}">${s.correctionDetails.slice(0,40)}${s.correctionDetails.length>40?'…':''}</span>`:'—'}
+    </td>
+    <td style="font-size:.78rem;color:var(--muted)">${s.submittedAt||'—'}</td>
+  </tr>`).join('');
+}
+function mkBadge(st) {
+  if(st==='OK')         return '<span class="badge b-ok">✅ Confirmed</span>';
+  if(st==='Correction') return '<span class="badge b-corr">⚠️ Correction</span>';
+  if(st==='Pending')    return '<span class="badge b-pend">⏳ Pending</span>';
+  return `<span class="badge b-pend">${st}</span>`;
+}
+function exportFiltered() {
+  const list = getFilteredStudents();
+  if (!list.length) { toast('No data to export'); return; }
+  exportCSVList(list, 'filtered');
+}
+
+// ══════════════════════════════════════════════════
+//  CORRECTIONS
+// ══════════════════════════════════════════════════
+function renderCorrections() {
+  const list = students.filter(s=>s.status==='Correction');
+  document.getElementById('corrCount').innerHTML = `Corrections <span>(${list.length})</span>`;
+
+  // Mini stats
+  const courses = {};
+  list.forEach(s=>{ const k=s.correctionCourse||'Other'; courses[k]=(courses[k]||0)+1; });
+  const topCourse = Object.entries(courses).sort(([,a],[,b])=>b-a)[0];
+  document.getElementById('corrStats').innerHTML = `
+    <div class="sc red"><div class="sc-lbl">Total Corrections</div><div class="sc-val red">${list.length}</div><div class="sc-sub">Requiring admin review</div></div>
+    <div class="sc orange"><div class="sc-lbl">Departments Affected</div><div class="sc-val orange">${new Set(list.map(s=>s.programme)).size}</div><div class="sc-sub">Unique departments</div></div>
+    <div class="sc blue"><div class="sc-lbl">Top Course Issue</div><div class="sc-val blue" style="font-size:1rem">${topCourse?topCourse[0].split(' ')[0]:'—'}</div><div class="sc-sub">${topCourse?`${topCourse[1]} reports`:'No data'}</div></div>`;
+
+  const tbody = document.getElementById('corrBody');
+  if (!list.length) { tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="ei">✅</div><p>No corrections — all clear!</p></div></td></tr>'; return; }
+  tbody.innerHTML = list.map((s,i)=>`<tr>
+    <td>${i+1}</td>
+    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.79rem">${s.registerNo}</span></td>
+    <td><strong>${s.studentName}</strong></td>
+    <td style="font-size:.82rem">${s.rollNumber}</td>
+    <td style="font-size:.81rem;color:var(--muted)">${s.programme}</td>
+    <td><span class="badge b-year">${s.year||'?'}</span></td>
+    <td style="font-size:.82rem">${s.correctionCourse||'—'}</td>
+    <td style="font-size:.81rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">
+      <span title="${s.correctionDetails}">${(s.correctionDetails||'—').slice(0,55)}${(s.correctionDetails||'').length>55?'…':''}</span>
+    </td>
+    <td style="font-size:.78rem;color:var(--muted)">${s.submittedAt||'—'}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="viewCorr(${students.indexOf(s)})">View</button></td>
+  </tr>`).join('');
+}
+
+function viewCorr(idx) {
+  activeCorrIdx = idx;
+  const s = students[idx];
+  document.getElementById('corrModalBody').innerHTML = `
+    <div class="mr"><span class="lbl">Student</span><span class="val">${s.studentName}</span></div>
+    <div class="mr"><span class="lbl">Register No</span><span class="val" style="font-family:monospace">${s.registerNo}</span></div>
+    <div class="mr"><span class="lbl">Roll No</span><span class="val">${s.rollNumber}</span></div>
+    <div class="mr"><span class="lbl">Programme</span><span class="val">${s.programme}</span></div>
+    <div class="mr"><span class="lbl">Year</span><span class="val">${s.year}</span></div>
+    <div class="mr"><span class="lbl">Submitted</span><span class="val">${s.submittedAt||'—'}</span></div>
+    <div style="margin-top:1rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem">Course / Field</div>
+      <div style="font-weight:700;color:var(--p700);font-size:.95rem">${s.correctionCourse||'—'}</div>
+    </div>
+    <div style="margin-top:.9rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Correction Details</div>
+      <div class="cb">${s.correctionDetails||'—'}</div>
+    </div>`;
+  document.getElementById('corrModal').classList.add('open');
+}
+function closeModal() { document.getElementById('corrModal').classList.remove('open'); }
+function markResolved() {
+  if (activeCorrIdx>=0) {
+    students[activeCorrIdx].status='OK'; students[activeCorrIdx].correctionFlag='RESOLVED';
+    toast('Marked as resolved ✓'); closeModal(); renderCorrections(); updateDashboard();
+    if(document.getElementById('sec-analytics').classList.contains('active')) renderAnalytics();
+  }
+}
+function exportCorrections() {
+  exportCSVList(students.filter(s=>s.status==='Correction'), 'corrections');
+}
+
+// ══════════════════════════════════════════════════
+//  FILE LINKS
+// ══════════════════════════════════════════════════
+function addLink() {
+  const g=document.getElementById('link-group').value.trim(), id=document.getElementById('link-id').value.trim();
+  if(!g||!id){toast('Both fields required');return;}
+  fileLinks[g]=id; localStorage.setItem('eduFileLinks',JSON.stringify(fileLinks));
+  renderFileLinksDisplay(); renderFileLinksTable();
+  document.getElementById('link-group').value=''; document.getElementById('link-id').value='';
+  toast('File link added ✓');
+}
+function removeLink(g) {
+  delete fileLinks[g]; localStorage.setItem('eduFileLinks',JSON.stringify(fileLinks));
+  renderFileLinksDisplay(); renderFileLinksTable(); toast('Link removed');
+}
+function renderFileLinksDisplay() {
+  const el=document.getElementById('fileLinksDisplay'); if(!el)return;
+  if(!Object.keys(fileLinks).length){el.innerHTML='<p style="color:var(--muted);font-size:.84rem;padding:.5rem 0">No file links yet</p>';return;}
+  el.innerHTML=Object.entries(fileLinks).map(([g,id])=>`
+    <div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .9rem;background:var(--p50);border:1px solid var(--p100);border-radius:10px;margin-bottom:.5rem">
+      <span style="font-weight:600;flex:1;font-size:.85rem">${g}</span>
+      <span style="font-family:monospace;font-size:.76rem;color:var(--muted);flex:2">${id}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeLink('${g}')">✕</button>
+    </div>`).join('');
+}
+function renderFileLinksTable() {
+  const counts={}; students.forEach(s=>{if(s.fileName)counts[s.fileName]=(counts[s.fileName]||0)+1;});
+  const tbody=document.getElementById('fileLinksTable'); if(!tbody)return;
+  if(!Object.keys(fileLinks).length){tbody.innerHTML='<tr><td colspan="5"><div class="empty"><p>No files linked</p></div></td></tr>';return;}
+  tbody.innerHTML=Object.entries(fileLinks).map(([g,id])=>`<tr>
+    <td><strong>${g}</strong></td>
+    <td><span style="font-family:monospace;font-size:.77rem;color:var(--muted)">${id}</span></td>
+    <td><a href="https://drive.google.com/file/d/${id}/view" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Open ↗</a></td>
+    <td><span class="badge b-year">${counts[g]||0} students</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="removeLink('${g}')">Remove</button></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  UPLOAD
+// ══════════════════════════════════════════════════
+let uploadedRows = [];
+function handleDragOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
+function handleDragLeave(){document.getElementById('dropZone').classList.remove('dragover');}
+function handleDrop(e){e.preventDefault();handleDragLeave();const f=e.dataTransfer.files[0];if(f)readFile(f);}
+function handleFileSelect(e){const f=e.target.files[0];if(f)readFile(f);}
+function readFile(file) {
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try {
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+      uploadedRows=data; showUploadPreview(data);
+      showMsg('uploadMsg',`✅ File loaded — ${data.length} rows found.`,'success');
+    } catch { showMsg('uploadMsg','❌ Error reading file.','error'); }
+  };
+  reader.readAsBinaryString(file);
+}
+function showUploadPreview(data) {
+  const rows=data.slice(0,5), keys=Object.keys(rows[0]||{});
+  let html=`<table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(r=>{html+=`<tr>${keys.map(k=>`<td style="font-size:.81rem">${r[k]}</td>`).join('')}</tr>`;});
+  html+='</tbody></table>';
+  document.getElementById('previewTable').innerHTML=html;
+  document.getElementById('uploadPreview').style.display='block';
+}
+async function pushToSheets() {
+  showMsg('uploadMsg','⏳ Pushing to Google Sheets…','info');
+  try {
+    const data=await gasPost({action:'bulkUpload',students:uploadedRows});
+    showMsg('uploadMsg',data.success?`✅ ${data.added||uploadedRows.length} students pushed!`:(data.message||'Failed'),data.success?'success':'error');
+    if(data.success) await refreshData();
+  } catch(e){ showMsg('uploadMsg',`⚠️ Backend unavailable — ${e.message}`,'error'); }
+}
+function addSingleStudent() {
+  const s={sNo:document.getElementById('s-sno').value,rollNumber:document.getElementById('s-roll').value,
+    registerNo:document.getElementById('s-reg').value,studentName:document.getElementById('s-name').value,
+    programme:document.getElementById('s-prog').value,dob:document.getElementById('s-dob').value,
+    fileName:document.getElementById('s-file').value,year:document.getElementById('s-year').value,
+    status:'Pending',correctionFlag:'',correctionDetails:'',correctionCourse:'',submittedAt:''};
+  if(!s.registerNo||!s.studentName){showMsg('singleMsg','❌ Register No and Name are required.','error');return;}
+  students.push(s); updateDashboard(); populateFilters();
+  showMsg('singleMsg',`✅ ${s.studentName} added locally. Pushing to backend…`,'success');
+  gasPost({action:'addStudent',...s})
+    .then(data=>showMsg('singleMsg',data.success?`✅ Saved to Google Sheets!`:`⚠️ Saved locally only.`,'success'))
+    .catch(()=>showMsg('singleMsg','⚠️ Backend unreachable — saved locally only.','error'));
+}
+
+// ══════════════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════════════
+function getReportData() {
+  const dept=document.getElementById('r-dept').value, year=document.getElementById('r-year').value, status=document.getElementById('r-status').value;
+  return students.filter(s=>{if(dept&&s.programme!==dept)return false;if(year&&s.year!==year)return false;if(status&&s.status!==status)return false;return true;});
+}
+function doReport(fmt) {
+  const data=getReportData(), type=document.getElementById('r-type').value;
+  if(!data.length){toast('No data to export');return;}
+  if(fmt==='pdf')exportPDF(data,type);
+  if(fmt==='excel')exportExcel(data);
+  if(fmt==='csv')exportCSVList(data,'report');
+  renderReportPreview(data);
+}
+function exportPDF(data,type) {
+  const {jsPDF}=window.jspdf, doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(46,16,101);
+  doc.text('Exam Preview — Student Verification Report',14,20);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text(`Generated: ${new Date().toLocaleString('en-IN')} | Records: ${data.length}`,14,28);
+  doc.text(`OK: ${data.filter(s=>s.status==='OK').length} | Corrections: ${data.filter(s=>s.status==='Correction').length} | Pending: ${data.filter(s=>s.status==='Pending').length}`,14,34);
+  doc.setTextColor(0);
+  const headers=type==='corrections'?[['#','Reg No','Name','Programme','Year','Course','Details','Submitted']]:[['#','Roll No','Reg No','Name','Programme','Year','File','Status','Submitted']];
+  const rows=data.map((s,i)=>type==='corrections'?[i+1,s.registerNo,s.studentName,s.programme,s.year,s.correctionCourse||'—',(s.correctionDetails||'—').slice(0,60),s.submittedAt||'—']:[i+1,s.rollNumber,s.registerNo,s.studentName,s.programme,s.year,s.fileName,s.status,s.submittedAt||'—']);
+  doc.autoTable({head:headers,body:rows,startY:40,theme:'striped',headStyles:{fillColor:[76,29,149],textColor:255,fontStyle:'bold',fontSize:8},bodyStyles:{fontSize:7},alternateRowStyles:{fillColor:[245,243,255]}});
+  doc.save(`EduVerify_${type}_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+function exportExcel(data) {
+  const hdr=['S.No','Roll No','Register No','Name','Programme','Year','File','Status','Correction','Course','Details','Submitted'];
+  const rows=data.map((s,i)=>[i+1,s.rollNumber,s.registerNo,s.studentName,s.programme,s.year,s.fileName,s.status,s.correctionFlag||'',s.correctionCourse||'',s.correctionDetails||'',s.submittedAt||'']);
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Students');
+  const map={};
+  students.forEach(s=>{if(!map[s.programme])map[s.programme]={t:0,ok:0,c:0,p:0};map[s.programme].t++;if(s.status==='OK')map[s.programme].ok++;else if(s.status==='Correction')map[s.programme].c++;else map[s.programme].p++;});
+  const sumHdr=['Department','Total','OK','Corrections','Pending','% Complete'];
+  const sumRows=Object.entries(map).map(([d,v])=>[d,v.t,v.ok,v.c,v.p,Math.round((v.ok+v.c)/v.t*100)+'%']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([sumHdr,...sumRows]),'Summary');
+  XLSX.writeFile(wb,`EduVerify_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+function exportCSVList(data, name) {
+  const hdr=['S.No','Roll No','Register No','Name','Programme','Year','File','Status','Correction Details','Submitted'];
+  const rows=data.map((s,i)=>[i+1,s.rollNumber,s.registerNo,`"${s.studentName}"`,`"${s.programme}"`,s.year,s.fileName,s.status,`"${s.correctionDetails||''}"`,s.submittedAt||'']);
+  const csv=[hdr.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`EduVerify_${name}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+function renderReportPreview(data) {
+  document.getElementById('reportPreview').innerHTML=`
+    <p style="color:var(--muted);font-size:.84rem;margin-bottom:.9rem">Showing ${data.length} records</p>
+    <div class="tw"><table><thead><tr><th>#</th><th>Name</th><th>Reg No</th><th>Programme</th><th>Year</th><th>Status</th><th>Correction</th></tr></thead>
+    <tbody>${data.map((s,i)=>`<tr>
+      <td>${i+1}</td><td><strong>${s.studentName}</strong></td>
+      <td style="font-family:monospace;font-size:.79rem">${s.registerNo}</td>
+      <td style="font-size:.82rem">${s.programme}</td>
+      <td><span class="badge b-year">${s.year}</span></td>
+      <td>${mkBadge(s.status)}</td>
+      <td style="font-size:.8rem;color:var(--muted)">${s.correctionDetails?(s.correctionDetails.slice(0,45)+'…'):'—'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════
+function getConfig(){try{return JSON.parse(localStorage.getItem('eduConfig')||'{}');}catch{return{};}}
+function saveConfig(){
+  const cfg={apiUrl:document.getElementById('cfg-url').value.trim()||GAS_URL,sheetId:document.getElementById('cfg-sheet').value.trim(),driveFolderId:document.getElementById('cfg-drive').value.trim()};
+  localStorage.setItem('eduConfig',JSON.stringify(cfg));
+  showMsg('configMsg','✅ Configuration saved!','success');
+}
+async function testConnection(){
+  showMsg('configMsg','🔌 Testing connection…','info');
+  try{const data=await gasGet({action:'getAll'},6000);
+    if(data?.success) showMsg('configMsg',`✅ Connected! ${data.count||0} students found.`,'success');
+    else showMsg('configMsg',`⚠️ Connected but: ${data?.message||'Unknown response'}`,'error');
+  }catch(e){showMsg('configMsg',`❌ Connection failed: ${e.message}`,'error');}
+}
+function buildSetupGuide(){
+  const steps=['Create a Google Sheet with tabs: <strong>Students, Corrections, Confirmations, Admin, FileLinks, AuditLog</strong>. Run <code>setupAllSheets()</code> from Apps Script.','Open <strong>Extensions → Apps Script</strong> and paste the backend code. Run <code>authorizeDriveNow()</code> once for Drive permissions.','Deploy as Web App: <strong>Deploy → New Deployment → Web App</strong>. Set <em>Execute as: Me</em>, <em>Access: Anyone</em>. Copy the URL.','Paste the URL into <strong>Configuration → Apps Script Web App URL</strong> and Save. Click <em>Test Connection</em> to verify.','Upload students via <strong>Upload → Bulk Upload</strong>. Required columns: <em>Roll Number, Register No, Student Name, Programme, DOB, File Name, Year</em>.','Upload PDFs to Google Drive, set sharing to <em>"Anyone with link can view"</em>, then link each group to its Drive File ID in <strong>Upload → Link PDFs</strong>.'];
+  document.getElementById('setupSteps').innerHTML=steps.map((s,i)=>`<div class="setup-step"><div class="sn">${i+1}</div><div class="st">${s}</div></div>`).join('');
+}
+
+// ══════════════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════════════
+function go(id, btn) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(window.innerWidth<900) closeSidebar();
+  if(id==='students'){renderStudents(students);populateFilters();}
+  if(id==='corrections')renderCorrections();
+  if(id==='analytics')renderAnalytics();
+  if(id==='reports')populateFilters();
+  if(id==='files')renderFileLinksTable();
+}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOvl').classList.toggle('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOvl').classList.remove('show');}
+
+// ══════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════
+function showMsg(id,text,type){const el=document.getElementById(id);if(!el)return;el.innerHTML=text;el.className='msg '+type;}
+let toastT;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
+function logout(){sessionStorage.clear();window.location.href='admin-login.html';}
+document.getElementById('corrModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+</script>
+</body>
+</html>

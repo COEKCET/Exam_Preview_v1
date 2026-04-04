@@ -1,0 +1,1297 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Exam Application Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --v900:#1E0A4A;--v800:#2D1268;--v700:#3D1A87;--v600:#5B2FCC;
+  --v500:#7C52E8;--v400:#9E7AF5;--v300:#BFA8FA;--v200:#DDD3FD;
+  --v100:#F0EBFF;--v50:#F8F5FF;--white:#FFFFFF;
+  --gray50:#F9FAFB;--gray100:#F3F4F6;--gray200:#E5E7EB;
+  --gray400:#9CA3AF;--gray600:#4B5563;--gray800:#1F2937;
+  --red:#EF4444;--green:#10B981;--amber:#F59E0B;--blue:#3B82F6;
+  --pink:#EC4899;--cyan:#06B6D4;
+  --mono:'JetBrains Mono',monospace;--sans:'Plus Jakarta Sans',sans-serif;
+  --shadow-sm:0 1px 3px rgba(91,47,204,0.08),0 1px 2px rgba(91,47,204,0.06);
+  --shadow:0 4px 16px rgba(91,47,204,0.12),0 2px 6px rgba(91,47,204,0.08);
+  --shadow-lg:0 20px 40px rgba(91,47,204,0.18),0 8px 16px rgba(91,47,204,0.1);
+}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--v50);color:var(--gray800);min-height:100vh;font-size:14px;line-height:1.6;}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--v900) 0%,var(--v800) 40%,var(--v700) 70%,var(--v600) 100%);padding:32px 36px 40px;position:relative;overflow:hidden;}
+.hdr::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 80% -20%,rgba(156,122,245,0.3) 0%,transparent 60%),radial-gradient(ellipse 40% 60% at -10% 100%,rgba(91,47,204,0.4) 0%,transparent 50%);}
+.hdr::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 60px,rgba(255,255,255,0.015) 60px,rgba(255,255,255,0.015) 61px);}
+.hdr-inner{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.hdr-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(8px);border-radius:50px;padding:5px 16px 5px 8px;margin-bottom:14px;}
+.hdr-dot{width:8px;height:8px;border-radius:50%;background:var(--v300);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(0.85);}}
+.hdr-eyebrow-txt{font-size:11px;font-weight:600;color:rgba(255,255,255,0.85);letter-spacing:.08em;text-transform:uppercase;}
+.hdr-title{font-size:clamp(22px,4vw,34px);font-weight:800;color:#fff;line-height:1.1;letter-spacing:-.5px;margin-bottom:10px;}
+.hdr-title em{font-style:normal;background:linear-gradient(90deg,var(--v300),#fff,var(--v300));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hdr-sub{color:rgba(255,255,255,0.55);font-size:13px;font-weight:400;max-width:520px;line-height:1.7;}
+.hdr-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.pill{font-size:11px;font-family:var(--mono);font-weight:500;padding:5px 13px;border-radius:50px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.75);border:1px solid rgba(255,255,255,0.14);backdrop-filter:blur(4px);transition:all .2s;}
+.pill:hover{background:rgba(255,255,255,0.15);}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.hdr-stat-mini{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(12px);border-radius:12px;padding:12px 18px;text-align:center;min-width:90px;}
+.hdr-stat-mini .v{font-family:var(--mono);font-size:22px;font-weight:700;color:#fff;line-height:1;}
+.hdr-stat-mini .l{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+
+/* UPLOAD */
+.upload-wrap{padding:40px 24px;max-width:720px;margin:0 auto;}
+.drop-zone{border:2px dashed var(--v300);border-radius:20px;background:linear-gradient(135deg,var(--white) 0%,var(--v50) 100%);box-shadow:var(--shadow);padding:56px 32px;text-align:center;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+.drop-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 50% at 50% 100%,rgba(91,47,204,0.06),transparent);pointer-events:none;}
+.drop-zone:hover,.drop-zone.over{border-color:var(--v500);background:linear-gradient(135deg,var(--v50) 0%,var(--v100) 100%);box-shadow:var(--shadow-lg);transform:translateY(-2px);}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.dz-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--v600),var(--v500));display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;box-shadow:0 8px 24px rgba(91,47,204,0.35);}
+.dz-title{font-size:20px;font-weight:800;color:var(--v800);margin-bottom:8px;}
+.dz-sub{font-size:13px;color:var(--gray400);margin-bottom:24px;line-height:1.6;}
+.btn-upload{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--v700),var(--v500));color:#fff;border:none;font-family:var(--sans);font-size:14px;font-weight:700;padding:13px 32px;border-radius:12px;cursor:pointer;box-shadow:0 4px 20px rgba(91,47,204,0.4);transition:all .25s;letter-spacing:.01em;}
+.btn-upload:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(91,47,204,0.5);}
+
+/* PROGRESS */
+.progress-section{display:none;padding:32px 24px;max-width:720px;margin:0 auto;}
+.progress-section.show{display:block;}
+.prog-card{background:var(--white);border-radius:16px;padding:32px;box-shadow:var(--shadow-lg);border:1px solid var(--v200);}
+.prog-icon{font-size:28px;margin-bottom:14px;}
+.prog-label{font-size:16px;font-weight:800;color:var(--v800);margin-bottom:4px;}
+.prog-step{font-size:12px;font-family:var(--mono);color:var(--gray400);margin-bottom:18px;}
+.prog-bar{height:8px;background:var(--v100);border-radius:50px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--v600),var(--v400));border-radius:50px;width:0;transition:width .4s cubic-bezier(.4,0,.2,1);box-shadow:0 0 12px rgba(91,47,204,0.4);}
+
+/* MAIN */
+.main{display:none;padding:24px;max-width:1500px;margin:0 auto;}
+.main.show{display:block;}
+
+/* SECTION LABEL */
+.sec-label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--v600);margin-bottom:16px;margin-top:8px;display:flex;align-items:center;gap:10px;}
+.sec-label::before{content:'';width:20px;height:3px;background:linear-gradient(90deg,var(--v600),var(--v400));border-radius:2px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--v200);}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px;margin-bottom:28px;}
+.stat-card{background:var(--white);border-radius:14px;padding:20px 16px;box-shadow:var(--shadow-sm);border:1px solid var(--v200);position:relative;overflow:hidden;transition:all .25s;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.stat-card::after{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,var(--clr,var(--v100)) 0%,transparent 70%);opacity:.6;}
+.stat-icon{font-size:20px;margin-bottom:10px;}
+.stat-val{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;margin-bottom:5px;color:var(--v800);}
+.stat-lbl{font-size:10.5px;font-weight:600;color:var(--gray400);text-transform:uppercase;letter-spacing:.07em;}
+.stat-card.accent{background:linear-gradient(135deg,var(--v700),var(--v500));border:none;}
+.stat-card.accent .stat-val,.stat-card.accent .stat-lbl,.stat-card.accent .stat-icon{color:#fff;}
+.stat-card.accent .stat-lbl{color:rgba(255,255,255,0.65);}
+.stat-card.accent::after{background:radial-gradient(circle,rgba(255,255,255,0.2) 0%,transparent 70%);}
+
+/* ANALYTICS GRID */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:28px;}
+.acard{background:var(--white);border-radius:14px;padding:22px;box-shadow:var(--shadow-sm);border:1px solid var(--v200);transition:box-shadow .25s;}
+.acard:hover{box-shadow:var(--shadow);}
+.acard-header{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
+.acard-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:linear-gradient(135deg,var(--v100),var(--v200));}
+.acard-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--v700);}
+.acard-sub{font-size:11px;color:var(--gray400);font-weight:400;margin-top:1px;}
+
+/* BAR CHART */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.bar-lbl{font-size:11.5px;color:var(--gray600);width:115px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--mono);}
+.bar-track{flex:1;height:8px;background:var(--v100);border-radius:50px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:50px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.bar-num{font-family:var(--mono);font-size:11px;color:var(--gray400);width:24px;text-align:right;font-weight:600;}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:24px;}
+.donut-svg{width:100px;height:100px;flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:10px;flex:1;}
+.legend-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.legend-left{display:flex;align-items:center;gap:8px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-name{font-size:12.5px;color:var(--gray600);}
+.legend-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--v700);}
+.legend-pct{font-size:11px;color:var(--gray400);font-family:var(--mono);}
+
+/* TOP LIST */
+.top-list{display:flex;flex-direction:column;gap:7px;}
+.top-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:linear-gradient(135deg,var(--v50),var(--v100));border:1px solid var(--v200);transition:all .2s;}
+.top-item:hover{border-color:var(--v400);transform:translateX(2px);}
+.top-rank{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--v600),var(--v400));color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);}
+.top-name{font-size:12.5px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--v800);}
+.top-count{font-family:var(--mono);font-size:12px;color:var(--v600);font-weight:700;}
+.top-badge{font-size:10px;background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:50px;font-weight:700;}
+
+/* EXPORT */
+.export-row{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;letter-spacing:.01em;}
+.btn-primary{background:linear-gradient(135deg,var(--v700),var(--v500));color:#fff;box-shadow:0 4px 16px rgba(91,47,204,0.35);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(91,47,204,0.45);}
+.btn-green{background:linear-gradient(135deg,#065F46,var(--green));color:#fff;box-shadow:0 4px 12px rgba(16,185,129,0.3);}
+.btn-green:hover{transform:translateY(-1px);}
+.btn-amber{background:linear-gradient(135deg,#92400E,var(--amber));color:#fff;box-shadow:0 4px 12px rgba(245,158,11,0.3);}
+.btn-amber:hover{transform:translateY(-1px);}
+.btn-outline{background:var(--white);color:var(--v700);border:1.5px solid var(--v300);box-shadow:var(--shadow-sm);}
+.btn-outline:hover{border-color:var(--v500);background:var(--v50);}
+
+/* TABLE CARD */
+.table-card{background:var(--white);border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:var(--shadow-sm);border:1px solid var(--v200);}
+.card-title{font-size:15px;font-weight:800;color:var(--v800);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-sub{font-size:12px;color:var(--gray400);font-weight:400;}
+.twrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{padding:10px 11px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--v500);border-bottom:2px solid var(--v100);white-space:nowrap;background:var(--white);}
+tbody td{padding:10px 11px;border-bottom:1px solid var(--gray100);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--v50);}
+.mono{font-family:var(--mono);font-size:11.5px;}
+.name-cell{font-weight:700;color:var(--v800);}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:50px;font-family:var(--mono);font-size:11px;font-weight:700;}
+.b-clean{background:#D1FAE5;color:#065F46;}
+.b-arrear{background:#FEE2E2;color:#991B1B;}
+.b-multi{background:#FEF3C7;color:#92400E;}
+.b-male{background:#DBEAFE;color:#1E40AF;}
+.b-female{background:#FCE7F3;color:#9D174D;}
+.b-regular{background:#E0F2FE;color:#075985;}
+.b-lateral{background:#EDE9FE;color:#5B21B6;}
+.arrear-detail{font-size:11px;color:var(--gray400);font-family:var(--mono);max-width:200px;word-break:break-all;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+.search-input{padding:9px 14px;border:1.5px solid var(--v200);border-radius:9px;font-family:var(--sans);font-size:13px;outline:none;background:var(--v50);color:var(--gray800);max-width:270px;width:100%;transition:.2s;}
+.search-input:focus{border-color:var(--v500);background:var(--white);box-shadow:0 0 0 3px rgba(91,47,204,0.1);}
+.filter-sel{padding:8px 12px;border:1.5px solid var(--v200);border-radius:9px;font-family:var(--sans);font-size:12px;outline:none;background:var(--v50);color:var(--gray800);cursor:pointer;transition:.2s;}
+.filter-sel:focus{border-color:var(--v500);}
+.rec-count{font-family:var(--mono);font-size:11px;color:var(--gray400);margin-left:auto;}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+@media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+.three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+@media(max-width:900px){.three-col{grid-template-columns:1fr 1fr;}}
+@media(max-width:580px){.three-col{grid-template-columns:1fr;}}
+
+.empty-msg{text-align:center;padding:28px;color:var(--gray400);font-size:13px;}
+
+/* PROGRAMME TABLE */
+.prog-table-wrap .prog-name{font-weight:700;color:var(--v700);}
+.prog-bar-inline{display:flex;align-items:center;gap:8px;}
+.prog-bar-inline .bar-track{height:6px;width:80px;flex-shrink:0;}
+
+/* SEMESTER GRID */
+.sem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:14px;}
+.sem-card{background:linear-gradient(135deg,var(--v50),var(--v100));border:1px solid var(--v200);border-radius:12px;padding:16px;}
+.sem-card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--v600);margin-bottom:12px;}
+.sem-stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.sem-stat-lbl{font-size:12px;color:var(--gray600);}
+.sem-stat-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--v800);}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--v100);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:var(--v300);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--v500);}
+
+@media(max-width:520px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .analytics-grid{grid-template-columns:1fr;}
+  .main,.upload-wrap{padding:12px;}
+  .hdr{padding:20px 16px 24px;}
+  .hdr-right{display:none;}
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.main.show .stat-card{animation:fadeUp .4s ease both;}
+.main.show .stat-card:nth-child(1){animation-delay:.05s;}
+.main.show .stat-card:nth-child(2){animation-delay:.08s;}
+.main.show .stat-card:nth-child(3){animation-delay:.11s;}
+.main.show .stat-card:nth-child(4){animation-delay:.14s;}
+.main.show .stat-card:nth-child(5){animation-delay:.17s;}
+.main.show .stat-card:nth-child(6){animation-delay:.20s;}
+.main.show .acard{animation:fadeUp .45s ease both;}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-left">
+      <div class="hdr-eyebrow">
+        <div class="hdr-dot"></div>
+        <span class="hdr-eyebrow-txt">Kamaraj College of Engineering &amp; Technology</span>
+      </div>
+      <div class="hdr-title">Exam Application <em>Analyzer</em></div>
+      
+      <div class="hdr-pills">
+        <span class="pill">⚡ 100% Client-side</span>
+        <span class="pill">📄 PDF.js Parser</span>
+        <span class="pill">📊 Excel + CSV Export</span>
+        <span class="pill">🎓 Programme-wise Analysis</span>
+        <span class="pill">📈 Deep Analytics</span>
+      </div>
+    </div>
+    <div class="hdr-right" id="hdrStats" style="display:none">
+      <div class="hdr-stat-mini" id="hdrTotal"><div class="v">—</div><div class="l">Students</div></div>
+      <div class="hdr-stat-mini" id="hdrArrear"><div class="v">—</div><div class="l">Arrears</div></div>
+      <div class="hdr-stat-mini" id="hdrPages"><div class="v">—</div><div class="l">Pages</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="upload-wrap" id="uploadWrap">
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".pdf"/>
+    <div class="dz-icon">📑</div>
+    <div class="dz-title">Drop your Exam PDF here</div>
+    <div class="dz-sub">Student exam application PDF — any department, any batch.<br>Data extracted by keyword matching from the PDF structure.</div>
+    <button class="btn-upload" onclick="document.getElementById('fileInput').click();event.stopPropagation();">📁 &nbsp;Select PDF File</button>
+  </div>
+</div>
+
+<div class="progress-section" id="progressSection">
+  <div class="prog-card">
+    <div class="prog-icon">⚙️</div>
+    <div class="prog-label" id="progLabel">Loading PDF…</div>
+    <div class="prog-step" id="progStep">Initializing PDF.js engine…</div>
+    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  </div>
+</div>
+
+<div class="main" id="mainContent">
+
+  <div class="sec-label">Overview Statistics</div>
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <div class="sec-label">Analytics Dashboard</div>
+  <div class="analytics-grid" id="analyticsGrid"></div>
+
+  <div class="sec-label">Programme-wise Analysis</div>
+  <div id="programmeSection"></div>
+
+  <div class="sec-label">Semester-wise Arrear Breakdown</div>
+  <div class="sem-grid" id="semGrid"></div>
+
+  <div class="sec-label">Export &amp; Actions</div>
+  <div class="export-row">
+    <button class="btn btn-green" onclick="exportExcel()">⬇ &nbsp;Excel (.xlsx)</button>
+    <button class="btn btn-amber" onclick="exportCSV()">⬇ &nbsp;CSV</button>
+    <button class="btn btn-outline" onclick="resetApp()">🔄 &nbsp;Upload New PDF</button>
+  </div>
+
+  <div class="table-card">
+    <div class="card-title">
+      Student Index — Page Mapping
+      <span class="card-sub" id="tableCount"></span>
+    </div>
+    <div class="toolbar">
+      <input class="search-input" id="searchInput" placeholder="🔍  Search name / register / roll…" oninput="applyFilters()"/>
+      <select class="filter-sel" id="filterGender" onchange="applyFilters()">
+        <option value="">All Genders</option>
+        <option>MALE</option><option>FEMALE</option>
+      </select>
+      <select class="filter-sel" id="filterType" onchange="applyFilters()">
+        <option value="">All Types</option>
+        <option value="Clean">Clean (No Arrear)</option>
+        <option value="Arrear">Has Arrear</option>
+        <option value="Multi-Page">Multi-Page</option>
+      </select>
+      <select class="filter-sel" id="filterBatch" onchange="applyFilters()">
+        <option value="">All Batches</option>
+        <option value="Regular">Regular</option>
+        <option value="Lateral">Lateral Entry</option>
+      </select>
+      <select class="filter-sel" id="filterProg" onchange="applyFilters()">
+        <option value="">All Programmes</option>
+      </select>
+      <span class="rec-count" id="recCount"></span>
+    </div>
+    <div class="twrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Register No.</th><th>Student Name</th><th>Roll No.</th>
+          <th>DOB</th><th>Gender</th><th>Programme</th><th>Semester</th><th>Batch</th><th>Page No.</th>
+          <th>Reg Sem Courses</th><th>Arrear Count</th><th>Total Courses</th>
+          <th>Arrear Details</th><th>Type</th><th>Remarks</th>
+        </tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="table-card" style="margin:0">
+      <div class="card-title">Multi-Page Students <span class="card-sub">overflow to next page</span></div>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Name</th><th>Reg No.</th><th>Programme</th><th>Pages</th><th>Arrears</th></tr></thead>
+          <tbody id="multiPageBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="table-card" style="margin:0">
+      <div class="card-title">Arrear Course Frequency <span class="card-sub">most repeated</span></div>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Code</th><th>Course Name</th><th>Sem</th><th>Students</th></tr></thead>
+          <tbody id="arrearFreqBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let STUDENTS=[],FILTERED=[],META={};
+
+/* ══════════════════════════════════════════
+   SEMESTER TEXT → NUMBER  (keyword-driven)
+══════════════════════════════════════════ */
+const SEM_TEXT_MAP={
+  'FIRST':1,'SECOND':2,'THIRD':3,'FOURTH':4,
+  'FIFTH':5,'SIXTH':6,'SEVENTH':7,'EIGHTH':8,
+  '1ST':1,'2ND':2,'3RD':3,'4TH':4,'5TH':5,'6TH':6,'7TH':7,'8TH':8
+};
+function semTextToNum(txt){
+  if(!txt)return null;
+  const u=txt.trim().toUpperCase().replace(/\s*SEMESTER\s*/g,'').trim();
+  if(SEM_TEXT_MAP[u]!==undefined)return SEM_TEXT_MAP[u];
+  const n=parseInt(u);
+  return(!isNaN(n)&&n>=1&&n<=8)?n:null;
+}
+function semLabel(n){
+  const m={1:'1st Sem',2:'2nd Sem',3:'3rd Sem',4:'4th Sem',5:'5th Sem',6:'6th Sem',7:'7th Sem',8:'8th Sem'};
+  return m[n]||('Sem '+n);
+}
+
+/* ══════════════════════════════════════════
+   UPLOAD
+══════════════════════════════════════════ */
+const dz=document.getElementById('dropZone');
+const fi=document.getElementById('fileInput');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');const f=e.dataTransfer.files[0];if(f&&f.type==='application/pdf')processFile(f);});
+fi.addEventListener('change',e=>{if(e.target.files[0])processFile(e.target.files[0]);});
+
+async function processFile(file){
+  document.getElementById('uploadWrap').style.display='none';
+  document.getElementById('progressSection').classList.add('show');
+  META={fileName:file.name,processedDate:new Date().toLocaleString('en-IN')};
+  try{
+    const buf=await file.arrayBuffer();
+    setP(10,'Loading PDF…','Initializing PDF.js engine…');
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    META.totalPages=pdf.numPages;
+    setP(20,'Extracting text…',`Reading ${pdf.numPages} pages…`);
+    const pageTexts=[];
+    for(let p=1;p<=pdf.numPages;p++){
+      const pg=await pdf.getPage(p);
+      const tc=await pg.getTextContent();
+      const txt=tc.items.map(i=>i.str).join('\n');
+      pageTexts.push({pageNum:p,text:txt});
+      setP(20+(p/pdf.numPages)*55,'Extracting text…',`Page ${p}/${pdf.numPages}`);
+    }
+    setP(82,'Parsing students…','Keyword-driven extraction…');
+    parseStudents(pageTexts);
+    setP(100,'Complete!',`✅ ${STUDENTS.length} students extracted successfully`);
+    setTimeout(()=>{
+      document.getElementById('progressSection').classList.remove('show');
+      document.getElementById('mainContent').classList.add('show');
+      document.getElementById('hdrStats').style.display='flex';
+      renderAll();
+    },700);
+  }catch(err){alert('Error: '+err.message);resetApp();}
+}
+function setP(pct,label,step){
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progLabel').textContent=label;
+  document.getElementById('progStep').textContent=step;
+}
+
+/* ══════════════════════════════════════════
+   PARSER — 100% keyword-driven, ENHANCED
+══════════════════════════════════════════ */
+function parseStudents(pageTexts){
+  STUDENTS=[];
+  // Mark continuation pages
+  const contdNext=new Set();
+  for(let i=0;i<pageTexts.length;i++){
+    if(/Contd\s*-+\s*>/i.test(pageTexts[i].text)&&i+1<pageTexts.length)
+      contdNext.add(i+1);
+  }
+  // Group into student blocks
+  const blocks=[];let cur=null;
+  for(let i=0;i<pageTexts.length;i++){
+    const pg=pageTexts[i];
+    const lines=pg.text.split('\n').map(l=>l.trim()).filter(l=>l);
+    if(contdNext.has(i)&&cur){
+      cur.pages.push(pg.pageNum);
+      cur.lines.push(...lines);
+    } else {
+      const joined=lines.join(' ');
+      if(joined.includes('APPLICATION FOR THE END SEMESTER EXAMINATION')||joined.includes('NAME OF THE CANDIDATE')){
+        cur={pages:[pg.pageNum],lines:[...lines]};
+        blocks.push(cur);
+      }
+    }
+  }
+  for(const b of blocks){const s=parseBlock(b);if(s)STUDENTS.push(s);}
+  STUDENTS.forEach((s,i)=>s.sno=i+1);
+}
+
+/* ══════════════════════════════════════════
+   ROLL NUMBER EXTRACTION — ENHANCED
+   Handles all common PDF layouts:
+   1. "ROLL NUMBER : 21CE001" on same line
+   2. "ROLL NUMBER\n21CE001" on next line
+   3. "ROLL NO : 21CE001"
+   4. Numeric roll numbers like "21001"
+   5. Alphanumeric like "21CE001", "CE001", "001"
+══════════════════════════════════════════ */
+function extractRollNo(lines, joined) {
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].toUpperCase().includes('ROLL')) {
+
+      // Check next lines (MOST RELIABLE)
+      for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+        let val = lines[j].trim().replace(/\s+/g, '');
+
+        if (!val) continue;
+
+        // Stop if other field
+        if (/^(DOB|GENDER|PROGRAMME|REGISTER)/i.test(val)) break;
+
+        // ✅ Accept ANY alphanumeric roll
+        if (/^[A-Z0-9]{3,15}$/i.test(val)) {
+          return val.toUpperCase();
+        }
+      }
+    }
+  }
+
+  // fallback
+  let m = joined.match(/ROLL\s*(?:NUMBER|NO\.?)\s*[:\-]?\s*([A-Z0-9]{3,15})/i);
+  if (m) return m[1].toUpperCase();
+
+  return 'N/A';
+}
+
+function formatDateToISO(dob) {
+  if (!dob || dob === 'N/A') return 'N/A';
+
+  const parts = dob.split('-');
+  if (parts.length !== 3) return dob;
+
+  // dd-mm-yyyy → yyyy-mm-dd
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
+function parseBlock(block){
+  const lines=block.lines;
+  const joined=lines.join('\n');
+
+  /* ── NAME OF THE CANDIDATE ── */
+  let name='';
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].toUpperCase().includes('NAME OF THE CANDIDATE')){
+      // check same line after keyword
+      const sameLine=lines[i].replace(/NAME OF THE CANDIDATE/i,'').replace(/^[\s:|\-]+/,'').trim();
+      if(sameLine&&/^[A-Z][A-Z\s\.]{2,}$/.test(sameLine)&&!isHeaderWord(sameLine)){
+        name=sameLine.split(/REGULAR SEMESTER|REGISTER NUMBER/i)[0].trim();
+      }
+      if(!name){
+        for(let j=i+1;j<Math.min(i+8,lines.length);j++){
+          const l=lines[j].trim();
+          if(isHeaderWord(l))continue;
+          if(/^[A-Z][A-Z\s\.]{2,50}$/.test(l)&&l.split(/\s+/).length<=8){name=l;break;}
+        }
+      }
+      if(name)break;
+    }
+  }
+  if(!name)return null;
+
+  /* ── REGISTER NUMBER ── */
+  let regNo='';
+  // Look for keyword then digits on same or next line
+  const regKwIdx=joined.toUpperCase().indexOf('REGISTER NUMBER');
+  if(regKwIdx>-1){
+    const after=joined.slice(regKwIdx+15).replace(/^[\s:\n\r|]+/,'');
+    const m=after.match(/(\d{9,16})/);
+    if(m)regNo=m[1];
+  }
+  if(!regNo){const m=joined.match(/\b(9\d{8,15})\b/);if(m)regNo=m[1];}
+  if(!regNo)return null;
+
+  /* ── REGULAR SEMESTER (which sem student is in) ── */
+  let regularSemNum=null;
+  // Pattern: "REGULAR SEMESTER\nFOURTH SEMESTER" or inline
+  const rsIdx=joined.toUpperCase().indexOf('REGULAR SEMESTER');
+  if(rsIdx>-1){
+    const after=joined.slice(rsIdx+16).replace(/^[\s:\n\r|]+/,'');
+    // grab up to 30 chars and try to find sem word
+    const chunk=after.slice(0,50).toUpperCase();
+    const semWords=['EIGHTH','SEVENTH','SIXTH','FIFTH','FOURTH','THIRD','SECOND','FIRST'];
+    for(const sw of semWords){
+      if(chunk.includes(sw)){regularSemNum=semTextToNum(sw);break;}
+    }
+    if(!regularSemNum){
+      const m=chunk.match(/(8TH|7TH|6TH|5TH|4TH|3RD|2ND|1ST)/);
+      if(m)regularSemNum=semTextToNum(m[1]);
+    }
+  }
+  // fallback: scan all lines
+  if(!regularSemNum){
+    const m=joined.match(/(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH)\s+SEMESTER/i);
+    if(m)regularSemNum=semTextToNum(m[1]);
+  }
+
+  /* ── REGULATIONS ── */
+  let regulations='';
+  const regM=joined.match(/REGULATIONS[\s:\n]*([0-9]{4})/i);
+  if(regM)regulations=regM[1];
+
+  /* ── GENDER — ENHANCED DETECTION ── */
+  let gender='MALE';
+  // Strategy 1: Look for "GENDER:" with strict pattern
+  let genderFound=false;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i].toUpperCase();
+    if(line.includes('GENDER')){
+      // Check same line for MALE/FEMALE after GENDER keyword
+      const afterGender=line.split('GENDER')[1]||'';
+      if(afterGender.includes('FEMALE')){
+        gender='FEMALE';
+        genderFound=true;
+        break;
+      }else if(afterGender.includes('MALE')){
+        gender='MALE';
+        genderFound=true;
+        break;
+      }
+      // Check next 2 lines
+      for(let j=i+1;j<Math.min(i+3,lines.length);j++){
+        const nextLine=lines[j].toUpperCase().trim();
+        if(nextLine==='FEMALE'||nextLine.startsWith('FEMALE')){
+          gender='FEMALE';
+          genderFound=true;
+          break;
+        }else if(nextLine==='MALE'||nextLine.startsWith('MALE')){
+          gender='MALE';
+          genderFound=true;
+          break;
+        }
+      }
+      if(genderFound)break;
+    }
+  }
+  // Strategy 2: Regex pattern match
+  if(!genderFound){
+    const genM=joined.match(/GENDER[\s:]+([A-Z]+)/i);
+    if(genM){
+      const g=genM[1].trim().toUpperCase();
+      if(g.includes('FEMALE'))gender='FEMALE';
+      else if(g.includes('MALE'))gender='MALE';
+    }
+  }
+
+  /* ── PROGRAMME NAME — ENHANCED ── */
+  let programme = 'Unknown';
+
+for (let i = 0; i < lines.length; i++) {
+
+  if (lines[i].toUpperCase().includes('PROGRAMME NAME')) {
+
+    for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+
+      let next = lines[j].trim();
+
+      if (!next) continue;
+
+      // ✅ CLEAN instead of BREAK
+      next = next.replace(/\b(DOB|ROLL NUMBER|GENDER|REGISTER NUMBER|REGULATIONS)\b.*$/i, '').trim();
+
+      if (next.length > 3) {
+        programme = next;
+        break;
+      }
+    }
+
+    if (programme !== 'Unknown') break;
+  }
+}
+  
+  // Strategy 2: Try regex pattern on full text
+  if(programme==='Unknown'){
+    const piIdx=joined.toUpperCase().indexOf('PROGRAMME NAME');
+    if(piIdx>-1){
+      let after=joined.slice(piIdx+14).replace(/^[\s:\n\r|]+/,'');
+      after=after.replace(/DOB[\s\S]*/i,'')
+                 .replace(/ROLL\s*(?:NUMBER|NO\.?)[\s\S]*/i,'')
+                 .replace(/\d{2}[-\/]\d{2}[-\/]\d{4}[\s\S]*/,'');
+      const firstLine=after.split('\n')[0].trim().replace(/\s+/g,' ');
+      if(firstLine&&firstLine.length>3)programme=firstLine;
+    }
+  }
+
+  /* ── DOB ── */
+  let dob='N/A';
+  const dobM=joined.match(/DOB[\s:\n]*(\d{2}[-\/]\d{2}[-\/]\d{4})/i);
+  if (dobM) {
+  dob = dobM[1].replace(/\//g, '-');
+  dob = formatDateToISO(dob);
+}
+  else {
+  const d = joined.match(/\b(\d{2}[-\/]\d{2}[-\/]\d{4})\b/);
+  if (d) {
+    dob = d[1].replace(/\//g, '-');
+    dob = formatDateToISO(dob);
+  }
+}
+
+  /* ── ROLL NUMBER — ENHANCED (replaces old single-line regex) ── */
+  let rollNo = extractRollNo(lines, joined);
+
+  /* ── BATCH (from reg no suffix) ── */
+  let batch='Regular';
+  if(parseInt(regNo.slice(-3))>=301)batch='Lateral';
+
+  /* ── COURSES — ENHANCED PARSING WITH COURSE NAMES ── */
+  const courseMap=new Map();
+  
+  // Strategy 1: Line-by-line structured parsing
+ // ✅ NEW MULTI-LINE TABLE PARSER
+for (let i = 0; i < lines.length; i++) {
+
+  // Step 1: Detect semester line (single digit)
+  let semMatch = lines[i].trim().match(/^([1-8])$/);
+
+  if (semMatch && i + 2 < lines.length) {
+
+    let sem = parseInt(semMatch[1]);
+
+    let codeLine = lines[i + 1].trim();
+    let nameLine = lines[i + 2].trim();
+
+    // Step 2: Validate course code
+    if (/^[A-Z]{2}\d{4}$/.test(codeLine)) {
+
+      let courseName = nameLine;
+
+      // Step 3: Merge additional lines (if name is split)
+      let j = i + 3;
+      while (j < lines.length) {
+
+        let next = lines[j].trim();
+
+        // Stop if next row starts
+        if (/^[1-8]$/.test(next)) break;
+        if (/^[A-Z]{2}\d{4}$/.test(next)) break;
+
+        // Stop if credit/type column
+        if (/^\d+\s*[TP]$/i.test(next)) break;
+
+        courseName += " " + next;
+        j++;
+      }
+
+      // Step 4: Clean
+      courseName = courseName
+        .replace(/\s+\d+\s+[TP].*$/i, '')
+        .replace(/\s+\d+$/, '')
+        .trim();
+
+      // Step 5: Save
+      if (!courseMap.has(codeLine)) {
+        courseMap.set(codeLine, {
+          sem,
+          code: codeLine,
+          name: courseName || 'N/A'
+        });
+      }
+    }
+  }
+}
+  
+  // Strategy 2: Search for "Course Name" column header and extract structured data
+  let courseTableStart=-1;
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].toUpperCase().includes('COURSE NAME')||
+       lines[i].toUpperCase().includes('COURSE CODE')){
+      courseTableStart=i;
+      break;
+    }
+  }
+  
+  if(courseTableStart>-1){
+    // Parse table rows after header
+    for(let i=courseTableStart+1;i<Math.min(courseTableStart+30,lines.length);i++){
+      const line=lines[i].trim();
+      
+      // Skip empty lines and known keywords
+      if(!line||isHeaderWord(line))continue;
+      
+      // Look for pattern: digit(sem) + code + text
+      const rowMatch=line.match(/^(\d)\s+([A-Z]{2}\d{4})\s+(.+?)(?:\s+\d+\s+[TPJB#])?$/);
+      if(rowMatch){
+        const sem=parseInt(rowMatch[1]);
+        const code=rowMatch[2];
+        let name=rowMatch[3].trim();
+        
+        // Clean up course name
+        name=name.replace(/\s+\d+\s+[TPJB#]\s*$/,'').trim();
+        name=name.replace(/\s+\d+\s*$/,'').trim();
+        
+        if(!courseMap.has(code)){
+          courseMap.set(code,{sem,code,name:name||''});
+        }else if(!courseMap.get(code).name&&name){
+          courseMap.get(code).name=name;
+        }
+      }
+    }
+  }
+  
+  // Strategy 3: Fallback regex scan for sem+code pairs
+  if(courseMap.size===0){
+    const re=/(\d)\s+([A-Z]{2}\d{4})/g;
+    let m2;
+    while((m2=re.exec(joined))!==null){
+      const sem=parseInt(m2[1]);
+      const code=m2[2];
+      if(!courseMap.has(code)){
+        courseMap.set(code,{sem,code,name:''});
+      }
+    }
+  }
+
+  const allCourses=[...courseMap.values()];
+  const regSemCourses=regularSemNum?allCourses.filter(c=>c.sem===regularSemNum):[];
+  const arrearCourses=regularSemNum?allCourses.filter(c=>c.sem<regularSemNum):[];
+
+  const regSemCount=regSemCourses.length;
+  const arrearCount=arrearCourses.length;
+  const totalCourses=allCourses.length;
+
+  const arrearDetails = arrearCourses.map(c => {
+  return `${c.code} - ${c.name || 'N/A'} (S${c.sem})`;
+}).join(', ');
+  const arrearCodeList=arrearCourses.map(c=>c.code);
+  const arrearBySem={};
+  arrearCourses.forEach(c=>{arrearBySem[c.sem]=(arrearBySem[c.sem]||0)+1;});
+
+  const isMulti=block.pages.length>1;
+  const pageNo=block.pages.join(', ');
+
+  let type='Clean';
+  if(isMulti)type='Multi-Page';
+  else if(arrearCount>0)type='Arrear';
+
+  let remarks='';
+  if(arrearCount===0)remarks='All regular courses';
+  else remarks=`${arrearCount} arrear(s) from prev semesters`;
+  if(isMulti)remarks=(remarks?remarks+'; ':'')+'Multi-page';
+
+  return{
+    sno:0,name:name.trim(),regNo,rollNo,dob,gender,
+    programme,regulations,regularSemNum,
+    batch,pageNo,isMulti,
+    regSemCount,arrearCount,totalCourses,
+    arrearDetails,arrearCodeList,arrearBySem,allCourses,
+    type,remarks,hasArrear:arrearCount>0
+  };
+}
+
+function isHeaderWord(s){
+  const skip=['FOURTH SEMESTER','THIRD SEMESTER','SECOND SEMESTER','FIRST SEMESTER',
+    'FIFTH SEMESTER','SIXTH SEMESTER','SEVENTH SEMESTER','EIGHTH SEMESTER',
+    'CIVIL ENGINEERING','PROGRAMME NAME','REGULAR SEMESTER','APPLICATION FOR THE END',
+    'KAMARAJ','COLLEGE','AFFILIATED','VIRUDHUNAGAR','AUTONOMOUS',
+    'GENDER','THEORY PRACTICAL','VERIFICATION','ENGINEERING AND TECHNOLOGY',
+    'STRENGTH OF MATERIALS','GEOTECHNICAL','ENVIRONMENTAL','CONCRETE','HYDRAULIC',
+    'PROBABILITY','REGISTER NUMBER','REGULATIONS','NAME OF THE CANDIDATE',
+    'ROLL NUMBER','ROLL NO','DOB','COURSE CODE','COURSE NAME','CREDIT','TYPE OF'];
+  const u=s.toUpperCase();
+  return skip.some(k=>u.includes(k));
+}
+
+/* ══════════════════════════════════════════
+   RENDER ALL
+══════════════════════════════════════════ */
+function renderAll(){
+  const totArr=STUDENTS.reduce((a,s)=>a+s.arrearCount,0);
+  document.querySelector('#hdrTotal .v').textContent=STUDENTS.length;
+  document.querySelector('#hdrArrear .v').textContent=totArr;
+  document.querySelector('#hdrPages .v').textContent=META.totalPages;
+
+  // Populate programme filter
+  const progs=[...new Set(STUDENTS.map(s=>s.programme))].sort();
+  const fp=document.getElementById('filterProg');
+  progs.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;fp.appendChild(o);});
+
+  renderStats();
+  renderAnalytics();
+  renderProgramme();
+  renderSemGrid();
+  renderTable(STUDENTS);
+  renderMultiPage();
+  renderArrearFreq();
+}
+
+/* ── STATS ── */
+function renderStats(){
+  const tot=STUDENTS.length||1;
+  const male=STUDENTS.filter(s=>s.gender==='MALE').length;
+  const fem=STUDENTS.filter(s=>s.gender==='FEMALE').length;
+  const arrear=STUDENTS.filter(s=>s.hasArrear).length;
+  const clean=tot-arrear;
+  const multi=STUDENTS.filter(s=>s.isMulti).length;
+  const totArr=STUDENTS.reduce((a,s)=>a+s.arrearCount,0);
+  const lateral=STUDENTS.filter(s=>s.batch==='Lateral').length;
+  const maxArr=Math.max(...STUDENTS.map(s=>s.arrearCount),0);
+  const progs=[...new Set(STUDENTS.map(s=>s.programme))].length;
+  const cards=[
+    {icon:'👥',v:STUDENTS.length,l:'Total Students',cls:'accent'},
+    {icon:'📄',v:META.totalPages,l:'PDF Pages',clr:'#EDE9FE'},
+    {icon:'♂',v:male,l:'Male Students',clr:'#DBEAFE'},
+    {icon:'♀',v:fem,l:'Female Students',clr:'#FCE7F3'},
+    {icon:'✅',v:clean,l:'Clean (No Arrear)',clr:'#D1FAE5'},
+    {icon:'⚠️',v:arrear,l:'Have Arrears',clr:'#FEE2E2'},
+    {icon:'📑',v:multi,l:'Multi-Page',clr:'#FEF3C7'},
+    {icon:'📚',v:totArr,l:'Total Arrear Registrations',clr:'#EDE9FE'},
+    {icon:'🎓',v:lateral,l:'Lateral Entry',clr:'#E0F2FE'},
+    {icon:'🏫',v:progs,l:'Programmes Detected',clr:'#FDF4FF'},
+    {icon:'🔝',v:maxArr,l:'Max Arrear Load',clr:'#FEE2E2'},
+    {icon:'📊',v:(totArr/STUDENTS.length).toFixed(1),l:'Avg Arrears/Student',clr:'#EDE9FE'},
+  ];
+  document.getElementById('statsGrid').innerHTML=cards.map(c=>
+    c.cls?`<div class="stat-card ${c.cls}"><div class="stat-icon">${c.icon}</div><div class="stat-val">${c.v}</div><div class="stat-lbl">${c.l}</div></div>`
+    :`<div class="stat-card" style="--clr:${c.clr}"><div class="stat-icon">${c.icon}</div><div class="stat-val">${c.v}</div><div class="stat-lbl">${c.l}</div></div>`
+  ).join('');
+}
+
+/* ── ANALYTICS ── */
+function renderAnalytics(){
+  const g=document.getElementById('analyticsGrid');g.innerHTML='';
+  g.innerHTML+=buildGenderCard();
+  g.innerHTML+=buildArrearDistCard();
+  g.innerHTML+=buildTopArrearCard();
+  g.innerHTML+=buildCourseLoadCard();
+  g.innerHTML+=buildBatchCard();
+  g.innerHTML+=buildBirthYearCard();
+  g.innerHTML+=buildArrearVsCleanCard();
+  g.innerHTML+=buildSemArrearCard();
+}
+
+function aCardWrap(icon,title,sub,content){
+  return`<div class="acard"><div class="acard-header"><div class="acard-icon">${icon}</div><div><div class="acard-title">${title}</div><div class="acard-sub">${sub}</div></div></div>${content}</div>`;
+}
+function donutSvg(tot,aVal,bVal,aC,bC,aL,bL){
+  const R=34,cx=50,cy=50,circ=2*Math.PI*R;
+  const aA=aVal/tot*circ;
+  const aPct=Math.round(aVal/tot*100);
+  return`<div class="donut-wrap">
+    <svg class="donut-svg" viewBox="0 0 100 100">
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#EDE9FE" stroke-width="18"/>
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${aC}" stroke-width="18"
+        stroke-dasharray="${aA} ${circ}" stroke-dashoffset="0" transform="rotate(-90 ${cx} ${cy})"/>
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${bC}" stroke-width="18"
+        stroke-dasharray="${circ-aA} ${circ}" stroke-dashoffset="${-aA}" transform="rotate(-90 ${cx} ${cy})"/>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="800" fill="#3D1A87">${tot}</text>
+    </svg>
+    <div class="donut-legend">
+      <div class="legend-row"><div class="legend-left"><div class="legend-dot" style="background:${aC}"></div><span class="legend-name">${aL}</span></div><span class="legend-val">${aVal}</span><span class="legend-pct">${aPct}%</span></div>
+      <div class="legend-row"><div class="legend-left"><div class="legend-dot" style="background:${bC}"></div><span class="legend-name">${bL}</span></div><span class="legend-val">${bVal}</span><span class="legend-pct">${100-aPct}%</span></div>
+    </div>
+  </div>`;
+}
+function buildGenderCard(){
+  const male=STUDENTS.filter(s=>s.gender==='MALE').length;
+  const fem=STUDENTS.filter(s=>s.gender==='FEMALE').length;
+  return aCardWrap('⚥','Gender Distribution','male vs female ratio',donutSvg(STUDENTS.length||1,male,fem,'#5B2FCC','#EC4899','Male','Female'));
+}
+function buildArrearDistCard(){
+  const bins=[
+    {label:'0 arrears',fn:s=>s.arrearCount===0,color:'#10B981'},
+    {label:'1 arrear',fn:s=>s.arrearCount===1,color:'#F59E0B'},
+    {label:'2 arrears',fn:s=>s.arrearCount===2,color:'#F97316'},
+    {label:'3–5 arrears',fn:s=>s.arrearCount>=3&&s.arrearCount<=5,color:'#EF4444'},
+    {label:'6–8 arrears',fn:s=>s.arrearCount>=6&&s.arrearCount<=8,color:'#B91C1C'},
+    {label:'9+ arrears',fn:s=>s.arrearCount>=9,color:'#7F1D1D'},
+  ];
+  const mx=Math.max(...bins.map(b=>STUDENTS.filter(b.fn).length),1);
+  return aCardWrap('⚠️','Arrear Distribution','by arrear count range',bins.map(b=>{
+    const n=STUDENTS.filter(b.fn).length;
+    return`<div class="bar-row"><div class="bar-lbl">${b.label}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%;background:${b.color}"></div></div><div class="bar-num">${n}</div></div>`;
+  }).join(''));
+}
+function buildTopArrearCard(){
+  const top=[...STUDENTS].filter(s=>s.hasArrear).sort((a,b)=>b.arrearCount-a.arrearCount).slice(0,8);
+  if(!top.length)return aCardWrap('🏅','Top Arrear Students','ranked by arrear count','<div class="empty-msg">✅ No arrear students!</div>');
+  return aCardWrap('🏅','Top Arrear Students','ranked by arrear count',`<div class="top-list">${top.map((s,i)=>`<div class="top-item"><div class="top-rank">${i+1}</div><div class="top-name" title="${s.name}">${s.name}</div><div class="top-count">${s.arrearCount}</div><div class="top-badge">${s.arrearCount} arr</div></div>`).join('')}</div>`);
+}
+function buildCourseLoadCard(){
+  const dist={};
+  STUDENTS.forEach(s=>{dist[s.totalCourses]=(dist[s.totalCourses]||0)+1;});
+  const mx=Math.max(...Object.values(dist),1);
+  return aCardWrap('📚','Total Course Load','distribution across students',Object.entries(dist).sort((a,b)=>+a[0]-+b[0]).map(([c,n])=>
+    `<div class="bar-row"><div class="bar-lbl">${c} courses</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%;background:linear-gradient(90deg,#5B2FCC,#9E7AF5)"></div></div><div class="bar-num">${n}</div></div>`
+  ).join(''));
+}
+function buildBatchCard(){
+  const reg=STUDENTS.filter(s=>s.batch==='Regular').length;
+  const lat=STUDENTS.filter(s=>s.batch==='Lateral').length;
+  return aCardWrap('🎓','Batch Distribution','regular vs lateral entry',donutSvg(STUDENTS.length||1,reg,lat,'#3B82F6','#7C3AED','Regular','Lateral'));
+}
+function buildBirthYearCard(){
+  const byear={};
+  STUDENTS.forEach(s=>{if(s.dob&&s.dob!=='N/A'){const y=s.dob.split('-')[2];if(y)byear[y]=(byear[y]||0)+1;}});
+  if(!Object.keys(byear).length)return aCardWrap('🎂','Birth Year Distribution','students by year of birth','<div class="empty-msg">No DOB data available</div>');
+  const mx=Math.max(...Object.values(byear),1);
+  const colors=['#5B2FCC','#7C52E8','#9E7AF5','#BFA8FA','#06B6D4','#3B82F6'];
+  return aCardWrap('🎂','Birth Year Distribution','students by year of birth',Object.entries(byear).sort().map(([y,n],i)=>
+    `<div class="bar-row"><div class="bar-lbl">Born ${y}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%;background:${colors[i%colors.length]}"></div></div><div class="bar-num">${n}</div></div>`
+  ).join(''));
+}
+function buildArrearVsCleanCard(){
+  const clean=STUDENTS.filter(s=>!s.hasArrear).length;
+  const arr=STUDENTS.filter(s=>s.hasArrear).length;
+  return aCardWrap('📊','Arrear vs Clean','academic performance split',donutSvg(STUDENTS.length||1,clean,arr,'#10B981','#EF4444','Clean','Has Arrear'));
+}
+function buildSemArrearCard(){
+  const semCount={};
+  STUDENTS.forEach(s=>{Object.entries(s.arrearBySem||{}).forEach(([sem,cnt])=>{
+    const k=parseInt(sem);semCount[k]=(semCount[k]||0)+cnt;
+  });});
+  const sems=Object.keys(semCount).map(Number).sort((a,b)=>a-b);
+  if(!sems.length)return aCardWrap('📅','Arrears by Past Semester','which semesters contribute most','<div class="empty-msg">No arrear data</div>');
+  const mx=Math.max(...Object.values(semCount),1);
+  const colors=['#EF4444','#F59E0B','#8B5CF6','#3B82F6','#10B981','#EC4899','#06B6D4','#F97316'];
+  return aCardWrap('📅','Arrears by Past Semester','which semesters contribute most',sems.map((sem,i)=>{
+    const n=semCount[sem];
+    return`<div class="bar-row"><div class="bar-lbl">Semester ${sem}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%;background:${colors[i%colors.length]}"></div></div><div class="bar-num">${n}</div></div>`;
+  }).join(''));
+}
+
+/* ── PROGRAMME ANALYSIS ── */
+function renderProgramme(){
+  const progs=[...new Set(STUDENTS.map(s=>s.programme))].sort();
+  const sec=document.getElementById('programmeSection');
+  const mx=Math.max(...progs.map(p=>STUDENTS.filter(s=>s.programme===p).length),1);
+  let tableRows='';
+  progs.forEach(p=>{
+    const grp=STUDENTS.filter(s=>s.programme===p);
+    const tot=grp.length;
+    const arr=grp.filter(s=>s.hasArrear).length;
+    const clean=tot-arr;
+    const male=grp.filter(s=>s.gender==='MALE').length;
+    const fem=grp.filter(s=>s.gender==='FEMALE').length;
+    const totArr=grp.reduce((a,s)=>a+s.arrearCount,0);
+    const multi=grp.filter(s=>s.isMulti).length;
+    const avgArr=(totArr/tot).toFixed(1);
+    const pct=Math.round(tot/STUDENTS.length*100);
+    tableRows+=`<tr>
+      <td class="prog-name">${p}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:var(--v700)">${tot} <span style="font-size:10px;color:var(--gray400)">(${pct}%)</span></td>
+      <td style="font-family:var(--mono)">${male} M / ${fem} F</td>
+      <td><span class="badge b-clean">${clean}</span></td>
+      <td><span class="badge b-arrear">${arr}</span></td>
+      <td style="font-family:var(--mono);color:var(--v600)">${totArr}</td>
+      <td style="font-family:var(--mono)">${avgArr}</td>
+      <td style="font-family:var(--mono)">${multi}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="bar-track" style="width:90px;height:6px"><div class="bar-fill" style="width:${Math.round(tot/mx*100)}%;background:linear-gradient(90deg,#5B2FCC,#9E7AF5)"></div></div>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--gray400)">${tot}</span>
+      </div></td>
+    </tr>`;
+  });
+  let progCards='';
+  progs.forEach(p=>{
+    const grp=STUDENTS.filter(s=>s.programme===p);
+    const tot=grp.length;
+    const arr=grp.filter(s=>s.hasArrear).length;
+    const clean=tot-arr;
+    const totArr=grp.reduce((a,s)=>a+s.arrearCount,0);
+    const cleanPct=Math.round(clean/tot*100);
+    const R=28,cx=40,cy=40,circ=2*Math.PI*R;
+    const cA=clean/tot*circ;
+    progCards+=`<div class="acard">
+      <div class="acard-header"><div class="acard-icon">🏫</div><div><div class="acard-title" style="font-size:10px">${p}</div><div class="acard-sub">${tot} students</div></div></div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+        <svg viewBox="0 0 80 80" width="80" height="80">
+          <circle cx="40" cy="40" r="${R}" fill="none" stroke="#EDE9FE" stroke-width="14"/>
+          <circle cx="40" cy="40" r="${R}" fill="none" stroke="#10B981" stroke-width="14" stroke-dasharray="${cA} ${circ}" stroke-dashoffset="0" transform="rotate(-90 40 40)"/>
+          <circle cx="40" cy="40" r="${R}" fill="none" stroke="#EF4444" stroke-width="14" stroke-dasharray="${circ-cA} ${circ}" stroke-dashoffset="${-cA}" transform="rotate(-90 40 40)"/>
+          <text x="40" y="40" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="800" fill="#3D1A87">${tot}</text>
+        </svg>
+        <div style="flex:1">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:12px;color:var(--green)">✅ Clean</span><span style="font-family:var(--mono);font-weight:700;color:var(--green)">${clean} (${cleanPct}%)</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:var(--red)">⚠️ Arrear</span><span style="font-family:var(--mono);font-weight:700;color:var(--red)">${arr} (${100-cleanPct}%)</span></div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--v100);padding-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--v700)">${totArr}</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--gray400)">Total Arrears</div></div>
+        <div style="text-align:center"><div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--v700)">${(totArr/tot).toFixed(1)}</div><div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--gray400)">Avg/Student</div></div>
+      </div>
+    </div>`;
+  });
+  sec.innerHTML=`
+    <div class="table-card" style="margin-bottom:14px">
+      <div class="card-title">Programme Summary Table</div>
+      <div class="twrap prog-table-wrap">
+        <table>
+          <thead><tr><th>Programme</th><th>Students</th><th>Gender</th><th>Clean</th><th>Arrear</th><th>Total Arrear Regs</th><th>Avg Arrear</th><th>Multi-Page</th><th>Distribution</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div class="analytics-grid">${progCards}</div>`;
+}
+
+/* ── SEMESTER GRID ── */
+function renderSemGrid(){
+  const semData={};
+  STUDENTS.forEach(s=>{
+    Object.entries(s.arrearBySem||{}).forEach(([sem,cnt])=>{
+      const k=parseInt(sem);
+      if(!semData[k])semData[k]={students:new Set(),totalCourses:0};
+      semData[k].students.add(s.sno);
+      semData[k].totalCourses+=cnt;
+    });
+  });
+  const colors=['#EF4444','#F59E0B','#8B5CF6','#3B82F6','#10B981','#EC4899','#06B6D4','#F97316'];
+  const sems=Object.keys(semData).map(Number).sort((a,b)=>a-b);
+  let html='';
+  sems.forEach((sem,i)=>{
+    const d=semData[sem];
+    const aff=d.students.size;
+    const pct=STUDENTS.length?Math.round(aff/STUDENTS.length*100):0;
+    html+=`<div class="sem-card">
+      <div class="sem-card-title" style="color:${colors[i%colors.length]}">Semester ${sem} Arrears</div>
+      <div class="sem-stat"><span class="sem-stat-lbl">Students Affected</span><span class="sem-stat-val">${aff}</span></div>
+      <div class="sem-stat"><span class="sem-stat-lbl">Total Course Registrations</span><span class="sem-stat-val">${d.totalCourses}</span></div>
+      <div class="sem-stat"><span class="sem-stat-lbl">% of Batch</span><span class="sem-stat-val">${pct}%</span></div>
+      <div style="margin-top:8px"><div style="height:5px;background:var(--v100);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${colors[i%colors.length]};border-radius:3px;transition:width .8s"></div></div></div>
+    </div>`;
+  });
+  if(!html)html='<div class="empty-msg">No arrear data detected</div>';
+  document.getElementById('semGrid').innerHTML=html;
+}
+
+/* ── MAIN TABLE ── */
+function renderTable(data){
+  FILTERED=data;
+  document.getElementById('tableCount').textContent=`${data.length} records`;
+  document.getElementById('recCount').textContent=`${data.length} / ${STUDENTS.length}`;
+  const tb=document.getElementById('tableBody');
+  if(!data.length){tb.innerHTML=`<tr><td colspan="16"><div class="empty-msg">No records match the current filters</div></td></tr>`;return;}
+  tb.innerHTML=data.map((s,i)=>`<tr>
+    <td style="color:var(--gray400);font-family:var(--mono);font-size:11px">${i+1}</td>
+    <td><span class="mono">${s.regNo}</span></td>
+    <td class="name-cell">${s.name}</td>
+    <td><span class="mono" style="color:var(--gray400)">${s.rollNo}</span></td>
+    <td style="font-size:12px;color:var(--gray400);font-family:var(--mono)">${s.dob}</td>
+    <td><span class="badge ${s.gender==='FEMALE'?'b-female':'b-male'}">${s.gender}</span></td>
+    <td style="font-size:11px;color:var(--v600);font-weight:600">${s.programme}</td>
+    <td style="font-family:var(--mono);font-size:11px;color:var(--v700);font-weight:700;text-align:center">${s.regularSemNum?semLabel(s.regularSemNum):'N/A'}</td>
+    <td><span class="badge ${s.batch==='Lateral'?'b-lateral':'b-regular'}">${s.batch}</span></td>
+    <td><span class="badge ${s.isMulti?'b-multi':'b-clean'}">${s.pageNo}</span></td>
+    <td style="font-family:var(--mono);text-align:center;font-weight:700">${s.regSemCount}</td>
+    <td style="font-family:var(--mono);text-align:center;font-weight:800;color:${s.arrearCount>0?'var(--red)':'var(--green)'}">${s.arrearCount===0?'—':s.arrearCount}</td>
+    <td style="font-family:var(--mono);text-align:center;font-weight:900;color:var(--v700)">${s.totalCourses}</td>
+    <td class="arrear-detail">${s.arrearDetails||'—'}</td>
+    <td><span class="badge ${s.type==='Clean'?'b-clean':s.type==='Multi-Page'?'b-multi':'b-arrear'}">${s.type}</span></td>
+    <td style="font-size:11px;color:var(--gray400)">${s.remarks}</td>
+  </tr>`).join('');
+}
+
+function applyFilters(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const gen=document.getElementById('filterGender').value;
+  const typ=document.getElementById('filterType').value;
+  const bat=document.getElementById('filterBatch').value;
+  const prg=document.getElementById('filterProg').value;
+  renderTable(STUDENTS.filter(s=>{
+    if(q&&!s.name.toLowerCase().includes(q)&&!s.regNo.includes(q)&&!s.rollNo.toLowerCase().includes(q))return false;
+    if(gen&&s.gender!==gen)return false;
+    if(typ&&s.type!==typ)return false;
+    if(bat&&s.batch!==bat)return false;
+    if(prg&&s.programme!==prg)return false;
+    return true;
+  }));
+}
+
+function renderMultiPage(){
+  const multi=STUDENTS.filter(s=>s.isMulti);
+  const tb=document.getElementById('multiPageBody');
+  if(!multi.length){tb.innerHTML=`<tr><td colspan="5"><div class="empty-msg">✅ All students fit in one page</div></td></tr>`;return;}
+  tb.innerHTML=multi.map(s=>`<tr>
+    <td class="name-cell" style="font-size:12px">${s.name}</td>
+    <td><span class="mono" style="font-size:11px">${s.regNo}</span></td>
+    <td style="font-size:11px;color:var(--v600)">${s.programme}</td>
+    <td><span class="badge b-multi">${s.pageNo}</span></td>
+    <td style="font-family:var(--mono);font-weight:800;color:var(--red)">${s.arrearCount}</td>
+  </tr>`).join('');
+}
+
+function renderArrearFreq(){
+  const freq={};
+
+  STUDENTS.forEach(s=>{
+    (s.allCourses || []).forEach(c=>{
+      if(s.arrearCodeList.includes(c.code)){
+        if(!freq[c.code]){
+          freq[c.code]={count:0,name:c.name,sem:c.sem};
+        }
+        freq[c.code].count++;
+      }
+    });
+  });
+
+  const rows=Object.entries(freq)
+    .sort((a,b)=>b[1].count-a[1].count)
+    .map(([code,data])=>`
+      <tr>
+        <td class="mono">${code}</td>
+        <td>${data.name || 'N/A'}</td>
+        <td>${data.sem}</td>
+        <td class="mono">${data.count}</td>
+      </tr>
+    `).join('');
+
+  document.getElementById('arrearFreqBody').innerHTML=rows || '<tr><td colspan="4">No data</td></tr>';
+}
+
+/* ══════════════════════════════════════════
+   EXPORT
+══════════════════════════════════════════ */
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  // Sheet 1: Full Index
+  const h1=['S.No','Register No.','Student Name','Roll No.','DOB','Gender','Programme','Regular Semester','Batch','Page No.','Page Count','Reg Sem Courses','Arrear Count','Total Courses','Arrear Details','Type','Remarks','Regulations'];
+  const r1=STUDENTS.map(s=>[s.sno,s.regNo,s.name,s.rollNo,s.dob,s.gender,s.programme,
+    s.regularSemNum?semLabel(s.regularSemNum):'N/A',s.batch,s.pageNo,
+    s.pageNo.split(',').length,s.regSemCount,s.arrearCount,s.totalCourses,
+    s.arrearDetails,s.type,s.remarks,s.regulations]);
+  const ws1=XLSX.utils.aoa_to_sheet([h1,...r1]);
+  ws1['!cols']=[5,16,28,12,12,8,30,12,10,10,8,12,12,12,50,12,30,10].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws1,'Page Index');
+
+  // Sheet 2: Arrear Students
+  const arr=STUDENTS.filter(s=>s.hasArrear).sort((a,b)=>b.arrearCount-a.arrearCount);
+  const ws2=XLSX.utils.aoa_to_sheet([
+    ['S.No','Register No.','Student Name','Roll No.','Gender','Programme','Regular Semester','Batch','Page No.','Arrear Count','Arrear Courses','Total Courses'],
+    ...arr.map((s,i)=>[i+1,s.regNo,s.name,s.rollNo,s.gender,s.programme,
+      s.regularSemNum?semLabel(s.regularSemNum):'N/A',s.batch,s.pageNo,s.arrearCount,s.arrearDetails,s.totalCourses])
+  ]);
+  ws2['!cols']=[5,16,28,12,8,30,12,10,10,12,60,12].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws2,'Arrear Students');
+
+  // Sheet 3: All Courses
+  const courseRows=[];
+  STUDENTS.forEach(s=>{
+    (s.allCourses||[]).forEach(c=>{
+      courseRows.push([s.sno,s.regNo,s.name,s.programme,
+        s.regularSemNum?semLabel(s.regularSemNum):'N/A',
+        c.sem,c.code,c.name,
+        (s.regularSemNum&&c.sem<s.regularSemNum)?'Arrear':'Regular']);
+    });
+  });
+  const ws3=XLSX.utils.aoa_to_sheet([
+    ['S.No','Reg No.','Name','Programme','Regular Semester','Course Semester','Course Code','Course Name','Status'],
+    ...courseRows
+  ]);
+  ws3['!cols']=[5,16,28,30,12,12,12,45,10].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws3,'All Courses');
+
+  // Sheet 4: Programme Summary
+  const progs=[...new Set(STUDENTS.map(s=>s.programme))].sort();
+  const ws4=XLSX.utils.aoa_to_sheet([
+    ['Programme','Total Students','Male','Female','Regular Batch','Lateral','Clean','Arrear','Total Arrear Regs','Avg Arrear/Student'],
+    ...progs.map(p=>{
+      const g=STUDENTS.filter(s=>s.programme===p);
+      const tot=g.length;
+      const arr2=g.filter(s=>s.hasArrear).length;
+      return[p,tot,g.filter(s=>s.gender==='MALE').length,g.filter(s=>s.gender==='FEMALE').length,
+        g.filter(s=>s.batch==='Regular').length,g.filter(s=>s.batch==='Lateral').length,
+        tot-arr2,arr2,g.reduce((a,s)=>a+s.arrearCount,0),(g.reduce((a,s)=>a+s.arrearCount,0)/tot).toFixed(2)];
+    })
+  ]);
+  ws4['!cols']=[32,14,8,8,12,10,10,10,22,18].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws4,'Programme Summary');
+
+  // Sheet 5: Multi-Page
+  const multi=STUDENTS.filter(s=>s.isMulti);
+  const ws5=XLSX.utils.aoa_to_sheet([
+    ['Register No.','Student Name','Roll No.','Programme','Pages','Arrear Count'],
+    ...multi.map(s=>[s.regNo,s.name,s.rollNo,s.programme,s.pageNo,s.arrearCount])
+  ]);
+  ws5['!cols']=[16,28,12,30,14,12].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws5,'Multi-Page Students');
+
+  // Sheet 6: Arrear Course Frequency
+  const freq={};
+  STUDENTS.forEach(s=>{
+    (s.allCourses||[]).filter(c=>s.regularSemNum&&c.sem<s.regularSemNum).forEach(c=>{
+      if(!freq[c.code])freq[c.code]={count:0,name:c.name,sem:c.sem};freq[c.code].count++;
+    });
+  });
+  const ws6=XLSX.utils.aoa_to_sheet([
+    ['Course Code','Course Name','Semester','Students Affected'],
+    ...Object.entries(freq).sort((a,b)=>b[1].count-a[1].count).map(([c,d])=>[c,d.name||'','Sem '+d.sem,d.count])
+  ]);
+  ws6['!cols']=[14,45,10,18].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws6,'Arrear Course Frequency');
+
+  // Sheet 7: Summary
+  const male=STUDENTS.filter(s=>s.gender==='MALE').length;
+  const fem=STUDENTS.filter(s=>s.gender==='FEMALE').length;
+  const totArr=STUDENTS.reduce((a,s)=>a+s.arrearCount,0);
+  const ws7=XLSX.utils.aoa_to_sheet([
+    ['Metric','Value'],
+    ['Source File',META.fileName],['Processed On',META.processedDate],
+    ['Total PDF Pages',META.totalPages],['Total Students',STUDENTS.length],
+    ['Male Students',male],['Female Students',fem],
+    ['Regular Batch',STUDENTS.filter(s=>s.batch==='Regular').length],
+    ['Lateral Entry',STUDENTS.filter(s=>s.batch==='Lateral').length],
+    ['Programmes Detected',[...new Set(STUDENTS.map(s=>s.programme))].length],
+    ['Clean Students (No Arrears)',STUDENTS.filter(s=>!s.hasArrear).length],
+    ['Students With Arrears',STUDENTS.filter(s=>s.hasArrear).length],
+    ['Total Arrear Registrations',totArr],
+    ['Average Arrears Per Student',(totArr/STUDENTS.length).toFixed(2)],
+    ['Maximum Arrear Load',Math.max(...STUDENTS.map(s=>s.arrearCount),0)],
+    ['Multi-Page Students',STUDENTS.filter(s=>s.isMulti).length],
+  ]);
+  ws7['!cols']=[34,24].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws7,'Summary');
+
+  XLSX.writeFile(wb,META.fileName.replace('.pdf','')+'_Analysis.xlsx');
+}
+
+function exportCSV(){
+  const h='S.No,Register No.,Student Name,Roll No.,DOB,Gender,Programme,Regular Semester,Batch,Page No.,Reg Sem Courses,Arrear Count,Total Courses,Arrear Details,Type,Remarks';
+  const rows=STUDENTS.map(s=>
+    `${s.sno},${s.regNo},"${s.name}",${s.rollNo},${s.dob},${s.gender},"${s.programme}","${s.regularSemNum?semLabel(s.regularSemNum):'N/A'}",${s.batch},"${s.pageNo}",${s.regSemCount},${s.arrearCount},${s.totalCourses},"${s.arrearDetails}",${s.type},"${s.remarks}"`
+  );
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent([h,...rows].join('\n'));
+  a.download=META.fileName.replace('.pdf','')+'_Analysis.csv';
+  a.click();
+}
+
+function resetApp(){
+  STUDENTS=[];FILTERED=[];META={};
+  document.getElementById('uploadWrap').style.display='';
+  document.getElementById('progressSection').classList.remove('show');
+  document.getElementById('mainContent').classList.remove('show');
+  document.getElementById('hdrStats').style.display='none';
+  document.getElementById('fileInput').value='';
+  document.getElementById('filterProg').innerHTML='<option value="">All Programmes</option>';
+}
+</script>
+</body>
+</html>
