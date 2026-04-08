@@ -2,1454 +2,1681 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard — Exam Preview Form</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Exam Preview Portal — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Clash+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     :root {
-      --bg:#faf8ff; --surface:#fff; --surface2:#f5f3ff;
-      --p900:#2e1065;--p800:#3b0764;--p700:#4c1d95;--p600:#6d28d9;
-      --p500:#7c3aed;--p400:#8b5cf6;--p300:#a78bfa;--p200:#c4b5fd;
-      --p100:#ede9fe;--p50:#f5f3ff;
-      --text:#1a0a3c;--muted:#6b5fa8;--border:#e4deff;
-      --ok:#059669;--okBg:#ecfdf5;--okB:#a7f3d0;
-      --warn:#d97706;--warnBg:#fffbeb;--warnB:#fde68a;
-      --err:#dc2626;--errBg:#fef2f2;--errB:#fecaca;
-      --info:#2563eb;--infoBg:#eff6ff;--infoB:#bfdbfe;
-      --sidebar:260px;--topbar:60px;--r:14px;
+      --void: #0a0614;
+      --deep: #0f0a1e;
+      --dark: #1a0f35;
+      --mid: #2d1b69;
+      --core: #4c1d95;
+      --viv: #7c3aed;
+      --bright: #8b5cf6;
+      --glow: #a78bfa;
+      --mist: #c4b5fd;
+      --ghost: #ede9fe;
+      --white: #ffffff;
+      --cream: #faf8ff;
+      --ice: #f5f0ff;
+      --pk: #d946ef;
+      --pk2: #e879f9;
+      --pk3: #f0abfc;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --err: #ef4444;
+      --info: #3b82f6;
+      --ok-bg: rgba(16,185,129,0.1);
+      --warn-bg: rgba(245,158,11,0.1);
+      --err-bg: rgba(239,68,68,0.1);
+      --info-bg: rgba(59,130,246,0.1);
+      --sidebar-w: 280px;
+      --top-h: 72px;
+      --r: 18px;
+      --r-sm: 12px;
+      --r-lg: 24px;
+      --g1: linear-gradient(135deg, var(--core), var(--viv));
+      --g2: linear-gradient(135deg, var(--viv), var(--pk));
+      --g3: linear-gradient(135deg, var(--mid), var(--core));
+      --gw: linear-gradient(135deg, #ffffff, var(--ice));
+      --s1: 0 1px 3px rgba(124,58,237,0.07), 0 4px 12px rgba(124,58,237,0.06);
+      --s2: 0 4px 20px rgba(124,58,237,0.10), 0 8px 40px rgba(124,58,237,0.07);
+      --s3: 0 12px 48px rgba(76,29,149,0.18), 0 24px 80px rgba(76,29,149,0.12);
+      --glow-ring: 0 0 0 3px rgba(139,92,246,0.18), 0 0 0 6px rgba(139,92,246,0.08);
+      --t: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      --t-fast: all 0.18s cubic-bezier(0.16,1,0.3,1);
     }
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-    html{scroll-behavior:smooth;}
-    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-      background:radial-gradient(ellipse 60% 40% at 0% 0%,rgba(139,92,246,.07) 0%,transparent 60%),
-                 radial-gradient(ellipse 50% 50% at 100% 100%,rgba(109,40,217,.06) 0%,transparent 60%);}
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--cream); color: #1e0a3c; min-height: 100vh; overflow-x: hidden; }
 
-    /* ── TOPBAR ── */
-    .topbar{position:fixed;top:0;left:0;right:0;z-index:300;height:var(--topbar);
-      display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;
-      background:rgba(255,255,255,.93);backdrop-filter:blur(16px);
-      border-bottom:1px solid var(--border);box-shadow:0 1px 12px rgba(109,40,217,.06);}
-    .topbar-l{display:flex;align-items:center;gap:.75rem;}
-    .hamburger{display:none;flex-direction:column;gap:4px;background:none;border:none;cursor:pointer;padding:4px;}
-    .hamburger span{display:block;width:20px;height:2px;background:var(--muted);border-radius:2px;transition:all .2s;}
-    .brand{display:flex;align-items:center;gap:.55rem;font-weight:800;font-size:1.05rem;
-      letter-spacing:-.02em;color:var(--text);text-decoration:none;}
-    .brand-mark{width:32px;height:32px;border-radius:10px;
-      background:linear-gradient(135deg,var(--p600),var(--p400));
-      display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#fff;
-      box-shadow:0 3px 10px rgba(109,40,217,.25);}
-    .admin-chip{background:var(--p100);color:var(--p700);font-size:.68rem;font-weight:700;
-      letter-spacing:.08em;padding:.2rem .65rem;border-radius:50px;border:1px solid var(--p200);}
-    .topbar-r{display:flex;align-items:center;gap:.9rem;}
-    .user-pill{display:flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:50px;
-      background:var(--p50);border:1px solid var(--p100);font-size:.82rem;font-weight:600;color:var(--p700);}
-    .user-avatar{width:24px;height:24px;border-radius:50%;
-      background:linear-gradient(135deg,var(--p500),var(--p300));
-      display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#fff;font-weight:700;}
-    .btn-logout{padding:.38rem .9rem;border-radius:8px;border:1px solid var(--border);
-      background:var(--surface);color:var(--muted);font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s;}
-    .btn-logout:hover{border-color:var(--err);color:var(--err);background:var(--errBg);}
+    .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .bg-mesh::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 900px 700px at 15% -10%, rgba(124,58,237,0.07) 0%, transparent 60%), radial-gradient(ellipse 600px 600px at 85% 10%, rgba(217,70,239,0.05) 0%, transparent 60%), radial-gradient(ellipse 800px 500px at 5% 90%, rgba(76,29,149,0.06) 0%, transparent 60%), radial-gradient(ellipse 400px 400px at 95% 85%, rgba(139,92,246,0.05) 0%, transparent 60%); }
+    .orb { position: absolute; border-radius: 50%; filter: blur(80px); animation: orbFloat 12s ease-in-out infinite; opacity: 0.4; }
+    .orb-1 { width:500px;height:500px;background:radial-gradient(circle,rgba(124,58,237,0.12),transparent);top:-100px;left:-100px;animation-delay:0s; }
+    .orb-2 { width:400px;height:400px;background:radial-gradient(circle,rgba(217,70,239,0.1),transparent);top:20%;right:-80px;animation-delay:-4s; }
+    .orb-3 { width:600px;height:300px;background:radial-gradient(circle,rgba(76,29,149,0.08),transparent);bottom:10%;left:20%;animation-delay:-8s; }
+    @keyframes orbFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(0.97); } }
 
-    /* ── LAYOUT ── */
-    .layout{display:flex;padding-top:var(--topbar);min-height:100vh;}
-    .sidebar{position:fixed;top:var(--topbar);left:0;bottom:0;width:var(--sidebar);
-      background:var(--surface);border-right:1px solid var(--border);
-      overflow-y:auto;overflow-x:hidden;padding:1.25rem .75rem;
-      display:flex;flex-direction:column;gap:.25rem;z-index:200;
-      transition:transform .28s cubic-bezier(.4,0,.2,1);}
-    .sidebar-ovl{display:none;position:fixed;inset:0;z-index:190;
-      background:rgba(46,16,101,.35);backdrop-filter:blur(2px);}
-    .sidebar-ovl.show{display:block;}
-    .sg{margin-bottom:.5rem;}
-    .sg-lbl{font-size:.68rem;font-weight:700;color:var(--p300);letter-spacing:.12em;text-transform:uppercase;
-      padding:.3rem .6rem .5rem;display:block;}
-    .ni{display:flex;align-items:center;gap:.65rem;padding:.65rem .8rem;border-radius:10px;
-      font-size:.88rem;font-weight:500;color:var(--muted);border:none;background:none;
-      width:100%;text-align:left;cursor:pointer;transition:all .18s;position:relative;}
-    .ni .ico{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
-    .ni .lbl{flex:1;}
-    .ni .nbadge{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:50px;
-      background:var(--errBg);color:var(--err);border:1px solid var(--errB);}
-    .ni .nbadge.blue{background:var(--p50);color:var(--p600);border-color:var(--p100);}
-    .ni:hover{background:var(--p50);color:var(--p700);}
-    .ni.active{background:var(--p100);color:var(--p700);font-weight:700;box-shadow:inset 3px 0 0 var(--p500);}
+    /* SIDEBAR */
+    .sidebar { position: fixed; left:0; top:0; bottom:0; width: var(--sidebar-w); background: linear-gradient(180deg, var(--void) 0%, var(--deep) 30%, var(--dark) 70%, #1e0f3d 100%); z-index: 300; display: flex; flex-direction: column; box-shadow: 4px 0 40px rgba(0,0,0,0.3), inset -1px 0 0 rgba(139,92,246,0.15); transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); overflow: hidden; }
+    .sidebar::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 300px 300px at 140px -40px, rgba(124,58,237,0.18) 0%, transparent 70%), radial-gradient(ellipse 200px 400px at -60px 70%, rgba(217,70,239,0.08) 0%, transparent 70%); pointer-events: none; }
+    .sidebar::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px); background-size: 32px 32px; pointer-events: none; }
+    .sidebar-logo { padding: 1.6rem 1.4rem 1.4rem; display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; border-bottom: 1px solid rgba(139,92,246,0.12); }
+    .logo-crystal { width: 48px; height: 48px; position: relative; flex-shrink: 0; }
+    .logo-crystal-inner { width: 48px; height: 48px; background: linear-gradient(135deg, #7c3aed, #d946ef); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 0 30px rgba(124,58,237,0.5), 0 4px 16px rgba(217,70,239,0.3); animation: crystalPulse 4s ease-in-out infinite; position: relative; overflow: hidden; }
+    .logo-crystal-inner::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(45deg, transparent, rgba(255,255,255,0.15), transparent); animation: shimmer 3s linear infinite; }
+    @keyframes crystalPulse { 0%,100% { box-shadow: 0 0 20px rgba(124,58,237,0.4), 0 4px 16px rgba(217,70,239,0.25); } 50% { box-shadow: 0 0 40px rgba(124,58,237,0.7), 0 4px 24px rgba(217,70,239,0.5); } }
+    @keyframes shimmer { 0% { transform: translateX(-200%) translateY(-200%) rotate(45deg); } 100% { transform: translateX(200%) translateY(200%) rotate(45deg); } }
+    .logo-text strong { display:block; font-family:'Clash Display',sans-serif; font-size:1.08rem; font-weight:700; color:white; letter-spacing:-0.01em; }
+    .logo-text span { font-size:0.62rem; color:rgba(167,139,250,0.7); text-transform:uppercase; letter-spacing:0.12em; font-weight:600; }
+    .sidebar-nav { flex:1; padding:0.8rem 0.7rem; overflow-y:auto; position:relative; z-index:1; }
+    .sidebar-nav::-webkit-scrollbar { width:3px; }
+    .sidebar-nav::-webkit-scrollbar-thumb { background:rgba(139,92,246,0.25); border-radius:2px; }
+    .nav-section { font-size:0.57rem; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; color:rgba(139,92,246,0.5); padding:1rem 0.7rem 0.4rem; }
+    .nav-item { display:flex; align-items:center; gap:0.75rem; padding:0.7rem 0.85rem; border-radius:12px; color:rgba(196,181,253,0.65); font-size:0.855rem; font-weight:500; cursor:pointer; transition:var(--t); margin-bottom:0.1rem; border:none; background:none; width:100%; text-align:left; position:relative; overflow:hidden; }
+    .nav-item::before { content:''; position:absolute; inset:0; border-radius:12px; background:linear-gradient(90deg, rgba(124,58,237,0), rgba(124,58,237,0)); transition: background 0.3s; }
+    .nav-item:hover { color:rgba(255,255,255,0.9); }
+    .nav-item:hover::before { background:rgba(124,58,237,0.12); }
+    .nav-item.active { background: linear-gradient(90deg, rgba(124,58,237,0.22), rgba(217,70,239,0.1)); color: white; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+    .nav-item.active::after { content:''; position:absolute; left:0; top:25%; bottom:25%; width:3px; background:linear-gradient(180deg, var(--viv), var(--pk)); border-radius:0 3px 3px 0; box-shadow: 0 0 8px rgba(124,58,237,0.8); }
+    .nav-icon { font-size:1rem; width:20px; text-align:center; flex-shrink:0; filter:drop-shadow(0 0 6px rgba(139,92,246,0.4)); }
+    .nav-label { flex:1; }
+    .nav-pill { margin-left:auto; background:rgba(124,58,237,0.3); color:var(--mist); font-size:0.58rem; font-weight:800; padding:0.15rem 0.55rem; border-radius:20px; border:1px solid rgba(124,58,237,0.3); min-width:22px; text-align:center; }
+    .sidebar-footer { padding:0.9rem 0.7rem 1.2rem; border-top:1px solid rgba(139,92,246,0.12); position:relative; z-index:1; }
+    .user-tile { display:flex; align-items:center; gap:0.7rem; padding:0.75rem 0.85rem; background:rgba(124,58,237,0.12); border-radius:13px; border:1px solid rgba(139,92,246,0.18); backdrop-filter:blur(4px); transition:var(--t); }
+    .user-tile:hover { background:rgba(124,58,237,0.18); }
+    .user-ava { width:36px; height:36px; background:linear-gradient(135deg, var(--viv), var(--pk)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; font-weight:800; color:white; flex-shrink:0; box-shadow: 0 0 12px rgba(124,58,237,0.4); }
+    .user-name { font-size:0.82rem; font-weight:700; color:white; }
+    .user-role { font-size:0.62rem; color:rgba(196,181,253,0.6); text-transform:uppercase; letter-spacing:0.07em; }
+    .btn-exit { background:none; border:none; color:rgba(196,181,253,0.4); cursor:pointer; font-size:1rem; padding:0.35rem; border-radius:8px; transition:var(--t); }
+    .btn-exit:hover { color:var(--pk); background:rgba(217,70,239,0.12); }
 
-    .main{margin-left:var(--sidebar);flex:1;padding:2rem;min-height:calc(100vh - var(--topbar));position:relative;z-index:1;}
-    .sec{display:none;} .sec.active{display:block;animation:fadeUp .3s ease both;}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+    /* TOPBAR */
+    .topbar { position:fixed; top:0; left:var(--sidebar-w); right:0; height:var(--top-h); background:rgba(250,248,255,0.88); backdrop-filter:blur(24px) saturate(180%); border-bottom:1px solid rgba(139,92,246,0.1); z-index:200; display:flex; align-items:center; padding:0 1.8rem; gap:1rem; box-shadow: 0 1px 0 rgba(139,92,246,0.08), 0 4px 24px rgba(124,58,237,0.05); transition: left 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .hamburger { display:none; background:var(--g1); border:none; cursor:pointer; padding:0.5rem 0.7rem; border-radius:10px; color:white; font-size:1.1rem; box-shadow:var(--s1); transition:var(--t); }
+    .hamburger:hover { transform:scale(1.05); box-shadow:var(--s2); }
+    .topbar-title { font-family:'Clash Display',sans-serif; font-size:1.3rem; font-weight:700; background:linear-gradient(135deg, var(--core), var(--viv), var(--pk)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; flex:1; letter-spacing:-0.02em; }
+    .topbar-right { display:flex; align-items:center; gap:0.75rem; }
+    .refresh-ts { font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:rgba(124,58,237,0.55); background:var(--ghost); padding:0.3rem 0.75rem; border-radius:8px; border:1px solid rgba(139,92,246,0.15); }
+    .btn-refresh { display:flex; align-items:center; gap:0.45rem; padding:0.5rem 1.1rem; background:var(--g1); color:white; border:none; border-radius:11px; font-size:0.8rem; font-weight:700; cursor:pointer; transition:var(--t); font-family:'Plus Jakarta Sans',sans-serif; box-shadow:var(--s2); letter-spacing:0.01em; position:relative; overflow:hidden; }
+    .btn-refresh::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); transform:translateX(-200%); transition:transform 0.6s; }
+    .btn-refresh:hover { transform:translateY(-2px); box-shadow:var(--s3); }
+    .btn-refresh:hover::before { transform:translateX(200%); }
+    .btn-refresh.spinning .spin-icon { animation:spin 0.7s linear infinite; }
+    .spin-icon { display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
-    /* ── PAGE HEADERS ── */
-    .ph{margin-bottom:1.8rem;}
-    .ph h1{font-size:1.65rem;font-weight:900;letter-spacing:-.03em;
-      background:linear-gradient(135deg,var(--p900),var(--p500));
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.3rem;}
-    .ph p{color:var(--muted);font-size:.88rem;}
-    .ph-row{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.8rem;}
-
-    /* ── STATS ── */
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.8rem;}
-    .sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
-      padding:1.3rem 1.2rem;transition:all .2s;position:relative;overflow:hidden;cursor:default;}
-    .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
-      background:linear-gradient(90deg,var(--p500),var(--p300));border-radius:3px 3px 0 0;}
-    .sc.green::before{background:linear-gradient(90deg,var(--ok),#34d399);}
-    .sc.red::before{background:linear-gradient(90deg,var(--err),#f87171);}
-    .sc.orange::before{background:linear-gradient(90deg,var(--warn),#fbbf24);}
-    .sc.blue::before{background:linear-gradient(90deg,#2563eb,#60a5fa);}
-    .sc.teal::before{background:linear-gradient(90deg,#0d9488,#2dd4bf);}
-    .sc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(109,40,217,.1);}
-    .sc-lbl{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.7rem;}
-    .sc-val{font-size:2rem;font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:.3rem;color:var(--p700);}
-    .sc-val.green{color:var(--ok);} .sc-val.red{color:var(--err);} .sc-val.orange{color:var(--warn);} .sc-val.blue{color:#2563eb;} .sc-val.teal{color:#0d9488;}
-    .sc-sub{font-size:.75rem;color:var(--muted);}
-    .sc-trend{font-size:.72rem;margin-top:.4rem;font-weight:600;}
-    .sc-trend.up{color:var(--ok);} .sc-trend.down{color:var(--err);}
-
-    /* ── CARDS ── */
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.6rem;margin-bottom:1.25rem;position:relative;}
-    .ct{font-size:.95rem;font-weight:800;letter-spacing:-.01em;
-      display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;color:var(--p900);}
-    .ct span{font-size:.78rem;color:var(--muted);font-weight:400;}
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
-    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;}
-
-    /* ── PROGRESS BARS ── */
-    .pi{margin-bottom:1rem;}
-    .pi-hdr{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:.4rem;font-weight:500;}
-    .pb{height:8px;background:var(--p50);border-radius:50px;overflow:hidden;border:1px solid var(--p100);}
-    .pf{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--p600),var(--p300));transition:width .7s ease;}
-    .pf.green{background:linear-gradient(90deg,var(--ok),#34d399);}
-    .pf.red{background:linear-gradient(90deg,var(--err),#f87171);}
-    .pf.orange{background:linear-gradient(90deg,var(--warn),#fbbf24);}
-
-    /* ── MINI BAR CHART ── */
-    .bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:4px 0;}
-    .bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
-    .bar-seg-wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;width:100%;gap:1px;}
-    .bar-seg{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .6s ease;}
-    .bar-lbl{font-size:.6rem;color:var(--muted);font-weight:600;text-align:center;white-space:nowrap;}
-
-    /* ── DONUT CHART ── */
-    .donut-wrap{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
-    .donut-svg{flex-shrink:0;}
-    .donut-legend{display:flex;flex-direction:column;gap:.55rem;}
-    .dl-item{display:flex;align-items:center;gap:.55rem;font-size:.82rem;}
-    .dl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-    .dl-lbl{color:var(--muted);} .dl-val{font-weight:700;color:var(--text);margin-left:auto;padding-left:.5rem;}
-
-    /* ── TABLE ── */
-    .tw{overflow-x:auto;}
-    table{width:100%;border-collapse:collapse;font-size:.84rem;}
-    thead th{padding:.65rem 1rem;text-align:left;font-size:.7rem;font-weight:700;
-      letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-      border-bottom:1px solid var(--border);background:var(--p50);white-space:nowrap;}
-    thead th:first-child{border-radius:var(--r) 0 0 0;} thead th:last-child{border-radius:0 var(--r) 0 0;}
-    tbody td{padding:.8rem 1rem;border-bottom:1px solid rgba(228,222,255,.5);vertical-align:middle;}
-    tbody tr:last-child td{border-bottom:none;}
-    tbody tr:hover td{background:var(--p50);}
-
-    /* ── BADGES ── */
-    .badge{display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:50px;
-      font-size:.73rem;font-weight:700;white-space:nowrap;}
-    .b-ok{background:var(--okBg);color:var(--ok);border:1px solid var(--okB);}
-    .b-corr{background:var(--errBg);color:var(--err);border:1px solid var(--errB);}
-    .b-pend{background:var(--warnBg);color:var(--warn);border:1px solid var(--warnB);}
-    .b-year{background:var(--p50);color:var(--p700);border:1px solid var(--p100);}
-    .b-info{background:var(--infoBg);color:var(--info);border:1px solid var(--infoB);}
-
-    /* ── FILTERS ── */
-    .filters{display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center;}
-    select,input[type="text"],input[type="date"],input[type="password"]{
-      padding:.6rem .9rem;background:var(--surface);border:1.5px solid var(--border);
-      border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;
-      font-size:.85rem;outline:none;transition:all .2s;font-weight:500;}
-    select:focus,input:focus{border-color:var(--p400);box-shadow:0 0 0 3px rgba(139,92,246,.1);}
-
-    /* ── BUTTONS ── */
-    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;border-radius:10px;
-      font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;border:none;cursor:pointer;
-      transition:all .2s;white-space:nowrap;}
-    .btn-primary{background:linear-gradient(135deg,var(--p600),var(--p400));color:#fff;box-shadow:0 3px 12px rgba(109,40,217,.22);}
-    .btn-primary:hover{box-shadow:0 6px 18px rgba(109,40,217,.32);transform:translateY(-1px);}
-    .btn-ghost{background:var(--p50);color:var(--p700);border:1px solid var(--p100);}
-    .btn-ghost:hover{background:var(--p100);}
-    .btn-outline{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
-    .btn-outline:hover{border-color:var(--p300);color:var(--p600);}
-    .btn-danger{background:var(--errBg);color:var(--err);border:1px solid var(--errB);}
-    .btn-success{background:var(--okBg);color:var(--ok);border:1px solid var(--okB);}
-    .btn-sm{padding:.35rem .75rem;font-size:.78rem;border-radius:8px;}
-    .btns-row{display:flex;gap:.6rem;flex-wrap:wrap;}
-
-    /* ── FORM ── */
-    .fg{margin-bottom:1.1rem;}
-    .fl{display:block;font-size:.73rem;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.4rem;}
-    .form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;}
-    .full{width:100%;}
-
-    /* ── DROP ZONE ── */
-    .dz{border:2px dashed var(--p200);border-radius:var(--r);padding:2.5rem;text-align:center;
-      cursor:pointer;transition:all .25s;background:var(--p50);}
-    .dz:hover,.dz.dragover{border-color:var(--p400);background:var(--p100);}
-    .dz-icon{font-size:2.8rem;margin-bottom:.8rem;}
-    .dz p{color:var(--muted);font-size:.88rem;}
-
-    /* ── MESSAGES ── */
-    .msg{padding:.8rem 1rem;border-radius:10px;font-size:.86rem;margin-bottom:1rem;display:none;}
-    .msg.success{background:var(--okBg);border:1px solid var(--okB);color:var(--ok);display:block;}
-    .msg.error{background:var(--errBg);border:1px solid var(--errB);color:var(--err);display:block;}
-    .msg.info{background:var(--infoBg);border:1px solid var(--infoB);color:var(--info);display:block;}
-
-    /* ── DATA BANNER ── */
-    .dbanner{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;border-radius:10px;
-      font-size:.8rem;font-weight:600;margin-bottom:1.2rem;}
-    .dbanner.live{background:var(--okBg);color:var(--ok);border:1px solid var(--okB);}
-    .dbanner.demo{background:var(--warnBg);color:var(--warn);border:1px solid var(--warnB);}
-    .dbanner.loading{background:var(--infoBg);color:var(--info);border:1px solid var(--infoB);}
-
-    /* ── HEATMAP ── */
-    .heatmap{display:flex;gap:4px;flex-wrap:wrap;}
-    .hm-cell{width:22px;height:22px;border-radius:4px;cursor:pointer;transition:transform .15s;position:relative;}
-    .hm-cell:hover{transform:scale(1.3);z-index:5;}
-    .hm-cell[title]:hover::after{content:attr(title);position:absolute;bottom:125%;left:50%;
-      transform:translateX(-50%);background:var(--p900);color:#fff;
-      font-size:.68rem;padding:.25rem .5rem;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:10;}
-
-    /* ── TIMELINE ── */
-    .timeline{display:flex;flex-direction:column;gap:.6rem;}
-    .tl-item{display:flex;gap:.85rem;align-items:flex-start;}
-    .tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:.3rem;}
-    .tl-dot.ok{background:var(--ok);}
-    .tl-dot.corr{background:var(--err);}
-    .tl-dot.pend{background:var(--warn);}
-    .tl-content{flex:1;}
-    .tl-name{font-weight:600;font-size:.84rem;}
-    .tl-meta{font-size:.76rem;color:var(--muted);margin-top:.1rem;}
-    .tl-time{font-size:.73rem;color:var(--muted);flex-shrink:0;font-family:'JetBrains Mono',monospace;}
-
-    /* ── INSIGHT CARDS ── */
-    .insight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:1.25rem;}
-    .ic{background:linear-gradient(135deg,var(--surface),var(--p50));border:1px solid var(--border);
-      border-radius:var(--r);padding:1.2rem 1.3rem;}
-    .ic-emoji{font-size:1.6rem;margin-bottom:.6rem;}
-    .ic-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;
-      letter-spacing:.07em;margin-bottom:.3rem;}
-    .ic-value{font-size:1.3rem;font-weight:900;color:var(--p700);letter-spacing:-.02em;}
-    .ic-desc{font-size:.77rem;color:var(--muted);margin-top:.25rem;line-height:1.5;}
-
-    /* ── MODAL ── */
-    .modal-bg{display:none;position:fixed;inset:0;z-index:500;
-      background:rgba(46,16,101,.3);backdrop-filter:blur(4px);
-      align-items:center;justify-content:center;padding:1rem;}
-    .modal-bg.open{display:flex;}
-    .modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;
-      padding:2rem;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;
-      box-shadow:0 24px 60px rgba(46,16,101,.2);}
-    .modal h3{font-size:1.1rem;font-weight:800;margin-bottom:1.3rem;color:var(--p900);}
-    .mr{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;
-      border-bottom:1px solid var(--border);font-size:.87rem;}
-    .mr:last-child{border:none;}
-    .mr .lbl{color:var(--muted);font-weight:500;} .mr .val{font-weight:600;color:var(--text);text-align:right;max-width:65%;}
-    .ma{display:flex;gap:.7rem;justify-content:flex-end;margin-top:1.4rem;}
-    .cb{background:var(--errBg);border:1px solid var(--errB);border-radius:10px;
-      padding:.9rem 1rem;font-size:.86rem;line-height:1.6;color:var(--err);margin-top:.5rem;}
-
-    /* ── SETUP STEPS ── */
-    .setup-step{display:flex;gap:1rem;padding:.9rem;background:var(--p50);border:1px solid var(--p100);border-radius:10px;margin-bottom:.7rem;}
-    .sn{width:28px;height:28px;border-radius:50%;flex-shrink:0;
-      background:linear-gradient(135deg,var(--p600),var(--p400));
-      color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;}
-    .st{font-size:.85rem;line-height:1.55;color:var(--text);}
-
-    /* ── MISC ── */
-    .spin{display:inline-block;width:16px;height:16px;
-      border:2px solid var(--p100);border-top-color:var(--p500);
-      border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    .empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
-    .empty .ei{font-size:2.5rem;margin-bottom:.8rem;}
-    #toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;
-      background:var(--p800);color:#fff;padding:.8rem 1.3rem;border-radius:12px;
-      font-size:.85rem;font-weight:500;box-shadow:0 8px 24px rgba(46,16,101,.3);
-      transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);
-      pointer-events:none;max-width:300px;}
-    #toast.show{transform:translateY(0);opacity:1;}
-
-    /* ── STACKED NUMBERS ── */
-    .num-animate{transition:all .4s ease;}
-
-    /* ── RESPONSIVE ── */
-    @media(max-width:900px){
-      .hamburger{display:flex;}
-      .sidebar{transform:translateX(calc(-1 * var(--sidebar)));}
-      .sidebar.open{transform:translateX(0);}
-      .main{margin-left:0;padding:1.25rem;}
-      .two-col,.three-col{grid-template-columns:1fr;}
-      .stats-grid{grid-template-columns:repeat(2,1fr);}
+    /* ── PROMINENT LOGOUT BUTTON ── */
+    .btn-logout {
+      display:flex; align-items:center; gap:0.5rem;
+      padding:0.5rem 1.15rem;
+      background:linear-gradient(135deg, #ef4444, #dc2626);
+      color:white; border:none; border-radius:11px;
+      font-size:0.82rem; font-weight:700; cursor:pointer;
+      transition:var(--t); font-family:'Plus Jakarta Sans',sans-serif;
+      box-shadow:0 2px 12px rgba(239,68,68,0.35);
+      letter-spacing:0.01em; white-space:nowrap;
+      position:relative; overflow:hidden;
     }
-    @media(max-width:560px){
-      .stats-grid{grid-template-columns:1fr 1fr;gap:.75rem;}
-      .sc-val{font-size:1.6rem;}
-      .card{padding:1.1rem;}
-      thead th,tbody td{padding:.6rem .65rem;font-size:.78rem;}
-      .topbar{padding:0 1rem;}
-      .up-name{display:none;}
-      .ph h1{font-size:1.35rem;}
-      .btns-row{gap:.4rem;}
-      .btn{padding:.5rem .85rem;font-size:.8rem;}
+    .btn-logout::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); transform:translateX(-200%); transition:transform 0.6s; }
+    .btn-logout:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(239,68,68,0.45); }
+    .btn-logout:hover::before { transform:translateX(200%); }
+    .btn-logout:active { transform:scale(0.97); }
+    .logout-icon { font-size:1rem; }
+
+    /* ── LOGOUT CONFIRM MODAL ── */
+    .logout-modal-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(10,6,20,0.72); backdrop-filter:blur(18px);
+      z-index:700; align-items:center; justify-content:center; padding:1rem;
     }
+    .logout-modal-overlay.active { display:flex; animation:fadeIn 0.22s ease; }
+    .logout-modal-box {
+      background:white; border-radius:22px; max-width:420px; width:100%;
+      box-shadow:var(--s3); animation:modalIn 0.38s cubic-bezier(0.16,1,0.3,1);
+      border:1px solid rgba(239,68,68,0.15); overflow:hidden;
+    }
+    .logout-modal-top { background:linear-gradient(135deg,rgba(239,68,68,0.06),rgba(239,68,68,0.02)); padding:2rem 2rem 1.5rem; text-align:center; border-bottom:1px solid rgba(239,68,68,0.1); }
+    .logout-icon-big { width:64px;height:64px;background:linear-gradient(135deg,#ef4444,#dc2626); border-radius:18px; display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem;box-shadow:0 4px 20px rgba(239,68,68,0.35); }
+    .logout-modal-title { font-family:'Clash Display',sans-serif;font-size:1.35rem;font-weight:700;color:#1e0a3c;margin-bottom:0.4rem; }
+    .logout-modal-sub { font-size:0.88rem;color:rgba(76,29,149,0.55);line-height:1.55; }
+    .logout-modal-footer { padding:1.5rem 2rem; display:flex; gap:0.8rem; }
+    .btn-logout-confirm { flex:1; padding:0.7rem 1rem; background:linear-gradient(135deg,#ef4444,#dc2626); color:white; border:none; border-radius:12px; font-size:0.88rem; font-weight:700; cursor:pointer; transition:var(--t); font-family:'Plus Jakarta Sans',sans-serif; box-shadow:0 2px 12px rgba(239,68,68,0.3); }
+    .btn-logout-confirm:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(239,68,68,0.4); }
+    .btn-logout-cancel { flex:1; padding:0.7rem 1rem; background:var(--ice); color:var(--viv); border:1.5px solid rgba(124,58,237,0.2); border-radius:12px; font-size:0.88rem; font-weight:700; cursor:pointer; transition:var(--t); font-family:'Plus Jakarta Sans',sans-serif; }
+    .btn-logout-cancel:hover { background:var(--ghost); border-color:var(--viv); }
+
+    /* MAIN */
+    .main { margin-left:var(--sidebar-w); margin-top:var(--top-h); padding:2rem; min-height:calc(100vh - var(--top-h)); position:relative; z-index:1; transition: margin-left 0.4s cubic-bezier(0.16,1,0.3,1); }
+    .panel { display:none; }
+    .panel.active { display:block; animation:fadeUp 0.45s cubic-bezier(0.16,1,0.3,1); }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes modalIn { from { opacity:0; transform:scale(0.92) translateY(32px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+    .page-header { margin-bottom:2rem; display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .page-headline { font-family:'Clash Display',sans-serif; font-size:2rem; font-weight:700; background:linear-gradient(135deg, var(--core) 20%, var(--viv) 60%, var(--pk)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:-0.03em; line-height:1.1; }
+    .page-sub { font-size:0.84rem; color:rgba(76,29,149,0.55); margin-top:0.3rem; font-weight:500; }
+
+    /* STATS GRID */
+    .stats-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1.2rem; margin-bottom:2rem; }
+    .scard { background:white; border:1px solid rgba(139,92,246,0.1); border-radius:var(--r-lg); padding:1.5rem 1.3rem; box-shadow:var(--s1); position:relative; overflow:hidden; transition:var(--t); cursor:default; animation:cardRise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
+    .scard:nth-child(1){animation-delay:0.05s} .scard:nth-child(2){animation-delay:0.1s} .scard:nth-child(3){animation-delay:0.15s} .scard:nth-child(4){animation-delay:0.2s} .scard:nth-child(5){animation-delay:0.25s}
+    @keyframes cardRise { from { opacity:0; transform:translateY(32px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+    .scard::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--ca, var(--g1)); box-shadow:0 0 20px var(--ca-glow, rgba(124,58,237,0.4)); }
+    .scard::after { content:''; position:absolute; bottom:-30px; right:-30px; width:100px; height:100px; background:var(--ca-bg, rgba(124,58,237,0.04)); border-radius:50%; transition:var(--t); }
+    .scard:hover { transform:translateY(-6px) scale(1.01); box-shadow:var(--s2), 0 0 0 1px rgba(139,92,246,0.15); }
+    .scard:hover::after { transform:scale(1.6); opacity:0.7; }
+    .scard.cv { --ca:linear-gradient(90deg,#7c3aed,#8b5cf6); --ca-glow:rgba(124,58,237,0.4); --ca-bg:rgba(124,58,237,0.04); }
+    .scard.cg { --ca:linear-gradient(90deg,#10b981,#34d399); --ca-glow:rgba(16,185,129,0.4); --ca-bg:rgba(16,185,129,0.04); }
+    .scard.cb { --ca:linear-gradient(90deg,#3b82f6,#60a5fa); --ca-glow:rgba(59,130,246,0.4); --ca-bg:rgba(59,130,246,0.04); }
+    .scard.cr { --ca:linear-gradient(90deg,#ef4444,#f87171); --ca-glow:rgba(239,68,68,0.4); --ca-bg:rgba(239,68,68,0.04); }
+    .scard.cp { --ca:linear-gradient(90deg,#d946ef,#e879f9); --ca-glow:rgba(217,70,239,0.4); --ca-bg:rgba(217,70,239,0.04); }
+    .scard-icon { font-size:1.7rem; margin-bottom:0.7rem; display:block; line-height:1; }
+    .scard-label { font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:rgba(76,29,149,0.45); margin-bottom:0.3rem; }
+    .scard-val { font-family:'Clash Display',sans-serif; font-size:2.4rem; font-weight:700; background:linear-gradient(135deg, var(--core), var(--viv)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1; margin-bottom:0.3rem; }
+    .scard-sub { font-size:0.72rem; color:rgba(76,29,149,0.45); font-weight:500; }
+    .pbar { height:4px; background:rgba(139,92,246,0.1); border-radius:2px; overflow:hidden; margin-top:0.65rem; }
+    .pbar-fill { height:100%; background:var(--ca, var(--g1)); border-radius:2px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+
+    /* CARDS */
+    .card { background:white; border:1px solid rgba(139,92,246,0.1); border-radius:var(--r-lg); box-shadow:var(--s1); overflow:hidden; margin-bottom:1.8rem; transition:var(--t); }
+    .card:hover { box-shadow:var(--s2); }
+    .card-header { display:flex; align-items:center; justify-content:space-between; padding:1.3rem 1.6rem; border-bottom:1px solid rgba(139,92,246,0.08); flex-wrap:wrap; gap:0.8rem; background:linear-gradient(90deg, rgba(245,240,255,0.8), rgba(255,255,255,0.9)); position:relative; }
+    .card-header::after { content:''; position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg, rgba(124,58,237,0.2), rgba(217,70,239,0.1), transparent); }
+    .card-title { font-family:'Clash Display',sans-serif; font-size:1.05rem; font-weight:700; background:var(--g3); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; display:flex; align-items:center; gap:0.5rem; letter-spacing:-0.01em; }
+    .card-body { padding:1.6rem; }
+
+    /* CHARTS */
+    .charts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1.4rem; margin-bottom:2rem; }
+    .chart-card { background:white; border:1px solid rgba(139,92,246,0.1); border-radius:var(--r); padding:1.5rem; box-shadow:var(--s1); transition:var(--t); position:relative; overflow:hidden; }
+    .chart-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--viv), var(--pk), transparent); }
+    .chart-card::after { content:''; position:absolute; bottom:0; right:0; width:120px; height:120px; background:radial-gradient(circle, rgba(124,58,237,0.04), transparent 70%); border-radius:50%; pointer-events:none; }
+    .chart-card:hover { transform:translateY(-4px); box-shadow:var(--s2); }
+    .chart-title { font-family:'Clash Display',sans-serif; font-size:0.88rem; font-weight:600; color:var(--core); margin-bottom:1rem; display:flex; align-items:center; gap:0.45rem; }
+    canvas { max-height:260px; }
+
+    /* FILTERS */
+    .filter-bar { display:flex; gap:0.8rem; flex-wrap:wrap; align-items:flex-end; }
+    .fg { display:flex; flex-direction:column; gap:0.3rem; min-width:130px; }
+    .flabel { font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:rgba(76,29,149,0.5); }
+    select, input[type="search"], input[type="text"] { padding:0.5rem 0.9rem; background:var(--ice); border:1px solid rgba(139,92,246,0.15); border-radius:11px; font-family:'Plus Jakarta Sans',sans-serif; font-size:0.855rem; color:#1e0a3c; outline:none; transition:var(--t); height:38px; }
+    select:focus, input:focus { border-color:var(--viv); background:white; box-shadow:var(--glow-ring); }
+    .sw { position:relative; }
+    .sw input { padding-left:2.2rem; }
+    .sw::before { content:'⌕'; position:absolute; left:0.75rem; top:50%; transform:translateY(-50%); font-size:1.1rem; color:rgba(124,58,237,0.4); pointer-events:none; }
+
+    /* BUTTONS */
+    .btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1.1rem; border:none; border-radius:11px; font-family:'Plus Jakarta Sans',sans-serif; font-size:0.82rem; font-weight:700; cursor:pointer; transition:var(--t); white-space:nowrap; height:38px; }
+    .btn-primary { background:var(--g1); color:white; box-shadow:var(--s1); position:relative; overflow:hidden; }
+    .btn-primary::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); transform:translateX(-200%); transition:transform 0.5s; }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:var(--s2); }
+    .btn-primary:hover::before { transform:translateX(200%); }
+    .btn-outline { background:transparent; color:var(--viv); border:1.5px solid rgba(124,58,237,0.3); }
+    .btn-outline:hover { background:var(--ice); border-color:var(--viv); }
+    .btn-sm { padding:0.35rem 0.75rem; font-size:0.77rem; height:32px; border-radius:8px; }
+
+    /* TABLES */
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:0.825rem; }
+    thead th { background:linear-gradient(90deg, rgba(245,240,255,0.9), rgba(237,233,254,0.6)); padding:0.9rem 1rem; text-align:left; font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--core); white-space:nowrap; border-bottom:2px solid rgba(124,58,237,0.15); }
+    tbody td { padding:0.8rem 1rem; border-bottom:1px solid rgba(139,92,246,0.06); color:#1e0a3c; vertical-align:middle; }
+    tbody tr { transition:background 0.18s; }
+    tbody tr:hover { background:rgba(124,58,237,0.03); }
+    tbody tr:last-child td { border-bottom:none; }
+    .mono { font-family:'JetBrains Mono',monospace; font-size:0.75rem; }
+
+    /* BADGES */
+    .badge { display:inline-flex; align-items:center; gap:0.25rem; padding:0.22rem 0.65rem; border-radius:20px; font-size:0.63rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; white-space:nowrap; }
+    .bs { background:var(--ok-bg); color:var(--ok); border:1px solid rgba(16,185,129,0.15); }
+    .bw { background:var(--warn-bg); color:var(--warn); border:1px solid rgba(245,158,11,0.15); }
+    .bd { background:var(--err-bg); color:var(--err); border:1px solid rgba(239,68,68,0.15); }
+    .bi { background:var(--info-bg); color:var(--info); border:1px solid rgba(59,130,246,0.15); }
+    .bp { background:var(--ghost); color:var(--core); border:1px solid rgba(124,58,237,0.15); }
+    .bpk { background:rgba(217,70,239,0.1); color:#a21caf; border:1px solid rgba(217,70,239,0.15); }
+
+    /* PAGINATION */
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-top:1px solid rgba(139,92,246,0.08); flex-wrap:wrap; gap:0.8rem; }
+    .page-info { font-size:0.78rem; color:rgba(76,29,149,0.5); font-weight:600; }
+    .page-controls { display:flex; gap:0.25rem; }
+    .page-btn { padding:0.3rem 0.6rem; min-width:34px; background:white; border:1px solid rgba(139,92,246,0.15); border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; transition:var(--t); color:rgba(76,29,149,0.6); font-family:'Plus Jakarta Sans',sans-serif; }
+    .page-btn:hover:not(:disabled) { background:var(--ice); border-color:var(--viv); color:var(--viv); }
+    .page-btn.active { background:var(--g1); color:white; border-color:var(--viv); box-shadow:0 2px 8px rgba(124,58,237,0.25); }
+    .page-btn:disabled { opacity:0.25; cursor:not-allowed; }
+
+    /* ANALYSIS TABS */
+    .atabs { display:flex; gap:0; flex-wrap:wrap; background:white; border:1px solid rgba(139,92,246,0.1); border-radius:var(--r); margin-bottom:1.6rem; padding:0.4rem; box-shadow:var(--s1); }
+    .atab { flex:1; padding:0.65rem 1rem; background:none; border:none; border-radius:12px; color:rgba(76,29,149,0.5); font-weight:600; font-size:0.82rem; cursor:pointer; transition:var(--t); font-family:'Plus Jakarta Sans',sans-serif; white-space:nowrap; text-align:center; }
+    .atab:hover { color:var(--viv); background:var(--ice); }
+    .atab.active { background:var(--g1); color:white; box-shadow:0 2px 12px rgba(124,58,237,0.3); }
+    .atab-content { display:none; animation:fadeUp 0.3s ease; }
+    .atab-content.active { display:block; }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(10,6,20,0.65); backdrop-filter:blur(16px); z-index:600; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.active { display:flex; animation:fadeIn 0.25s ease; }
+    .modal-box { background:white; border-radius:var(--r-lg); max-width:640px; width:100%; max-height:92vh; overflow-y:auto; box-shadow:var(--s3); animation:modalIn 0.4s cubic-bezier(0.16,1,0.3,1); border:1px solid rgba(139,92,246,0.12); }
+    .modal-header { padding:1.6rem 1.6rem 1.2rem; border-bottom:1px solid rgba(139,92,246,0.08); display:flex; align-items:center; justify-content:space-between; background:linear-gradient(90deg, rgba(245,240,255,0.8), white); }
+    .modal-title { font-family:'Clash Display',sans-serif; font-size:1.2rem; font-weight:700; background:var(--g1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .modal-close { background:var(--err-bg); border:none; border-radius:10px; width:34px; height:34px; cursor:pointer; font-size:1.1rem; transition:var(--t); display:flex; align-items:center; justify-content:center; color:var(--err); }
+    .modal-close:hover { background:var(--err); color:white; }
+    .modal-body { padding:1.6rem; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.1rem; margin-bottom:1.4rem; }
+    .ditem { display:flex; flex-direction:column; gap:0.25rem; }
+    .dkey { font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:rgba(76,29,149,0.45); }
+    .dval { font-size:0.9rem; font-weight:600; color:#1e0a3c; word-break:break-word; }
+    .status-selector { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .status-btn { padding:0.5rem 1.1rem; border:2px solid rgba(139,92,246,0.18); background:white; border-radius:11px; font-size:0.82rem; font-weight:700; cursor:pointer; transition:var(--t); color:rgba(76,29,149,0.6); font-family:'Plus Jakarta Sans',sans-serif; }
+    .status-btn:hover { border-color:var(--viv); color:var(--viv); }
+    .status-btn.active { background:var(--g1); border-color:transparent; color:white; box-shadow:var(--s1); }
+
+    /* LOADING / EMPTY */
+    .loading-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4rem 2rem; gap:1rem; }
+    .spinner { width:44px; height:44px; border:3px solid rgba(139,92,246,0.15); border-top-color:var(--viv); border-radius:50%; animation:spin 0.75s linear infinite; box-shadow:0 0 20px rgba(124,58,237,0.15); }
+    .loading-text { font-size:0.9rem; color:rgba(76,29,149,0.5); font-weight:600; }
+    .empty-state { text-align:center; padding:3rem; color:rgba(76,29,149,0.4); }
+    .empty-state .icon { font-size:2.8rem; margin-bottom:0.8rem; }
+    .empty-state p { font-size:0.9rem; font-weight:500; }
+
+    /* TOAST */
+    .toast-wrap { position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999; display:flex; flex-direction:column; gap:0.5rem; }
+    .toast { display:flex; align-items:center; gap:0.7rem; padding:0.85rem 1.2rem; background:white; border:1px solid rgba(139,92,246,0.12); border-radius:14px; box-shadow:var(--s3); font-size:0.84rem; font-weight:600; max-width:360px; animation:toastIn 0.35s cubic-bezier(0.16,1,0.3,1); border-left:3px solid var(--viv); }
+    @keyframes toastIn { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+    .toast.success { border-left-color:var(--ok); }
+    .toast.error { border-left-color:var(--err); }
+    .toast.warning { border-left-color:var(--warn); }
+
+    /* SIDEBAR OVERLAY */
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(10,6,20,0.55); z-index:250; backdrop-filter:blur(6px); }
+    .sidebar-overlay.open { display:block; }
+
+    /* METRIC GRID */
+    .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1.2rem; }
+    .metric-tile { padding:1.4rem; border-radius:16px; border-left:4px solid var(--mc, var(--viv)); background:var(--mbg, var(--ice)); transition:var(--t); position:relative; overflow:hidden; }
+    .metric-tile::after { content:''; position:absolute; bottom:-20px; right:-20px; width:80px; height:80px; background:radial-gradient(circle, var(--mc, var(--viv)), transparent 70%); opacity:0.06; border-radius:50%; }
+    .metric-tile:hover { transform:translateY(-4px); box-shadow:var(--s2); }
+    .mtile-label { font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--mc,var(--viv)); margin-bottom:0.5rem; opacity:0.8; }
+    .mtile-val { font-family:'Clash Display',sans-serif; font-size:2.1rem; font-weight:700; color:var(--mc,var(--viv)); line-height:1; }
+    .mtile-sub { font-size:0.75rem; color:rgba(76,29,149,0.45); margin-top:0.5rem; font-weight:500; }
+
+    /* INSIGHT CARDS */
+    .insight-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.2rem; margin-top:1.5rem; }
+    .insight-card { background:white; border:1px solid rgba(139,92,246,0.1); border-radius:var(--r); padding:1.3rem; box-shadow:var(--s1); transition:var(--t); position:relative; overflow:hidden; }
+    .insight-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--viv), var(--pk)); }
+    .insight-card:hover { transform:translateY(-4px); box-shadow:var(--s2); }
+    .insight-header { display:flex; align-items:center; gap:0.6rem; margin-bottom:0.9rem; }
+    .insight-icon { width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+    .insight-title { font-size:0.78rem; font-weight:800; color:rgba(76,29,149,0.6); text-transform:uppercase; letter-spacing:0.06em; }
+    .insight-val { font-family:'Clash Display',sans-serif; font-size:1.7rem; font-weight:700; margin-bottom:0.3rem; line-height:1; }
+    .insight-desc { font-size:0.77rem; color:rgba(76,29,149,0.5); line-height:1.55; }
+
+    /* RANK TABLE */
+    .rank-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .rank-table th { background:rgba(245,240,255,0.7); padding:0.7rem 0.9rem; text-align:left; font-size:0.6rem; font-weight:800; text-transform:uppercase; letter-spacing:0.09em; color:var(--core); border-bottom:1px solid rgba(139,92,246,0.1); }
+    .rank-table td { padding:0.7rem 0.9rem; border-bottom:1px solid rgba(139,92,246,0.05); vertical-align:middle; }
+    .rank-table tr:hover { background:rgba(124,58,237,0.03); }
+    .rank-table tr:last-child td { border-bottom:none; }
+    .rank-num { width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:0.78rem;font-weight:800;font-family:'Clash Display',sans-serif; }
+    .rn-1{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:white;box-shadow:0 2px 8px rgba(245,158,11,0.4)}
+    .rn-2{background:linear-gradient(135deg,#6b7280,#9ca3af);color:white}
+    .rn-3{background:linear-gradient(135deg,#b45309,#d97706);color:white;box-shadow:0 2px 8px rgba(180,83,9,0.3)}
+    .rn-n{background:var(--ice);color:var(--core);border:1px solid rgba(124,58,237,0.15)}
+    .mini-bar-wrap { display:flex;align-items:center;gap:0.5rem; }
+    .mini-bar { flex:1;height:6px;background:rgba(139,92,246,0.1);border-radius:3px;overflow:hidden; }
+    .mini-bar-fill { height:100%;background:var(--g1);border-radius:3px;transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+    .mini-bar-val { font-size:0.73rem;font-weight:700;color:var(--viv);min-width:32px;text-align:right; }
+
+    /* HEATMAP */
+    .heatmap-legend { display:flex; gap:0.7rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+    .hlegend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; font-weight:600; color:rgba(76,29,149,0.6); }
+    .hlegend-dot { width:14px;height:14px;border-radius:4px; }
+
+    /* SCORE BARS */
+    .score-bar-row { display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem; }
+    .score-bar-label { font-size:0.75rem; font-weight:600; min-width:100px; color:rgba(76,29,149,0.7); }
+    .score-bar-track { flex:1; height:8px; background:rgba(139,92,246,0.1); border-radius:4px; overflow:hidden; }
+    .score-bar-fill { height:100%; border-radius:4px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); }
+    .score-bar-val { font-size:0.75rem; font-weight:800; min-width:40px; text-align:right; color:var(--viv); }
+
+    /* FUNNEL */
+    .funnel-step { display:flex; align-items:center; gap:1rem; padding:1rem 1.2rem; border-radius:14px; background:var(--ice); border-left:4px solid var(--fc,var(--viv)); margin-bottom:0.8rem; transition:var(--t); }
+    .funnel-step:hover { transform:translateX(4px); box-shadow:var(--s1); }
+    .funnel-num { font-family:'Clash Display',sans-serif; font-size:2rem; font-weight:700; color:var(--fc,var(--viv)); min-width:60px; }
+    .funnel-label { font-size:0.82rem; font-weight:700; color:#1e0a3c; }
+    .funnel-sub { font-size:0.73rem; color:rgba(76,29,149,0.5); margin-top:0.2rem; }
+    .funnel-pct { margin-left:auto; font-size:0.9rem; font-weight:800; color:var(--fc,var(--viv)); }
+
+    /* RESPONSIVE */
+    @media(max-width:1400px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+    @media(max-width:900px){ .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)} .topbar{left:0}.main{margin-left:0}.hamburger{display:flex} .detail-grid{grid-template-columns:1fr} }
+    @media(max-width:768px){ :root{--top-h:62px;--sidebar-w:265px} .main{padding:1.2rem}.stats-grid{grid-template-columns:repeat(2,1fr);gap:0.9rem} .filter-bar{flex-direction:column}.fg{width:100%;min-width:unset} .sw input{width:100%}.topbar-title{font-size:1rem}.refresh-ts{display:none} .metric-grid{grid-template-columns:1fr 1fr}.insight-grid{grid-template-columns:1fr} .atabs{flex-wrap:wrap}.atab{flex:unset;font-size:0.78rem;padding:0.55rem 0.75rem} .btn-logout span.logout-text{display:none} }
+    @media(max-width:560px){ .main{padding:0.9rem}.stats-grid{grid-template-columns:1fr} .pagination{flex-direction:column;align-items:stretch} .metric-grid{grid-template-columns:1fr}.modal-box{max-height:95vh} }
   </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
-<header class="topbar">
-  <div class="topbar-l">
-    <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
-    <a class="brand" href="#"><span class="brand-mark">🎓</span><span>Exam Preview</span></a>
-    <span class="admin-chip">ADMIN</span>
-  </div>
-  <div class="topbar-r">
-    <div class="user-pill">
-      <div class="user-avatar" id="userAvatar">A</div>
-      <span class="up-name" id="userLabel">admin</span>
+<div class="bg-mesh">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="sidebar-overlay" id="sOverlay" onclick="closeSidebar()"></div>
+
+<!-- LOGOUT CONFIRMATION MODAL -->
+<div class="logout-modal-overlay" id="logoutModal">
+  <div class="logout-modal-box">
+    <div class="logout-modal-top">
+      <div class="logout-icon-big">⎋</div>
+      <div class="logout-modal-title">Sign out?</div>
+      <div class="logout-modal-sub">You'll be returned to the login screen.<br>Any unsaved changes may be lost.</div>
     </div>
-    <button class="btn-logout" onclick="logout()">Sign Out</button>
+    <div class="logout-modal-footer">
+      <button class="btn-logout-cancel" onclick="closeLogoutModal()">Cancel</button>
+      <button class="btn-logout-confirm" onclick="confirmLogout()">Yes, Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-crystal"><div class="logo-crystal-inner">✦</div></div>
+    <div class="logo-text">
+      <strong>Exam Preview</strong>
+      <span>Admin Portal</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <button class="nav-item active" onclick="showPanel('overview',this)">
+      <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+    </button>
+    <div class="nav-section">Intelligence</div>
+    <button class="nav-item" onclick="showPanel('analysis',this)">
+      <span class="nav-icon">📈</span><span class="nav-label">Deep Analysis</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('insights',this)">
+      <span class="nav-icon">💡</span><span class="nav-label">AI Insights</span>
+    </button>
+    <div class="nav-section">Data</div>
+    <button class="nav-item" onclick="showPanel('students',this)">
+      <span class="nav-icon">🎓</span><span class="nav-label">Students</span>
+      <span class="nav-pill" id="np-students">—</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('corrections',this)">
+      <span class="nav-icon">✏️</span><span class="nav-label">Corrections</span>
+      <span class="nav-pill" id="np-corrections">—</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('confirmations',this)">
+      <span class="nav-icon">✅</span><span class="nav-label">Confirmations</span>
+      <span class="nav-pill" id="np-confirmations">—</span>
+    </button>
+    <div class="nav-section">System</div>
+    <button class="nav-item" onclick="showPanel('filelinks',this)">
+      <span class="nav-icon">📁</span><span class="nav-label">File Links</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('admins',this)">
+      <span class="nav-icon">🔑</span><span class="nav-label">Admins</span>
+    </button>
+    <button class="nav-item" onclick="showPanel('auditlog',this)">
+      <span class="nav-icon">📋</span><span class="nav-label">Audit Log</span>
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-tile">
+      <div class="user-ava" id="userAva">A</div>
+      <div class="user-info">
+        <div class="user-name" id="uName">Admin</div>
+        <div class="user-role" id="uRole">Administrator</div>
+      </div>
+      <button class="btn-exit" onclick="handleLogout()" title="Logout">⎋</button>
+    </div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="topbar-title" id="topTitle">Dashboard</div>
+  <div class="topbar-right">
+    <span class="refresh-ts" id="lastRefresh">Not loaded</span>
+    <button class="btn-refresh" onclick="loadAllData()" id="btnRefresh">
+      <span class="spin-icon">🔄</span> Refresh
+    </button>
+    <!-- PROMINENT LOGOUT BUTTON -->
+    <button class="btn-logout" onclick="handleLogout()">
+      <span class="logout-icon">⎋</span>
+      <span class="logout-text">Sign Out</span>
+    </button>
   </div>
 </header>
 
-<div class="sidebar-ovl" id="sidebarOvl" onclick="toggleSidebar()"></div>
+<main class="main">
 
-<div class="layout">
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sg">
-      <span class="sg-lbl">Overview</span>
-      <button class="ni active" onclick="go('dashboard',this)">
-        <span class="ico">📊</span><span class="lbl">Dashboard</span>
-      </button>
-      <button class="ni" onclick="go('analytics',this)">
-        <span class="ico">📈</span><span class="lbl">Analytics</span>
-      </button>
-    </div>
-    <div class="sg">
-      <span class="sg-lbl">Records</span>
-      <button class="ni" onclick="go('students',this)">
-        <span class="ico">👥</span><span class="lbl">All Students</span>
-        <span class="nbadge blue" id="sb-students">0</span>
-      </button>
-      <button class="ni" onclick="go('corrections',this)">
-        <span class="ico">⚠️</span><span class="lbl">Corrections</span>
-        <span class="nbadge" id="sb-corrections">0</span>
-      </button>
-    </div>
-    <div class="sg">
-      <span class="sg-lbl">Management</span>
-      <button class="ni" onclick="go('upload',this)">
-        <span class="ico">📤</span><span class="lbl">Upload Data</span>
-      </button>
-      <button class="ni" onclick="go('files',this)">
-        <span class="ico">📁</span><span class="lbl">Manage Files</span>
-      </button>
-    </div>
-    <div class="sg">
-      <span class="sg-lbl">Reports</span>
-      <button class="ni" onclick="go('reports',this)">
-        <span class="ico">📋</span><span class="lbl">Reports</span>
-      </button>
-    </div>
-    <div class="sg">
-      <span class="sg-lbl">System</span>
-      <button class="ni" onclick="go('config',this)">
-        <span class="ico">⚙️</span><span class="lbl">Configuration</span>
-      </button>
-    </div>
-  </aside>
-
-  <main class="main">
-
-    <!-- ══════════ DASHBOARD ══════════ -->
-    <div class="sec active" id="sec-dashboard">
-      <div class="ph-row">
-        <div class="ph" style="margin:0"><h1>Dashboard</h1><p>Real-time verification overview</p></div>
-        <div class="btns-row">
-          <button class="btn btn-ghost" onclick="refreshData()">↻ Refresh</button>
-          <button class="btn btn-primary" onclick="go('analytics',document.querySelectorAll('.ni')[1])">📈 Analytics →</button>
-        </div>
+  <!-- ══ OVERVIEW ══ -->
+  <div class="panel active" id="panel-overview">
+    <div class="page-header">
+      <div>
+        <div class="page-headline">Dashboard Overview</div>
+        <div class="page-sub">Real-time exam submission analytics &amp; insights</div>
       </div>
+    </div>
+    <div class="stats-grid">
+      <div class="scard cv"><span class="scard-icon">🎓</span><div class="scard-label">Total Students</div><div class="scard-val" id="ov-total">—</div><div class="scard-sub">Enrolled in system</div></div>
+      <div class="scard cg"><span class="scard-icon">✅</span><div class="scard-label">Submitted</div><div class="scard-val" id="ov-submitted">—</div><div class="scard-sub" id="ov-sub-pct">— completion</div><div class="pbar"><div class="pbar-fill cg" id="ov-sub-bar" style="width:0%"></div></div></div>
+      <div class="scard cb"><span class="scard-icon">⏳</span><div class="scard-label">Pending</div><div class="scard-val" id="ov-pending">—</div><div class="scard-sub" id="ov-pend-pct">— pending</div><div class="pbar"><div class="pbar-fill cb" id="ov-pend-bar" style="width:0%"></div></div></div>
+      <div class="scard cr"><span class="scard-icon">⚠️</span><div class="scard-label">Needs Correction</div><div class="scard-val" id="ov-correction">—</div><div class="scard-sub" id="ov-cor-pct">— flagged</div></div>
+      <div class="scard cp"><span class="scard-icon">💬</span><div class="scard-label">Confirmations</div><div class="scard-val" id="ov-confirmations">—</div><div class="scard-sub" id="ov-conf-yes">— YES responses</div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-title">📊 Submission Status</div><canvas id="ch-status"></canvas></div>
+      <div class="chart-card"><div class="chart-title">✏️ Correction Breakdown</div><canvas id="ch-correction"></canvas></div>
+      <div class="chart-card"><div class="chart-title">💬 Confirmation Responses</div><canvas id="ch-confirmations"></canvas></div>
+      <div class="chart-card"><div class="chart-title">📅 Submissions by Year</div><canvas id="ch-year"></canvas></div>
+      <div class="chart-card"><div class="chart-title">🏫 Submissions by Department</div><canvas id="ch-dept"></canvas></div>
+      <div class="chart-card"><div class="chart-title">📈 Submitted vs Corrections by Year</div><canvas id="ch-rate-year"></canvas></div>
+    </div>
+  </div>
 
-      <div id="dataBanner" class="dbanner loading">
-        <span class="spin"></span> Connecting to Google Sheets backend…
+  <!-- ══ DEEP ANALYSIS ══ -->
+  <div class="panel" id="panel-analysis">
+    <div class="page-header">
+      <div>
+        <div class="page-headline">Deep Analysis</div>
+        <div class="page-sub">Multi-dimensional breakdown across departments, years &amp; metrics</div>
       </div>
+    </div>
+    <div class="atabs">
+      <button class="atab active" onclick="switchTab(this,'at-year')">📅 Year-wise</button>
+      <button class="atab" onclick="switchTab(this,'at-dept')">🏫 Department</button>
+      <button class="atab" onclick="switchTab(this,'at-correction')">✏️ Corrections</button>
+      <button class="atab" onclick="switchTab(this,'at-confirmation')">✅ Confirmations</button>
+      <button class="atab" onclick="switchTab(this,'at-trend')">📉 Trends</button>
+      <button class="atab" onclick="switchTab(this,'at-metrics')">🎯 KPIs</button>
+      <button class="atab" onclick="switchTab(this,'at-funnel')">🔻 Funnel</button>
+      <button class="atab" onclick="switchTab(this,'at-cohort')">🔬 Cohort</button>
+      <button class="atab" onclick="switchTab(this,'at-pending')">⏳ Pending List</button>
+    </div>
 
-      <div class="stats-grid">
-        <div class="sc"><div class="sc-lbl">Total Students</div><div class="sc-val" id="st-total">—</div><div class="sc-sub">All departments</div></div>
-        <div class="sc green"><div class="sc-lbl">Confirmed OK</div><div class="sc-val green" id="st-ok">—</div><div class="sc-sub">No corrections</div></div>
-        <div class="sc red"><div class="sc-lbl">Corrections</div><div class="sc-val red" id="st-corr">—</div><div class="sc-sub">Need attention</div></div>
-        <div class="sc orange"><div class="sc-lbl">Pending</div><div class="sc-val orange" id="st-pend">—</div><div class="sc-sub">Not yet verified</div></div>
-        <div class="sc blue"><div class="sc-lbl">Completion</div><div class="sc-val blue" id="st-pct">—%</div><div class="sc-sub">Overall progress</div></div>
-        <div class="sc teal"><div class="sc-lbl">Response Rate</div><div class="sc-val teal" id="st-resp">—%</div><div class="sc-sub">Responded students</div></div>
-      </div>
-
-      <div class="two-col">
-        <div class="card">
-          <div class="ct">Department Progress <span id="deptTotal"></span></div>
-          <div id="deptChart"><div class="empty"><div class="ei">📊</div><p>Loading…</p></div></div>
-        </div>
-        <div class="card">
-          <div class="ct">Year-wise Breakdown</div>
-          <div id="yearChart"><div class="empty"><div class="ei">📈</div><p>Loading…</p></div></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="ct">Recent Submissions <span>Last 10</span></div>
-        <div id="recentActivity"><div class="empty"><div class="ei">🕐</div><p>No activity yet</p></div></div>
+    <div class="atab-content active" id="at-year">
+      <div class="card"><div class="card-header"><div class="card-title">📅 Year-wise Analysis</div></div>
+        <div class="card-body"><div style="margin-bottom:1.8rem"><canvas id="ch-year-detail" style="max-height:320px;"></canvas></div><div id="year-tbl"></div></div>
       </div>
     </div>
 
-    <!-- ══════════ ANALYTICS ══════════ -->
-    <div class="sec" id="sec-analytics">
-      <div class="ph"><h1>Analytics</h1><p>Deep insights into verification progress</p></div>
+    <div class="atab-content" id="at-dept">
+      <div class="card"><div class="card-header"><div class="card-title">🏫 Department-wise Analysis</div></div>
+        <div class="card-body"><div style="margin-bottom:1.8rem"><canvas id="ch-dept-detail" style="max-height:380px;"></canvas></div><div id="dept-tbl"></div></div>
+      </div>
+    </div>
 
-      <!-- Key Insights Row -->
-      <div class="insight-grid" id="insightGrid"></div>
-
-      <div class="two-col">
-        <!-- Donut chart: status distribution -->
-        <div class="card">
-          <div class="ct">Status Distribution</div>
-          <div class="donut-wrap">
-            <svg class="donut-svg" viewBox="0 0 120 120" width="120" height="120" id="donutSvg">
-              <circle cx="60" cy="60" r="50" fill="none" stroke="#f5f3ff" stroke-width="18"/>
-            </svg>
-            <div class="donut-legend" id="donutLegend"></div>
+    <div class="atab-content" id="at-correction">
+      <div class="card"><div class="card-header"><div class="card-title">✏️ Correction Analysis</div></div>
+        <div class="card-body">
+          <div class="charts-grid" style="margin-bottom:1.8rem;">
+            <div><div class="chart-title" style="font-family:'Clash Display';color:var(--core)">🏫 Corrections by Dept</div><canvas id="ch-cor-dept"></canvas></div>
+            <div><div class="chart-title" style="font-family:'Clash Display';color:var(--core)">📅 Corrections by Year</div><canvas id="ch-cor-year"></canvas></div>
           </div>
-        </div>
-        <!-- Stacked bar: dept breakdown -->
-        <div class="card">
-          <div class="ct">Department Breakdown <span>OK / Correction / Pending</span></div>
-          <div id="stackedBar"></div>
-        </div>
-      </div>
-
-      <!-- Correction Analysis -->
-      <div class="two-col">
-        <div class="card">
-          <div class="ct">Top Correction Reasons</div>
-          <div id="corrReasons"></div>
-        </div>
-        <div class="card">
-          <div class="ct">Submission Activity <span>by hour</span></div>
-          <div id="hourlyChart"></div>
-        </div>
-      </div>
-
-      <!-- Year × Dept Heatmap -->
-      <div class="card">
-        <div class="ct">Completion Heatmap <span>Year × Department (% complete)</span></div>
-        <div id="heatmapContainer" style="overflow-x:auto;padding:0.5rem 0;"></div>
-      </div>
-
-      <!-- Pending deep-dive -->
-      <div class="card">
-        <div class="ct">Pending Students by Department <span>Who hasn't responded</span></div>
-        <div id="pendingBreakdown"></div>
-      </div>
-    </div>
-
-    <!-- ══════════ STUDENTS ══════════ -->
-    <div class="sec" id="sec-students">
-      <div class="ph-row">
-        <div class="ph" style="margin:0"><h1>All Students</h1><p>Browse, filter and manage records</p></div>
-        <div class="btns-row">
-          <button class="btn btn-ghost" onclick="refreshData()">↻ Refresh</button>
-          <button class="btn btn-primary" onclick="go('upload',document.querySelectorAll('.ni')[4])">+ Add Students</button>
-        </div>
-      </div>
-      <div class="filters">
-        <select id="f-dept" onchange="applyFilters()"><option value="">All Departments</option></select>
-        <select id="f-year" onchange="applyFilters()">
-          <option value="">All Years</option>
-          <option>I</option><option>II</option><option>III</option><option>IV</option>
-        </select>
-        <select id="f-status" onchange="applyFilters()">
-          <option value="">All Status</option>
-          <option value="Pending">Pending</option>
-          <option value="OK">Confirmed OK</option>
-          <option value="Correction">Correction</option>
-        </select>
-        <input type="text" id="f-search" placeholder="🔍  Search name / reg no…" oninput="applyFilters()" style="min-width:190px"/>
-        <button class="btn btn-ghost btn-sm" onclick="exportFiltered()">⬇ Export filtered</button>
-      </div>
-      <div class="card">
-        <div class="ct" id="studCount">Students</div>
-        <div class="tw">
-          <table id="studTable">
-            <thead><tr>
-              <th>#</th><th>Roll No</th><th>Reg No</th><th>Name</th>
-              <th>Programme</th><th>Year</th><th>File</th>
-              <th>Status</th><th>Correction Notes</th><th>Submitted</th>
-            </tr></thead>
-            <tbody id="studBody">
-              <tr><td colspan="10"><div class="empty"><div class="ei">⏳</div><p>Loading…</p></div></td></tr>
-            </tbody>
-          </table>
+          <div id="cor-analysis-tbl"></div>
         </div>
       </div>
     </div>
 
-    <!-- ══════════ CORRECTIONS ══════════ -->
-    <div class="sec" id="sec-corrections">
-      <div class="ph-row">
-        <div class="ph" style="margin:0"><h1>Corrections Inbox</h1><p>Students who flagged issues</p></div>
-        <div class="btns-row">
-          <button class="btn btn-ghost" onclick="exportCorrections()">⬇ Export CSV</button>
-        </div>
-      </div>
-
-      <!-- Summary mini-cards -->
-      <div class="stats-grid" style="margin-bottom:1.25rem" id="corrStats"></div>
-
-      <div class="card">
-        <div class="ct" id="corrCount">Corrections</div>
-        <div class="tw">
-          <table>
-            <thead><tr>
-              <th>#</th><th>Reg No</th><th>Name</th><th>Roll No</th>
-              <th>Programme</th><th>Year</th><th>Course / Field</th><th>Details</th>
-              <th>Submitted</th><th>Action</th>
-            </tr></thead>
-            <tbody id="corrBody">
-              <tr><td colspan="10"><div class="empty"><div class="ei">✅</div><p>No corrections reported</p></div></td></tr>
-            </tbody>
-          </table>
+    <div class="atab-content" id="at-confirmation">
+      <div class="card"><div class="card-header"><div class="card-title">✅ Confirmation Analysis</div></div>
+        <div class="card-body">
+          <div class="charts-grid" style="margin-bottom:1.8rem;">
+            <div><div class="chart-title" style="font-family:'Clash Display';color:var(--core)">🏫 Confirmations by Dept</div><canvas id="ch-conf-dept"></canvas></div>
+            <div><div class="chart-title" style="font-family:'Clash Display';color:var(--core)">📊 YES vs NO by Dept</div><canvas id="ch-conf-yn"></canvas></div>
+          </div>
+          <div id="conf-analysis-tbl"></div>
         </div>
       </div>
     </div>
 
-    <!-- ══════════ UPLOAD ══════════ -->
-    <div class="sec" id="sec-upload">
-      <div class="ph"><h1>Upload Data</h1><p>Import student records or add individually</p></div>
-
-      <div class="card">
-        <div class="ct">📤 Bulk Upload — CSV / Excel</div>
-        <div id="uploadMsg" class="msg"></div>
-        <div class="dz" id="dropZone" onclick="document.getElementById('fileInput').click()"
-             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-          <div class="dz-icon">📁</div>
-          <p><strong>Click to browse</strong> or drag & drop</p>
-          <p style="margin-top:.4rem;font-size:.77rem">Supports .csv and .xlsx — max 10 MB</p>
+    <div class="atab-content" id="at-trend">
+      <div class="card"><div class="card-header"><div class="card-title">📉 Trend Analysis</div></div>
+        <div class="card-body" id="trend-body">
+          <div class="charts-grid" style="margin-bottom:1.8rem;">
+            <div><div class="chart-title" style="font-family:'Clash Display';color:var(--core)">📊 Completion Rate Trend</div><canvas id="ch-trend-completion"></canvas></div>
+            <div><div class="chart-title" style="font-family:'Clash Display';color:var(--core)">🔥 Correction Density Radar</div><canvas id="ch-trend-correction"></canvas></div>
+          </div>
+          <div id="trend-dept-bars"></div>
         </div>
-        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleFileSelect(event)"/>
-        <div id="uploadPreview" style="display:none;margin-top:1.3rem">
-          <div class="ct" style="margin-bottom:.8rem">Preview — first 5 rows</div>
-          <div class="tw" id="previewTable"></div>
-          <div class="btns-row" style="margin-top:1rem">
-            <button class="btn btn-primary" onclick="pushToSheets()">Push to Google Sheets →</button>
-            <button class="btn btn-outline" onclick="document.getElementById('uploadPreview').style.display='none'">Cancel</button>
+      </div>
+    </div>
+
+    <div class="atab-content" id="at-metrics">
+      <div class="card"><div class="card-header"><div class="card-title">🎯 Key Performance Indicators</div></div>
+        <div class="card-body" id="key-metrics"></div>
+      </div>
+    </div>
+
+    <!-- NEW: FUNNEL TAB -->
+    <div class="atab-content" id="at-funnel">
+      <div class="card"><div class="card-header"><div class="card-title">🔻 Correction Resolution Funnel</div></div>
+        <div class="card-body" id="funnel-body">
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Computing funnel…</div></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-header"><div class="card-title">📊 Correction Status Distribution</div></div>
+        <div class="card-body">
+          <div style="max-width:500px;margin:0 auto"><canvas id="ch-funnel-pie" style="max-height:300px"></canvas></div>
+          <div id="funnel-dept-breakdown" style="margin-top:2rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW: COHORT TAB -->
+    <div class="atab-content" id="at-cohort">
+      <div class="card"><div class="card-header"><div class="card-title">🔬 Cohort Analysis — Year × Department Submission Matrix</div></div>
+        <div class="card-body" id="cohort-body">
+          <div class="loading-state"><div class="spinner"></div><div class="loading-text">Building matrix…</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1.4rem"><div class="card-header"><div class="card-title">📈 Year-over-Year Confirmation Rate</div></div>
+        <div class="card-body"><canvas id="ch-cohort-conf" style="max-height:280px"></canvas></div>
+      </div>
+    </div>
+
+    <!-- NEW: PENDING LIST TAB -->
+    <div class="atab-content" id="at-pending">
+      <div class="card"><div class="card-header">
+        <div class="card-title">⏳ Students Yet to Submit</div>
+        <div class="filter-bar">
+          <div class="sw"><input type="search" id="pend-s" placeholder="Name, roll, dept…" oninput="filterPendingList()"></div>
+          <div class="fg"><label class="flabel">Programme</label><select id="pend-prog" onchange="filterPendingList()"><option value="">All</option></select></div>
+          <div class="fg"><label class="flabel">Year</label><select id="pend-year" onchange="filterPendingList()"><option value="">All</option></select></div>
+          <button class="btn btn-primary btn-sm" onclick="exportPending()">📥 Export</button>
+        </div>
+      </div>
+        <div id="pend-summary" style="padding:1rem 1.6rem 0;display:flex;gap:1rem;flex-wrap:wrap"></div>
+        <div id="pend-wrap">
+          <div class="table-wrap">
+            <table><thead><tr><th>#</th><th>Roll No</th><th>Register No</th><th>Name</th><th>Programme</th><th>Year</th><th>Correction?</th></tr></thead>
+            <tbody id="pend-tbody"></tbody></table>
+          </div>
+          <div class="pagination">
+            <div class="page-info">Showing <b id="pend-show">0–0</b> of <b id="pend-tot">0</b></div>
+            <div class="page-controls" id="pend-pages"></div>
           </div>
         </div>
       </div>
-
-      <div class="card">
-        <div class="ct">➕ Add Single Student</div>
-        <div id="singleMsg" class="msg"></div>
-        <div class="form-grid">
-          <div class="fg"><label class="fl">S.No</label><input type="text" class="full" id="s-sno" placeholder="1"/></div>
-          <div class="fg"><label class="fl">Roll Number</label><input type="text" class="full" id="s-roll" placeholder="24UCI004"/></div>
-          <div class="fg"><label class="fl">Register No</label><input type="text" class="full" id="s-reg" placeholder="920424103001"/></div>
-          <div class="fg"><label class="fl">Student Name</label><input type="text" class="full" id="s-name" placeholder="ADHITHYA P"/></div>
-          <div class="fg"><label class="fl">Programme</label><input type="text" class="full" id="s-prog" placeholder="CIVIL ENGINEERING"/></div>
-          <div class="fg"><label class="fl">Date of Birth</label><input type="date" class="full" id="s-dob"/></div>
-          <div class="fg"><label class="fl">File Group</label><input type="text" class="full" id="s-file" placeholder="II CIVIL"/></div>
-          <div class="fg"><label class="fl">Year</label>
-            <select class="full" id="s-year"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select>
-          </div>
-        </div>
-        <button class="btn btn-primary" onclick="addSingleStudent()">Add Student</button>
-      </div>
-
-      <div class="card">
-        <div class="ct">🔗 Link PDF Files to Groups</div>
-        <p style="color:var(--muted);font-size:.86rem;margin-bottom:1.2rem">Connect file group names to Google Drive File IDs.</p>
-        <div id="fileLinksDisplay"></div>
-        <div style="display:flex;gap:.7rem;margin-top:1rem;flex-wrap:wrap">
-          <input type="text" id="link-group" placeholder="Group name (e.g. II CIVIL)" style="flex:1;min-width:140px"/>
-          <input type="text" id="link-id" placeholder="Google Drive File ID" style="flex:2;min-width:160px"/>
-          <button class="btn btn-ghost" onclick="addLink()">Link</button>
-        </div>
-      </div>
     </div>
 
-    <!-- ══════════ FILES ══════════ -->
-    <div class="sec" id="sec-files">
-      <div class="ph"><h1>Manage Files</h1><p>Linked PDF groups and Google Drive connections</p></div>
-      <div class="card">
-        <div class="ct">Linked PDF Files</div>
-        <div class="tw">
-          <table>
-            <thead><tr><th>File Group</th><th>Drive File ID</th><th>Drive Link</th><th>Students</th><th>Action</th></tr></thead>
-            <tbody id="fileLinksTable">
-              <tr><td colspan="5"><div class="empty"><p>No files linked yet</p></div></td></tr>
-            </tbody>
-          </table>
+  </div>
+
+  <!-- ══ AI INSIGHTS ══ -->
+  <div class="panel" id="panel-insights">
+    <div class="page-header"><div><div class="page-headline">AI Insights</div><div class="page-sub">Smart observations, rankings &amp; completion heatmap</div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">💡 Smart Observations</div></div>
+      <div class="card-body" id="insights-body"><div class="loading-state"><div class="spinner"></div><div class="loading-text">Computing insights…</div></div></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">🏆 Department Rankings</div></div>
+      <div class="card-body" id="dept-rankings"></div>
+    </div>
+    <div class="card"><div class="card-header"><div class="card-title">🗺️ Completion Heatmap — Dept × Year</div></div>
+      <div class="card-body" id="completion-heatmap"></div>
+    </div>
+  </div>
+
+  <!-- ══ STUDENTS ══ -->
+  <div class="panel" id="panel-students">
+    <div class="page-header"><div><div class="page-headline">Student Submissions</div><div class="page-sub">Browse and manage all student records</div></div></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🎓 All Students</div>
+        <div class="filter-bar">
+          <div class="sw"><input type="search" id="stu-s" placeholder="Name, roll, register…" oninput="filterStudents()"></div>
+          <div class="fg"><label class="flabel">Programme</label><select id="stu-prog" onchange="filterStudents()"><option value="">All</option></select></div>
+          <div class="fg"><label class="flabel">Year</label><select id="stu-year" onchange="filterStudents()"><option value="">All</option></select></div>
+          <div class="fg"><label class="flabel">Status</label><select id="stu-status" onchange="filterStudents()"><option value="">All</option><option value="submitted">Submitted</option><option value="pending">Pending</option></select></div>
+          <button class="btn btn-primary btn-sm" onclick="exportStudents()">📥 Export</button>
         </div>
       </div>
+      <div id="stu-load" class="loading-state"><div class="spinner"></div><div class="loading-text">Loading…</div></div>
+      <div id="stu-wrap" style="display:none;">
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Roll No</th><th>Register No</th><th>Name</th><th>Programme</th><th>Year</th><th>Pages</th><th>Status</th><th>Submitted At</th><th>Action</th></tr></thead><tbody id="stu-tbody"></tbody></table></div>
+        <div class="pagination"><div class="page-info">Showing <b id="stu-show">0–0</b> of <b id="stu-tot">0</b></div><div class="page-controls" id="stu-pages"></div></div>
+      </div>
     </div>
+  </div>
 
-    <!-- ══════════ REPORTS ══════════ -->
-    <div class="sec" id="sec-reports">
-      <div class="ph"><h1>Generate Reports</h1><p>Export verification data in multiple formats</p></div>
-      <div class="two-col" style="margin-bottom:1.25rem">
-        <div class="card">
-          <div class="ct">📋 Report Filters</div>
-          <div class="fg"><label class="fl">Department</label><select class="full" id="r-dept"><option value="">All Departments</option></select></div>
-          <div class="fg"><label class="fl">Year</label>
-            <select class="full" id="r-year"><option value="">All Years</option><option>I</option><option>II</option><option>III</option><option>IV</option></select>
-          </div>
-          <div class="fg"><label class="fl">Status</label>
-            <select class="full" id="r-status"><option value="">All</option><option value="Pending">Pending Only</option><option value="OK">Confirmed OK</option><option value="Correction">Corrections Only</option></select>
-          </div>
-          <div class="fg"><label class="fl">Report Type</label>
-            <select class="full" id="r-type">
-              <option value="full">Full Data Report</option>
-              <option value="corrections">Corrections Detail</option>
-              <option value="summary">Summary by Department</option>
-            </select>
-          </div>
-        </div>
-        <div class="card">
-          <div class="ct">⬇️ Export</div>
-          <div style="display:flex;flex-direction:column;gap:.8rem">
-            <button class="btn btn-primary" onclick="doReport('pdf')" style="justify-content:center;padding:.9rem">📄 Download as PDF</button>
-            <button class="btn btn-ghost" onclick="doReport('excel')" style="justify-content:center;padding:.9rem">📊 Download as Excel (.xlsx)</button>
-            <button class="btn btn-outline" onclick="doReport('csv')" style="justify-content:center;padding:.9rem">📋 Download as CSV</button>
-          </div>
+  <!-- ══ CORRECTIONS ══ -->
+  <div class="panel" id="panel-corrections">
+    <div class="page-header"><div><div class="page-headline">Correction Records</div><div class="page-sub">Track and update correction status</div></div></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">✏️ All Corrections</div>
+        <div class="filter-bar">
+          <div class="sw"><input type="search" id="cor-s" placeholder="Name, roll, register…" oninput="filterCorrections()"></div>
+          <div class="fg"><label class="flabel">Programme</label><select id="cor-prog" onchange="filterCorrections()"><option value="">All</option></select></div>
+          <div class="fg"><label class="flabel">Status</label><select id="cor-status" onchange="filterCorrections()"><option value="">All</option><option value="Pending">Pending</option><option value="Done">Done</option><option value="Reviewed">Reviewed</option></select></div>
+          <button class="btn btn-primary btn-sm" onclick="exportCorrections()">📥 Export</button>
         </div>
       </div>
-      <div class="card">
-        <div class="ct">Report Preview</div>
-        <div id="reportPreview"><div class="empty"><div class="ei">📋</div><p>Generate a report to preview here</p></div></div>
+      <div id="cor-load" class="loading-state"><div class="spinner"></div><div class="loading-text">Loading…</div></div>
+      <div id="cor-wrap" style="display:none;">
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Register No</th><th>Roll No</th><th>Name</th><th>Programme</th><th>Course</th><th>Status</th><th>Submitted At</th><th>Action</th></tr></thead><tbody id="cor-tbody"></tbody></table></div>
+        <div class="pagination"><div class="page-info">Showing <b id="cor-show">0–0</b> of <b id="cor-tot">0</b></div><div class="page-controls" id="cor-pages"></div></div>
       </div>
     </div>
+  </div>
 
-    <!-- ══════════ CONFIG ══════════ -->
-    <div class="sec" id="sec-config">
-      <div class="ph"><h1>Configuration</h1><p>Backend integration settings</p></div>
-      <div class="card" style="margin-bottom:1.25rem">
-        <div class="ct">🔧 Google Sheets Integration</div>
-        <div id="configMsg" class="msg"></div>
-        <div class="fg"><label class="fl">Apps Script Web App URL</label><input type="text" class="full" id="cfg-url" placeholder="https://script.google.com/macros/s/…" style="width:100%"/></div>
-        <div class="fg"><label class="fl">Google Sheet ID</label><input type="text" class="full" id="cfg-sheet" style="width:100%"/></div>
-        <div class="fg"><label class="fl">Drive Folder ID (for PDFs)</label><input type="text" class="full" id="cfg-drive" style="width:100%"/></div>
-        <div class="btns-row">
-          <button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
-          <button class="btn btn-ghost" onclick="testConnection()">🔌 Test Connection</button>
+  <!-- ══ CONFIRMATIONS ══ -->
+  <div class="panel" id="panel-confirmations">
+    <div class="page-header"><div><div class="page-headline">Confirmation Responses</div><div class="page-sub">Student YES/NO confirmation data</div></div></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">✅ All Confirmations</div>
+        <div class="filter-bar">
+          <div class="sw"><input type="search" id="conf-s" placeholder="Name, roll, register…" oninput="filterConfirmations()"></div>
+          <div class="fg"><label class="flabel">Programme</label><select id="conf-prog" onchange="filterConfirmations()"><option value="">All</option></select></div>
+          <div class="fg"><label class="flabel">Response</label><select id="conf-response" onchange="filterConfirmations()"><option value="">All</option><option value="YES">YES</option><option value="NO">NO</option></select></div>
+          <button class="btn btn-primary btn-sm" onclick="exportConfirmations()">📥 Export</button>
         </div>
       </div>
-      <div class="card">
-        <div class="ct">📋 Setup Guide</div>
-        <div id="setupSteps"></div>
+      <div id="conf-load" class="loading-state"><div class="spinner"></div><div class="loading-text">Loading…</div></div>
+      <div id="conf-wrap" style="display:none;">
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Register No</th><th>Roll No</th><th>Name</th><th>Programme</th><th>Response</th><th>Course</th><th>Submitted At</th></tr></thead><tbody id="conf-tbody"></tbody></table></div>
+        <div class="pagination"><div class="page-info">Showing <b id="conf-show">0–0</b> of <b id="conf-tot">0</b></div><div class="page-controls" id="conf-pages"></div></div>
       </div>
     </div>
+  </div>
 
-  </main>
-</div>
-
-<!-- CORRECTION MODAL -->
-<div class="modal-bg" id="corrModal">
-  <div class="modal">
-    <h3>⚠️ Correction Details</h3>
-    <div id="corrModalBody"></div>
-    <div class="ma">
-      <button class="btn btn-outline" onclick="closeModal()">Close</button>
-      <button class="btn btn-success" onclick="markResolved()">✓ Mark Resolved</button>
+  <!-- ══ FILE LINKS ══ -->
+  <div class="panel" id="panel-filelinks">
+    <div class="page-header"><div><div class="page-headline">File Links</div><div class="page-sub">Google Drive file references</div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">📁 Drive Files</div></div>
+      <div id="fl-load" class="loading-state"><div class="spinner"></div><div class="loading-text">Loading…</div></div>
+      <div id="fl-wrap" style="display:none;"><div class="table-wrap"><table><thead><tr><th>#</th><th>File Group Name</th><th>Google Drive File ID</th><th>Notes</th><th>Action</th></tr></thead><tbody id="fl-tbody"></tbody></table></div></div>
     </div>
+  </div>
+
+  <!-- ══ ADMINS ══ -->
+  <div class="panel" id="panel-admins">
+    <div class="page-header"><div><div class="page-headline">Admin Accounts</div><div class="page-sub">Manage administrator access</div></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">🔑 Administrators</div></div>
+      <div id="adm-load" class="loading-state"><div class="spinner"></div><div class="loading-text">Loading…</div></div>
+      <div id="adm-wrap" style="display:none;"><div class="table-wrap"><table><thead><tr><th>#</th><th>Username</th><th>Role</th><th>Notes</th></tr></thead><tbody id="adm-tbody"></tbody></table></div></div>
+    </div>
+  </div>
+
+  <!-- ══ AUDIT LOG ══ -->
+  <div class="panel" id="panel-auditlog">
+    <div class="page-header"><div><div class="page-headline">Audit Log</div><div class="page-sub">All system actions &amp; events</div></div></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 Activity Log</div>
+        <div class="filter-bar">
+          <div class="sw"><input type="search" id="aud-s" placeholder="Register no, name, action…" oninput="filterAudit()"></div>
+          <button class="btn btn-primary btn-sm" onclick="exportAudit()">📥 Export</button>
+        </div>
+      </div>
+      <div id="aud-load" class="loading-state"><div class="spinner"></div><div class="loading-text">Loading…</div></div>
+      <div id="aud-wrap" style="display:none;">
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Timestamp</th><th>Action</th><th>Register No</th><th>Student Name</th></tr></thead><tbody id="aud-tbody"></tbody></table></div>
+        <div class="pagination"><div class="page-info">Showing <b id="aud-show">0–0</b> of <b id="aud-tot">0</b></div><div class="page-controls" id="aud-pages"></div></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Student/Correction Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Details</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
 
-<div id="toast"></div>
+<div class="toast-wrap" id="toasts"></div>
 
 <script>
-// ══════════════════════════════════════════════════
-//  AUTH GUARD — redirect if not logged in
-// ══════════════════════════════════════════════════
-(function(){
-  const auth = sessionStorage.getItem('adminAuth');
-  if (!auth) { window.location.href = 'admin-login.html'; }
-})();
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzMskvkVR1BUrNkls3aooPjpV9kRfVgTXApxX6xW4A9Od2QHQ6Mo61rSCIG6Nr7tskQ/exec";
+const PER_PAGE = 25;
 
-// ══════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════
-const GAS_URL = "https://script.google.com/macros/s/AKfycbw1be7D1-FDi3C6DtAvOKG-a5Ta84Inx6GQ8zt7VU8fYFHI0QPjYWpPXUm7YRiMYyf-/exec";
-
-// ══════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════
-let students = [], fileLinks = {}, activeCorrIdx = -1, dataSource = 'loading';
-
-// ══════════════════════════════════════════════════
-//  DEMO DATA
-// ══════════════════════════════════════════════════
-function getDemoStudents() {
-  const progs = ['CIVIL ENGINEERING','COMPUTER SCIENCE','MECHANICAL ENGINEERING','ELECTRICAL ENGINEERING','ELECTRONICS & COMMUNICATION'];
-  const years = ['I','II','III','IV'];
-  const stats = ['Pending','OK','OK','OK','Correction'];
-  const corrections = [
-    {course:'Mathematics III', details:'Grade entry mismatch — shows B+ but transcript shows A'},
-    {course:'Engineering Drawing', details:'Missing internal marks for Unit 2 assessment'},
-    {course:'Physics Lab', details:'Attendance percentage shown as 72% (actual: 81%)'},
-    {course:'Environmental Science', details:'Course credit listed as 2, should be 3'},
-    {course:'Programming in C', details:'Name misspelled in register — shows PRIYA R instead of PRIYA S'},
-  ];
-  const out = [];
-  const now = new Date('2025-01-20');
-  for (let i = 0; i < 60; i++) {
-    const prog = progs[i % progs.length];
-    const year = years[i % years.length];
-    const st   = stats[i % stats.length];
-    const corr = st === 'Correction' ? corrections[i % corrections.length] : null;
-    // random submission hour for hourly chart demo
-    const hr   = [8,9,9,10,10,10,11,11,12,14,15,15,16,17][i % 14];
-    const dd   = String(1 + (i % 19)).padStart(2,'0');
-    out.push({
-      sNo: String(i+1), rollNumber: `24${prog.slice(0,2).toUpperCase()}${String(i+1).padStart(3,'0')}`,
-      registerNo: `9204241${String(i+1).padStart(5,'0')}`,
-      studentName: `STUDENT ${String.fromCharCode(65+(i%26))} ${String.fromCharCode(65+(i%20))}`,
-      programme: prog, year, fileName: `${year} ${prog.split(' ')[0]}`,
-      status: st, correctionFlag: st==='Correction'?'YES':st==='OK'?'NO':'',
-      correctionCourse: corr?.course||'', correctionDetails: corr?.details||'',
-      submittedAt: st!=='Pending'?`2025-01-${dd} ${String(hr).padStart(2,'0')}:${String(i%60).padStart(2,'0')}:00`:'',
-      dob:`200${2+(i%3)}-${String(1+(i%12)).padStart(2,'0')}-${String(1+(i%28)).padStart(2,'0')}`,
-      driveFileId:''
-    });
-  }
-  return out;
-}
-
-// ══════════════════════════════════════════════════
-//  FETCH HELPERS
-// ══════════════════════════════════════════════════
-async function gasGet(params={}, ms=8000) {
-  const url = new URL(GAS_URL);
-  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), ms);
-  try {
-    const r = await fetch(url.toString(), {signal:ctrl.signal});
-    clearTimeout(t);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return await r.json();
-  } catch(e){ clearTimeout(t); throw e; }
-}
-async function gasPost(body, ms=10000) {
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), ms);
-  try {
-    const r = await fetch(GAS_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(body), signal:ctrl.signal});
-    clearTimeout(t); return await r.json();
-  } catch(e){ clearTimeout(t); throw e; }
-}
-
-// ══════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════
-window.onload = async () => {
-  const auth = JSON.parse(sessionStorage.getItem('adminAuth') || '{"username":"admin"}');
-  const name = auth.username || 'admin';
-  document.getElementById('userLabel').textContent = name;
-  document.getElementById('userAvatar').textContent = name[0].toUpperCase();
-
-  const cfg = getConfig();
-  document.getElementById('cfg-url').value   = cfg.apiUrl || GAS_URL;
-  document.getElementById('cfg-sheet').value = cfg.sheetId || '';
-  document.getElementById('cfg-drive').value = cfg.driveFolderId || '';
-
-  try { fileLinks = JSON.parse(localStorage.getItem('eduFileLinks')||'{}'); } catch {}
-  buildSetupGuide();
-  renderFileLinksDisplay();
-  await refreshData();
+const S = {
+  students:[], stuF:[], stuP:1,
+  corrections:[], corF:[], corP:1,
+  confirmations:[], confF:[], confP:1,
+  filelinks:[], admins:[],
+  auditlog:[], audF:[], audP:1,
+  pendingF:[], pendP:1,
+  charts:{}
 };
 
-// ══════════════════════════════════════════════════
-//  REFRESH
-// ══════════════════════════════════════════════════
-async function refreshData() {
-  setBanner('loading','<span class="spin"></span> Fetching from Google Sheets…');
-  toast('Fetching data…');
+// AUTH
+function checkAuth() {
+  const a = sessionStorage.getItem('adminAuth');
+  if (!a) { window.location.href = 'admin-login.html'; return null; }
+  return JSON.parse(a);
+}
+function handleLogout() {
+  $('logoutModal').classList.add('active');
+}
+function closeLogoutModal() {
+  $('logoutModal').classList.remove('active');
+}
+function confirmLogout() {
+  sessionStorage.removeItem('adminAuth');
+  window.location.href = 'admin-login.html';
+}
+function initUser() {
+  const a = checkAuth();
+  if (!a) return;
+  const n = a.username || 'Admin', r = a.role || 'admin';
+  $('uName').textContent = n;
+  $('uRole').textContent = r.charAt(0).toUpperCase() + r.slice(1);
+  $('userAva').textContent = n.charAt(0).toUpperCase();
+}
+
+// SIDEBAR
+function toggleSidebar() { $('sidebar').classList.toggle('open'); $('sOverlay').classList.toggle('open'); }
+function closeSidebar() { $('sidebar').classList.remove('open'); $('sOverlay').classList.remove('open'); }
+
+const panelNames = { overview:'Dashboard', analysis:'Deep Analysis', insights:'AI Insights', students:'Students', corrections:'Corrections', confirmations:'Confirmations', filelinks:'File Links', admins:'Admins', auditlog:'Audit Log' };
+
+function showPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  $('panel-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  $('topTitle').textContent = panelNames[name] || name;
+  closeSidebar();
+  if (name === 'analysis') setTimeout(renderAnalysis, 100);
+  if (name === 'insights') setTimeout(renderInsights, 100);
+}
+
+function switchTab(btn, id) {
+  document.querySelectorAll('.atab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.atab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  $(id).classList.add('active');
+  setTimeout(() => {
+    if (id==='at-year') renderYearAnalysis();
+    else if (id==='at-dept') renderDeptAnalysis();
+    else if (id==='at-correction') renderCorrectionAnalysis();
+    else if (id==='at-confirmation') renderConfirmationAnalysis();
+    else if (id==='at-trend') renderTrendAnalysis();
+    else if (id==='at-metrics') renderKeyMetrics();
+    else if (id==='at-funnel') renderFunnelAnalysis();
+    else if (id==='at-cohort') renderCohortAnalysis();
+    else if (id==='at-pending') renderPendingList();
+  }, 80);
+}
+
+// API
+async function apiFetch(action, extra={}) {
+  const p = new URLSearchParams({action,...extra});
+  const r = await fetch(`${GAS_URL}?${p}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+// LOAD ALL DATA
+async function loadAllData() {
+  if (!checkAuth()) return;
+  const btn = $('btnRefresh');
+  btn.classList.add('spinning');
+  showToast('Fetching all data…','info');
   try {
-    const data = await gasGet({action:'getAll'});
-    if (data?.success && Array.isArray(data.students) && data.students.length) {
-      students = data.students; dataSource = 'live';
-      setBanner('live', `✅ Live data — ${students.length} students loaded`);
-      toast(`✅ ${students.length} students loaded!`);
-    } else {
-      students = getDemoStudents(); dataSource = 'demo';
-      setBanner('demo', `⚠️ No data from backend — showing ${students.length} demo records`);
-      toast('Demo mode active');
+    const [stuR,corR,confR,flR,admR,audR] = await Promise.all([
+      apiFetch('getAllData'), apiFetch('getCorrections'), apiFetch('getConfirmations'),
+      apiFetch('getFileLinks'), apiFetch('getAdmins'), apiFetch('getAuditLog')
+    ]);
+    if (stuR.success) {
+      S.students = stuR.data||[];
+      S.stuF = [...S.students];
+      populateFilters('stu-prog','stu-year',S.students);
+      renderStudentsTable();
+      $('np-students').textContent = S.students.length;
     }
-  } catch {
-    students = getDemoStudents(); dataSource = 'demo';
-    setBanner('demo', `⚠️ Backend unreachable — demo mode (${students.length} records)`);
-    toast('⚠️ Backend offline — demo mode');
+    if (corR.success) {
+      S.corrections = corR.data||[];
+      S.corF = [...S.corrections];
+      populateSel('cor-prog', uniq(S.corrections.map(r=>r.programme)));
+      renderCorrectionsTable();
+      $('np-corrections').textContent = S.corrections.length;
+    }
+    if (confR.success) {
+      S.confirmations = confR.data||[];
+      S.confF = [...S.confirmations];
+      populateSel('conf-prog', uniq(S.confirmations.map(r=>r.programme)));
+      renderConfirmationsTable();
+      $('np-confirmations').textContent = S.confirmations.length;
+    }
+    if (flR.success) { S.filelinks=flR.data||[]; renderFileLinks(); }
+    if (admR.success) { S.admins=admR.data||[]; renderAdmins(); }
+    if (audR.success) { S.auditlog=audR.data||[]; S.audF=[...S.auditlog]; renderAuditTable(); }
+    updateOverview();
+    renderCharts();
+    initPendingFilters();
+    $('lastRefresh').textContent = 'Updated '+new Date().toLocaleTimeString('en-IN');
+    showToast('Data loaded!','success');
+  } catch(e) {
+    console.error(e);
+    showToast('Load failed: '+e.message,'error');
+  } finally { btn.classList.remove('spinning'); }
+}
+
+// OVERVIEW
+function updateOverview() {
+  const tot=S.students.length;
+  const sub=S.students.filter(r=>r.submittedAt).length;
+  const pend=tot-sub;
+  const corY=S.students.filter(r=>r.correction==='YES').length;
+  const confY=S.confirmations.filter(r=>r.response==='YES').length;
+  const sp=tot?((sub/tot)*100).toFixed(1):0;
+  const pp=tot?((pend/tot)*100).toFixed(1):0;
+  const cp=tot?((corY/tot)*100).toFixed(1):0;
+  setText('ov-total',tot); setText('ov-submitted',sub); setText('ov-pending',pend);
+  setText('ov-correction',corY); setText('ov-confirmations',S.confirmations.length);
+  setText('ov-sub-pct',sp+'% completion'); setText('ov-pend-pct',pp+'% pending');
+  setText('ov-cor-pct',cp+'% flagged'); setText('ov-conf-yes',confY+' YES responses');
+  setW('ov-sub-bar',sp+'%'); setW('ov-pend-bar',pp+'%');
+}
+
+// CHARTS
+function renderCharts() {
+  const tot=S.students.length, sub=S.students.filter(r=>r.submittedAt).length, pend=tot-sub;
+  const corY=S.students.filter(r=>r.correction==='YES').length;
+  const corN=S.students.filter(r=>r.correction==='NO').length;
+  const corX=tot-corY-corN;
+  const confY=S.confirmations.filter(r=>r.response==='YES').length;
+  const confN=S.confirmations.filter(r=>r.response==='NO').length;
+  mkDoughnut('ch-status',['Submitted','Pending'],[sub,pend],['#10b981','#3b82f6']);
+  mkPie('ch-correction',['Needs Correction','No Correction','Not Set'],[corY,corN,corX],['#ef4444','#10b981','#d1d5db']);
+  mkDoughnut('ch-confirmations',['YES','NO'],[confY,confN],['#10b981','#ef4444']);
+  const yMap=groupBy(S.students,'year');
+  const years=Object.keys(yMap).sort();
+  mkBar('ch-year',years,years.map(y=>yMap[y].length));
+  const dMap=groupBy(S.students,'programme');
+  const topD=Object.entries(dMap).sort((a,b)=>b[1].length-a[1].length).slice(0,8);
+  mkBar('ch-dept',topD.map(d=>d[0]),topD.map(d=>d[1].length));
+  mkMultiBar('ch-rate-year',years,[
+    {label:'Submitted',data:years.map(y=>yMap[y].filter(r=>r.submittedAt).length),color:'#10b981'},
+    {label:'Corrections',data:years.map(y=>yMap[y].filter(r=>r.correction==='YES').length),color:'#ef4444'}
+  ]);
+}
+
+function renderAnalysis() {
+  const activeTab = document.querySelector('.atab.active');
+  const onclick = activeTab ? activeTab.getAttribute('onclick') : '';
+  const m = onclick.match(/'([^']+)'/);
+  const tabId = m ? m[1] : 'at-year';
+  if (tabId==='at-year') renderYearAnalysis();
+  else if (tabId==='at-dept') renderDeptAnalysis();
+  else if (tabId==='at-correction') renderCorrectionAnalysis();
+  else if (tabId==='at-confirmation') renderConfirmationAnalysis();
+  else if (tabId==='at-trend') renderTrendAnalysis();
+  else if (tabId==='at-metrics') renderKeyMetrics();
+  else if (tabId==='at-funnel') renderFunnelAnalysis();
+  else if (tabId==='at-cohort') renderCohortAnalysis();
+  else if (tabId==='at-pending') renderPendingList();
+}
+
+function renderYearAnalysis() {
+  const yMap=groupByAnalysis(S.students,'year');
+  const years=Object.keys(yMap).sort();
+  mkMultiBar('ch-year-detail',years,[
+    {label:'Submitted',data:years.map(y=>yMap[y].submitted),color:'#10b981'},
+    {label:'Pending',data:years.map(y=>yMap[y].pending),color:'#3b82f6'}
+  ]);
+  $('year-tbl').innerHTML=buildAnalysisTable(
+    ['Year','Total','Submitted','Pending','Correction YES','Completion %'],
+    years.map(y=>{
+      const d=yMap[y]; const pct=((d.submitted/d.total)*100).toFixed(1);
+      return[esc(y),d.total,fc(d.submitted,'#10b981'),fc(d.pending,'#3b82f6'),fc(d.correctionYes,'#ef4444'),pctBadge(+pct)];
+    })
+  );
+}
+
+function renderDeptAnalysis() {
+  const dMap=groupByAnalysis(S.students,'programme');
+  const depts=Object.keys(dMap).sort((a,b)=>dMap[b].total-dMap[a].total);
+  mkMultiBarH('ch-dept-detail',depts,[
+    {label:'Submitted',data:depts.map(d=>dMap[d].submitted),color:'#10b981'},
+    {label:'Pending',data:depts.map(d=>dMap[d].pending),color:'#3b82f6'}
+  ]);
+  $('dept-tbl').innerHTML=buildAnalysisTable(
+    ['Department','Total','Submitted','Pending','Correction YES','Completion %'],
+    depts.map(d=>{
+      const data=dMap[d]; const pct=((data.submitted/data.total)*100).toFixed(1);
+      return[esc(d),data.total,fc(data.submitted,'#10b981'),fc(data.pending,'#3b82f6'),fc(data.correctionYes,'#ef4444'),pctBadge(+pct)];
+    })
+  );
+}
+
+function renderCorrectionAnalysis() {
+  const dMap=groupBy(S.corrections,'programme');
+  const depts=Object.keys(dMap).sort((a,b)=>dMap[b].length-dMap[a].length).slice(0,10);
+  mkBar('ch-cor-dept',depts,depts.map(d=>dMap[d].length),'#ef4444');
+  const yMap=groupBy(S.corrections,'year');
+  const years=Object.keys(yMap).sort();
+  mkBar('ch-cor-year',years,years.map(y=>yMap[y].length),'#f59e0b');
+  const sdMap={};
+  S.corrections.forEach(r=>{
+    const d=r.programme||'Unknown';
+    if(!sdMap[d])sdMap[d]={total:0,Pending:0,Done:0,Reviewed:0};
+    sdMap[d].total++;
+    sdMap[d][r.status]=(sdMap[d][r.status]||0)+1;
+  });
+  const topDepts=Object.keys(sdMap).sort((a,b)=>sdMap[b].total-sdMap[a].total).slice(0,8);
+  $('cor-analysis-tbl').innerHTML=buildAnalysisTable(
+    ['Department','Total','Pending','Done','Reviewed','Resolution %'],
+    topDepts.map(d=>{
+      const data=sdMap[d];
+      const resPct=(((data.Done||0)+(data.Reviewed||0))/data.total*100).toFixed(1);
+      return[esc(d),data.total,fc(data.Pending||0,'#f59e0b'),fc(data.Done||0,'#10b981'),fc(data.Reviewed||0,'#3b82f6'),pctBadge(+resPct)];
+    })
+  );
+}
+
+function renderConfirmationAnalysis() {
+  const dMap=groupBy(S.confirmations,'programme');
+  const depts=Object.keys(dMap).sort((a,b)=>dMap[b].length-dMap[a].length).slice(0,10);
+  mkBar('ch-conf-dept',depts,depts.map(d=>dMap[d].length),'#7c3aed');
+  mkMultiBar('ch-conf-yn',depts,[
+    {label:'YES',data:depts.map(d=>(dMap[d]||[]).filter(r=>r.response==='YES').length),color:'#10b981'},
+    {label:'NO',data:depts.map(d=>(dMap[d]||[]).filter(r=>r.response==='NO').length),color:'#ef4444'}
+  ]);
+  const ydMap={};
+  S.confirmations.forEach(r=>{
+    const d=r.programme||'Unknown';
+    if(!ydMap[d])ydMap[d]={total:0,yes:0,no:0};
+    ydMap[d].total++;
+    if(r.response==='YES')ydMap[d].yes++;
+    else if(r.response==='NO')ydMap[d].no++;
+  });
+  const sortedDepts=Object.keys(ydMap).sort((a,b)=>ydMap[b].total-ydMap[a].total);
+  $('conf-analysis-tbl').innerHTML=buildAnalysisTable(
+    ['Department','Total','YES','NO','YES Rate %'],
+    sortedDepts.map(d=>{
+      const data=ydMap[d];
+      const yr=((data.yes/data.total)*100).toFixed(1);
+      return[esc(d),data.total,fc(data.yes,'#10b981'),fc(data.no,'#ef4444'),pctBadge(+yr)];
+    })
+  );
+}
+
+function renderTrendAnalysis() {
+  const yMap=groupByAnalysis(S.students,'year');
+  const years=Object.keys(yMap).sort();
+  const completionRates=years.map(y=>+((yMap[y].submitted/yMap[y].total)*100).toFixed(1));
+  const correctionRates=years.map(y=>+((yMap[y].correctionYes/yMap[y].total)*100).toFixed(1));
+  mkLine('ch-trend-completion',years,[
+    {label:'Completion %',data:completionRates,color:'#10b981'},
+    {label:'Correction %',data:correctionRates,color:'#ef4444'}
+  ]);
+  const dMap=groupByAnalysis(S.students,'programme');
+  const topDepts=Object.entries(dMap).sort((a,b)=>b[1].total-a[1].total).slice(0,8);
+  mkRadar('ch-trend-correction',topDepts.map(([d])=>d),[
+    {label:'Correction %',data:topDepts.map(([,d])=>+((d.correctionYes/d.total)*100).toFixed(1)),color:'rgba(239,68,68,0.6)',border:'#ef4444'},
+    {label:'Completion %',data:topDepts.map(([,d])=>+((d.submitted/d.total)*100).toFixed(1)),color:'rgba(16,185,129,0.3)',border:'#10b981'}
+  ]);
+  const sorted=Object.entries(dMap).sort((a,b)=>(b[1].submitted/b[1].total)-(a[1].submitted/a[1].total));
+  $('trend-dept-bars').innerHTML=`
+    <div style="margin-top:1.6rem">
+      <div style="font-family:'Clash Display',sans-serif;font-size:0.95rem;font-weight:700;color:var(--core);margin-bottom:1.2rem">📊 Department Completion Rates</div>
+      ${sorted.map(([dept,d])=>{
+        const pct=((d.submitted/d.total)*100).toFixed(1);
+        const col=pct>=80?'#10b981':pct>=50?'#7c3aed':'#ef4444';
+        return`<div class="score-bar-row"><div class="score-bar-label" title="${dept}">${esc(dept.length>18?dept.slice(0,18)+'…':dept)}</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${col};"></div></div><div class="score-bar-val" style="color:${col}">${pct}%</div></div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderKeyMetrics() {
+  const tot=S.students.length||1;
+  const sub=S.students.filter(r=>r.submittedAt).length;
+  const pend=tot-sub;
+  const corY=S.students.filter(r=>r.correction==='YES').length;
+  const depts=new Set(S.students.map(r=>r.programme)).size||1;
+  const years=new Set(S.students.map(r=>r.year)).size||1;
+  const confY=S.confirmations.filter(r=>r.response==='YES').length;
+  const confTot=S.confirmations.length||1;
+  const corDone=S.corrections.filter(r=>r.status==='Done'||r.status==='Reviewed').length;
+  const corTot=S.corrections.length||1;
+  $('key-metrics').innerHTML=`
+    <div class="metric-grid">
+      ${tile('#7c3aed','rgba(124,58,237,0.07)','Submission Rate',((sub/tot)*100).toFixed(1)+'%','Out of '+tot+' students')}
+      ${tile('#10b981','rgba(16,185,129,0.07)','Completed',sub,'submitted so far')}
+      ${tile('#ef4444','rgba(239,68,68,0.07)','Correction Rate',((corY/tot)*100).toFixed(1)+'%',corY+' students flagged')}
+      ${tile('#3b82f6','rgba(59,130,246,0.07)','Pending Rate',((pend/tot)*100).toFixed(1)+'%',pend+' remaining')}
+      ${tile('#f59e0b','rgba(245,158,11,0.07)','Avg per Dept',(tot/depts).toFixed(1),'Over '+depts+' departments')}
+      ${tile('#d946ef','rgba(217,70,239,0.07)','Avg per Year',(tot/years).toFixed(1),'Over '+years+' years')}
+      ${tile('#10b981','rgba(16,185,129,0.07)','YES Conf Rate',((confY/confTot)*100).toFixed(1)+'%',confY+' YES of '+confTot)}
+      ${tile('#7c3aed','rgba(124,58,237,0.07)','Correction Resolution',((corDone/corTot)*100).toFixed(1)+'%',corDone+' resolved')}
+    </div>`;
+}
+
+// ── NEW: FUNNEL ANALYSIS ──
+function renderFunnelAnalysis() {
+  const tot=S.corrections.length;
+  if(!tot){ $('funnel-body').innerHTML='<div class="empty-state"><div class="icon">📭</div><p>No correction data loaded</p></div>'; return; }
+  const pending=S.corrections.filter(r=>r.status==='Pending'||!r.status).length;
+  const done=S.corrections.filter(r=>r.status==='Done').length;
+  const reviewed=S.corrections.filter(r=>r.status==='Reviewed').length;
+  const resolved=done+reviewed;
+  const unresolved=pending;
+
+  $('funnel-body').innerHTML=`
+    <div style="max-width:660px">
+      <div style="font-size:0.78rem;color:rgba(76,29,149,0.5);font-weight:600;margin-bottom:1.4rem">Step-through of correction workflow from raised to fully resolved.</div>
+      <div class="funnel-step" style="--fc:#7c3aed">
+        <div class="funnel-num">${tot}</div>
+        <div><div class="funnel-label">Total Corrections Raised</div><div class="funnel-sub">All students flagged for correction</div></div>
+        <div class="funnel-pct">100%</div>
+      </div>
+      <div style="text-align:center;font-size:1.2rem;color:rgba(124,58,237,0.3);margin:0.3rem 0">↓</div>
+      <div class="funnel-step" style="--fc:#f59e0b">
+        <div class="funnel-num">${pending}</div>
+        <div><div class="funnel-label">Pending — Awaiting Action</div><div class="funnel-sub">Not yet reviewed or resolved</div></div>
+        <div class="funnel-pct" style="color:#f59e0b">${((pending/tot)*100).toFixed(1)}%</div>
+      </div>
+      <div style="text-align:center;font-size:1.2rem;color:rgba(124,58,237,0.3);margin:0.3rem 0">↓</div>
+      <div class="funnel-step" style="--fc:#3b82f6">
+        <div class="funnel-num">${reviewed}</div>
+        <div><div class="funnel-label">Reviewed — Under Assessment</div><div class="funnel-sub">Seen by admin, not yet closed</div></div>
+        <div class="funnel-pct" style="color:#3b82f6">${((reviewed/tot)*100).toFixed(1)}%</div>
+      </div>
+      <div style="text-align:center;font-size:1.2rem;color:rgba(124,58,237,0.3);margin:0.3rem 0">↓</div>
+      <div class="funnel-step" style="--fc:#10b981">
+        <div class="funnel-num">${done}</div>
+        <div><div class="funnel-label">Done — Fully Resolved</div><div class="funnel-sub">Correction marked as complete</div></div>
+        <div class="funnel-pct" style="color:#10b981">${((done/tot)*100).toFixed(1)}%</div>
+      </div>
+      <div style="margin-top:1.8rem;padding:1.2rem 1.4rem;border-radius:14px;background:${resolved/tot>=0.7?'rgba(16,185,129,0.08)':'rgba(239,68,68,0.07)'};border-left:4px solid ${resolved/tot>=0.7?'#10b981':'#ef4444'}">
+        <div style="font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${resolved/tot>=0.7?'#10b981':'#ef4444'};margin-bottom:0.35rem">Overall Resolution Rate</div>
+        <div style="font-family:'Clash Display',sans-serif;font-size:2.2rem;font-weight:700;color:${resolved/tot>=0.7?'#065f46':'#991b1b'}">${((resolved/tot)*100).toFixed(1)}%</div>
+        <div style="font-size:0.8rem;color:rgba(76,29,149,0.55);margin-top:0.3rem">${resolved} of ${tot} corrections resolved — ${unresolved} still pending</div>
+      </div>
+    </div>`;
+
+  mkPie('ch-funnel-pie',['Pending','Reviewed','Done'],[pending,reviewed,done],['#f59e0b','#3b82f6','#10b981']);
+
+  // Per-dept funnel breakdown
+  const deptMap={};
+  S.corrections.forEach(r=>{
+    const d=r.programme||'Unknown';
+    if(!deptMap[d])deptMap[d]={total:0,done:0,reviewed:0,pending:0};
+    deptMap[d].total++;
+    if(r.status==='Done') deptMap[d].done++;
+    else if(r.status==='Reviewed') deptMap[d].reviewed++;
+    else deptMap[d].pending++;
+  });
+  const sorted=Object.entries(deptMap).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+  $('funnel-dept-breakdown').innerHTML=`
+    <div style="font-family:'Clash Display',sans-serif;font-size:0.95rem;font-weight:700;color:var(--core);margin-bottom:1.2rem">🏫 Resolution by Department</div>
+    ${buildAnalysisTable(
+      ['Department','Total','Pending','Reviewed','Done','Resolution %'],
+      sorted.map(([d,v])=>{
+        const resPct=(((v.done+v.reviewed)/v.total)*100).toFixed(1);
+        return[esc(d),v.total,fc(v.pending,'#f59e0b'),fc(v.reviewed,'#3b82f6'),fc(v.done,'#10b981'),pctBadge(+resPct)];
+      })
+    )}`;
+}
+
+// ── NEW: COHORT ANALYSIS ──
+function renderCohortAnalysis() {
+  const yMap=groupByAnalysis(S.students,'year');
+  const years=Object.keys(yMap).sort();
+  const dMap={};
+  S.students.forEach(r=>{
+    const d=r.programme||'Unknown', y=r.year||'Unknown';
+    if(!dMap[d]) dMap[d]={};
+    if(!dMap[d][y]) dMap[d][y]={total:0,submitted:0,correction:0};
+    dMap[d][y].total++;
+    if(r.submittedAt) dMap[d][y].submitted++;
+    if(r.correction==='YES') dMap[d][y].correction++;
+  });
+  const depts=Object.keys(dMap).sort();
+
+  if(!years.length||!depts.length){
+    $('cohort-body').innerHTML='<div class="empty-state"><div class="icon">📊</div><p>No data available</p></div>'; return;
   }
-  updateDashboard(); populateFilters();
-  if (document.getElementById('sec-students').classList.contains('active')) renderStudents(students);
-  if (document.getElementById('sec-analytics').classList.contains('active')) renderAnalytics();
-  if (document.getElementById('sec-corrections').classList.contains('active')) renderCorrections();
-}
 
-function setBanner(type, html) {
-  const el = document.getElementById('dataBanner');
-  el.className = `dbanner ${type}`; el.innerHTML = html;
-}
-
-// ══════════════════════════════════════════════════
-//  DASHBOARD
-// ══════════════════════════════════════════════════
-function updateDashboard() {
-  const total = students.length;
-  const ok    = students.filter(s=>s.status==='OK').length;
-  const corr  = students.filter(s=>s.status==='Correction').length;
-  const pend  = students.filter(s=>s.status==='Pending').length;
-  const resp  = ok + corr;
-  const pct   = total ? Math.round((resp/total)*100) : 0;
-  const rRate = total ? Math.round((resp/total)*100) : 0;
-
-  animateNum('st-total', total);
-  animateNum('st-ok',    ok);
-  animateNum('st-corr',  corr);
-  animateNum('st-pend',  pend);
-  document.getElementById('st-pct').textContent  = pct+'%';
-  document.getElementById('st-resp').textContent = rRate+'%';
-  document.getElementById('sb-students').textContent    = total;
-  document.getElementById('sb-corrections').textContent = corr;
-
-  renderDeptChart(); renderYearChart(); renderRecent();
-}
-
-function animateNum(id, target) {
-  const el = document.getElementById(id);
-  const start = parseInt(el.textContent) || 0;
-  const dur = 600, t0 = performance.now();
-  function tick(now) {
-    const p = Math.min(1, (now-t0)/dur);
-    el.textContent = Math.round(start + (target-start) * (1-(1-p)**3));
-    if (p < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-function renderDeptChart() {
-  const map = {};
-  students.forEach(s => {
-    const d = s.programme||'Unknown';
-    if (!map[d]) map[d]={t:0,ok:0,c:0,p:0};
-    map[d].t++;
-    if (s.status==='OK') map[d].ok++;
-    else if (s.status==='Correction') map[d].c++;
-    else map[d].p++;
-  });
-  const entries = Object.entries(map);
-  document.getElementById('deptTotal').textContent = `${entries.length} departments`;
-  if (!entries.length) { document.getElementById('deptChart').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
-  const html = entries.map(([dept,v])=>{
-    const pct = v.t ? Math.round((v.ok+v.c)/v.t*100) : 0;
-    const lbl = dept.length>22 ? dept.slice(0,20)+'…' : dept;
-    return `<div class="pi">
-      <div class="pi-hdr">
-        <span title="${dept}">${lbl}</span>
-        <span style="color:var(--muted)">${v.ok+v.c}/${v.t} <strong>${pct}%</strong></span>
-      </div>
-      <div class="pb"><div class="pf" style="width:${pct}%"></div></div>
-      <div style="display:flex;gap:.4rem;margin-top:.3rem;flex-wrap:wrap">
-        <span class="badge b-ok" style="font-size:.65rem">✅ ${v.ok}</span>
-        <span class="badge b-corr" style="font-size:.65rem">⚠️ ${v.c}</span>
-        <span class="badge b-pend" style="font-size:.65rem">⏳ ${v.p}</span>
-      </div>
+  // Matrix table
+  $('cohort-body').innerHTML=`
+    <div style="font-size:0.8rem;color:rgba(76,29,149,0.5);font-weight:600;margin-bottom:1.2rem">Submission count (Submitted / Total) per department per year. Color = completion %.</div>
+    <div style="overflow-x:auto">
+      <table style="border-collapse:collapse;font-size:0.8rem;min-width:100%">
+        <thead><tr>
+          <th style="padding:0.55rem 0.9rem;text-align:left;background:rgba(245,240,255,0.7);color:var(--core);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:800;white-space:nowrap;border-bottom:1px solid rgba(139,92,246,0.12)">Department</th>
+          ${years.map(y=>`<th style="padding:0.55rem 0.9rem;background:rgba(245,240,255,0.7);color:var(--core);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:800;text-align:center;border-bottom:1px solid rgba(139,92,246,0.12)">${esc(y)}</th>`).join('')}
+          <th style="padding:0.55rem 0.9rem;background:rgba(124,58,237,0.1);color:var(--core);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:800;text-align:center;border-bottom:1px solid rgba(139,92,246,0.12)">Total</th>
+        </tr></thead>
+        <tbody>
+          ${depts.map(d=>{
+            const dTotal=years.reduce((a,y)=>a+(dMap[d][y]?.total||0),0);
+            const dSub=years.reduce((a,y)=>a+(dMap[d][y]?.submitted||0),0);
+            return`<tr>
+              <td style="padding:0.55rem 0.9rem;font-weight:600;white-space:nowrap;border-bottom:1px solid rgba(139,92,246,0.05)">${esc(d)}</td>
+              ${years.map(y=>{
+                const cell=dMap[d][y];
+                if(!cell) return`<td style="padding:0.55rem 0.9rem;text-align:center;border-bottom:1px solid rgba(139,92,246,0.05);color:rgba(139,92,246,0.2)">—</td>`;
+                const pct=(cell.submitted/cell.total*100);
+                const bg=pct>=80?'rgba(16,185,129,0.14)':pct>=50?'rgba(124,58,237,0.1)':pct>0?'rgba(245,158,11,0.13)':'rgba(239,68,68,0.09)';
+                const col=pct>=80?'#065f46':pct>=50?'#4c1d95':pct>0?'#92400e':'#991b1b';
+                return`<td style="padding:0.55rem 0.9rem;text-align:center;border-bottom:1px solid rgba(139,92,246,0.05);background:${bg};color:${col};font-weight:700;font-size:0.78rem" title="${d}/${y}: ${cell.submitted}/${cell.total}">${cell.submitted}/${cell.total}</td>`;
+              }).join('')}
+              <td style="padding:0.55rem 0.9rem;text-align:center;border-bottom:1px solid rgba(139,92,246,0.05);font-weight:800;color:var(--viv);background:rgba(124,58,237,0.05)">${dSub}/${dTotal}</td>
+            </tr>`;
+          }).join('')}
+          <tr style="border-top:2px solid rgba(124,58,237,0.15)">
+            <td style="padding:0.7rem 0.9rem;font-weight:800;color:var(--core)">TOTAL</td>
+            ${years.map(y=>{
+              const tot2=depts.reduce((a,d)=>a+(dMap[d][y]?.total||0),0);
+              const sub2=depts.reduce((a,d)=>a+(dMap[d][y]?.submitted||0),0);
+              const pct=tot2?(sub2/tot2*100).toFixed(0):0;
+              return`<td style="padding:0.7rem 0.9rem;text-align:center;font-weight:800;color:var(--core);background:rgba(124,58,237,0.05)">${sub2}/${tot2} <span style="font-size:0.65rem;color:var(--viv)">(${pct}%)</span></td>`;
+            }).join('')}
+            <td style="padding:0.7rem 0.9rem;text-align:center;font-weight:800;color:var(--viv);background:rgba(124,58,237,0.08)">${S.students.filter(r=>r.submittedAt).length}/${S.students.length}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>`;
-  }).join('');
-  document.getElementById('deptChart').innerHTML = html;
-}
 
-function renderYearChart() {
-  const map = {};
-  students.forEach(s => {
-    const y = s.year||'?';
-    if (!map[y]) map[y]={t:0,d:0};
-    map[y].t++; if (s.status!=='Pending') map[y].d++;
+  // Year-over-year confirmation rate chart
+  const confByYear={};
+  S.confirmations.forEach(r=>{
+    const y=r.year||r.programme||'Unknown';
+    if(!confByYear[y])confByYear[y]={yes:0,total:0};
+    confByYear[y].total++;
+    if(r.response==='YES')confByYear[y].yes++;
   });
-  const entries = Object.entries(map).sort();
-  if (!entries.length) { document.getElementById('yearChart').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
-  const html = entries.map(([yr,v])=>{
-    const pct = v.t?Math.round(v.d/v.t*100):0;
-    return `<div class="pi">
-      <div class="pi-hdr"><span>Year ${yr}</span><span style="color:var(--muted)">${v.d}/${v.t} <strong>${pct}%</strong></span></div>
-      <div class="pb"><div class="pf green" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('');
-  document.getElementById('yearChart').innerHTML = html;
+  const confYears=Object.keys(confByYear).sort();
+  mkMultiBar('ch-cohort-conf',confYears,[
+    {label:'YES',data:confYears.map(y=>confByYear[y].yes),color:'#10b981'},
+    {label:'NO',data:confYears.map(y=>confByYear[y].total-confByYear[y].yes),color:'#ef4444'}
+  ]);
 }
 
-function renderRecent() {
-  const recent = [...students].filter(s=>s.submittedAt).sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt)).slice(0,10);
-  if (!recent.length) { document.getElementById('recentActivity').innerHTML='<div class="empty"><div class="ei">🕐</div><p>No submissions yet</p></div>'; return; }
-  let html = `<div class="timeline">`;
-  recent.forEach(s => {
-    html += `<div class="tl-item">
-      <div class="tl-dot ${s.status==='OK'?'ok':s.status==='Correction'?'corr':'pend'}"></div>
-      <div class="tl-content">
-        <div class="tl-name">${s.studentName} <span class="badge ${s.status==='OK'?'b-ok':s.status==='Correction'?'b-corr':'b-pend'}" style="font-size:.65rem">${s.status}</span></div>
-        <div class="tl-meta">${s.programme} · Year ${s.year} · ${s.registerNo}</div>
-      </div>
-      <div class="tl-time">${s.submittedAt?.slice(11,16)||''}</div>
-    </div>`;
+// ── NEW: PENDING LIST ──
+function initPendingFilters() {
+  const pending=S.students.filter(r=>!r.submittedAt);
+  populateSel('pend-prog',uniq(pending.map(r=>r.programme)));
+  populateSel('pend-year',uniq(pending.map(r=>r.year)));
+  S.pendingF=[...pending]; S.pendP=1;
+}
+function filterPendingList() {
+  const q=v('pend-s').toLowerCase(), prog=v('pend-prog'), yr=v('pend-year');
+  const pending=S.students.filter(r=>!r.submittedAt);
+  S.pendingF=pending.filter(r=>{
+    const mQ=!q||(r.studentName||'').toLowerCase().includes(q)||(r.rollNumber||'').toLowerCase().includes(q)||(r.programme||'').toLowerCase().includes(q);
+    return mQ&&(!prog||r.programme===prog)&&(!yr||r.year==yr);
   });
-  html += `</div>`;
-  document.getElementById('recentActivity').innerHTML = html;
+  S.pendP=1; renderPendingList();
+}
+function renderPendingList() {
+  if(!S.pendingF.length && !S.students.length) { initPendingFilters(); }
+  const data=S.pendingF, page=S.pendP;
+  const start=(page-1)*PER_PAGE, slice=data.slice(start,start+PER_PAGE);
+
+  // Summary pills
+  const deptCount={};
+  data.forEach(r=>{ const d=r.programme||'Unknown'; deptCount[d]=(deptCount[d]||0)+1; });
+  const topDepts=Object.entries(deptCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  $('pend-summary').innerHTML=`
+    <div style="display:flex;gap:0.7rem;flex-wrap:wrap;align-items:center;padding-bottom:1rem;width:100%">
+      <div style="background:rgba(239,68,68,0.09);border:1px solid rgba(239,68,68,0.18);border-radius:10px;padding:0.5rem 1rem;font-weight:800;color:#991b1b;font-size:0.82rem">⏳ ${data.length} Pending Total</div>
+      ${topDepts.map(([d,n])=>`<div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.15);border-radius:10px;padding:0.5rem 1rem;font-weight:700;color:var(--core);font-size:0.78rem">${esc(d.length>20?d.slice(0,20)+'…':d)}: <b>${n}</b></div>`).join('')}
+    </div>`;
+
+  $('pend-tbody').innerHTML=!slice.length
+    ?`<tr><td colspan="7">${emptyState('🎉','All students have submitted!')}</td></tr>`
+    :slice.map((r,i)=>`<tr>
+        <td class="mono">${start+i+1}</td>
+        <td class="mono"><b>${esc(r.rollNumber)}</b></td>
+        <td class="mono">${esc(r.registerNo)}</td>
+        <td style="font-weight:600">${esc(r.studentName)}</td>
+        <td style="font-size:0.78rem">${esc(r.programme)}</td>
+        <td>${esc(r.year)}</td>
+        <td>${r.correction==='YES'?'<span class="badge bd">⚠ YES</span>':'<span class="badge bs">— NO</span>'}</td>
+      </tr>`).join('');
+  setText('pend-show',`${start+1}–${Math.min(start+PER_PAGE,data.length)}`);
+  setText('pend-tot',data.length);
+  renderPages('pend-pages',page,Math.ceil(data.length/PER_PAGE),p=>{S.pendP=p;renderPendingList();});
+}
+function exportPending(){
+  dlCSV(S.pendingF.map((r,i)=>[i+1,r.rollNumber,r.registerNo,`"${r.studentName}"`,`"${r.programme}"`,r.year,r.correction||'']),
+    ['#','Roll','Register','Name','Programme','Year','Correction'],`pending-students-${today()}.csv`);
 }
 
-// ══════════════════════════════════════════════════
-//  ANALYTICS
-// ══════════════════════════════════════════════════
-function renderAnalytics() {
-  renderInsights();
-  renderDonut();
-  renderStackedBar();
-  renderCorrReasons();
-  renderHourlyChart();
-  renderHeatmap();
-  renderPendingBreakdown();
-}
-
+// AI INSIGHTS
 function renderInsights() {
-  const total = students.length, ok = students.filter(s=>s.status==='OK').length;
-  const corr = students.filter(s=>s.status==='Correction').length;
-  const pend = students.filter(s=>s.status==='Pending').length;
-  const corrRate = total ? (corr/total*100).toFixed(1) : 0;
-  const pendRate = total ? (pend/total*100).toFixed(1) : 0;
-  // Fastest dept
-  const dmap = {};
-  students.forEach(s=>{ if(!dmap[s.programme])dmap[s.programme]={t:0,d:0}; dmap[s.programme].t++; if(s.status!=='Pending')dmap[s.programme].d++; });
-  const bestDept = Object.entries(dmap).sort(([,a],[,b])=>(b.d/b.t)-(a.d/a.t))[0];
-  const avgSubmit = (() => {
-    const hrs = students.filter(s=>s.submittedAt).map(s=>parseInt(s.submittedAt.split(' ')[1]?.split(':')[0]||'0'));
-    return hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : 0;
-  })();
-  document.getElementById('insightGrid').innerHTML = [
-    {e:'🎯', t:'Correction Rate',    v:`${corrRate}%`,  d:`${corr} of ${total} students flagged issues`},
-    {e:'⏳', t:'Pending Rate',       v:`${pendRate}%`,  d:`${pend} students haven't responded yet`},
-    {e:'🏆', t:'Best Department',    v: bestDept?bestDept[0].split(' ')[0]:'—', d: bestDept?`${Math.round(bestDept[1].d/bestDept[1].t*100)}% completion rate`:'No data'},
-    {e:'🕐', t:'Avg Submission Hour',v:`${avgSubmit}:00`,d:'Most students submit mid-morning'},
-  ].map(i=>`<div class="ic"><div class="ic-emoji">${i.e}</div><div class="ic-title">${i.t}</div><div class="ic-value">${i.v}</div><div class="ic-desc">${i.d}</div></div>`).join('');
-}
+  if (!S.students.length) { $('insights-body').innerHTML='<div class="empty-state"><div class="icon">📊</div><p>Load data first to see insights</p></div>'; return; }
+  const tot=S.students.length;
+  const sub=S.students.filter(r=>r.submittedAt).length;
+  const pend=tot-sub;
+  const corY=S.students.filter(r=>r.correction==='YES').length;
+  const dMap=groupByAnalysis(S.students,'programme');
+  const topDept=Object.entries(dMap).sort((a,b)=>b[1].submitted-a[1].submitted)[0];
+  const lowDept=Object.entries(dMap).sort((a,b)=>(a[1].submitted/a[1].total)-(b[1].submitted/b[1].total))[0];
+  const highCorDept=Object.entries(dMap).sort((a,b)=>b[1].correctionYes-a[1].correctionYes)[0];
+  const yMap=groupByAnalysis(S.students,'year');
+  const highPendYear=Object.entries(yMap).sort((a,b)=>b[1].pending-a[1].pending)[0];
+  const confY=S.confirmations.filter(r=>r.response==='YES').length;
+  const confTot=S.confirmations.length;
+  const corDone=S.corrections.filter(r=>r.status==='Done'||r.status==='Reviewed').length;
+  const corTot=S.corrections.length||1;
 
-function renderDonut() {
-  const ok = students.filter(s=>s.status==='OK').length;
-  const corr = students.filter(s=>s.status==='Correction').length;
-  const pend = students.filter(s=>s.status==='Pending').length;
-  const total = ok + corr + pend || 1;
-  const segments = [
-    {v:ok,   c:'#059669', l:'Confirmed OK'},
-    {v:corr, c:'#dc2626', l:'Correction'},
-    {v:pend, c:'#d97706', l:'Pending'},
+  const insights=[
+    {icon:'🎯',color:'#7c3aed',bg:'rgba(124,58,237,0.08)',title:'Overall Completion',val:((sub/tot)*100).toFixed(1)+'%',desc:`${sub} of ${tot} students submitted. ${pend>0?pend+' still pending.':'All submitted!'}`},
+    {icon:'🏆',color:'#10b981',bg:'rgba(16,185,129,0.08)',title:'Top Performing Dept',val:topDept?topDept[0]:'N/A',desc:topDept?`${topDept[1].submitted}/${topDept[1].total} — ${(topDept[1].submitted/topDept[1].total*100).toFixed(1)}% completion.`:'No data'},
+    {icon:'⚠️',color:'#f59e0b',bg:'rgba(245,158,11,0.08)',title:'Needs Attention',val:lowDept?lowDept[0]:'N/A',desc:lowDept?`Only ${(lowDept[1].submitted/lowDept[1].total*100).toFixed(1)}%. ${lowDept[1].pending} pending.`:'All performing well'},
+    {icon:'✏️',color:'#ef4444',bg:'rgba(239,68,68,0.08)',title:'High Correction Dept',val:highCorDept?highCorDept[0]:'N/A',desc:highCorDept?`${highCorDept[1].correctionYes} corrections — ${(highCorDept[1].correctionYes/highCorDept[1].total*100).toFixed(1)}% flagged.`:'None'},
+    {icon:'📅',color:'#3b82f6',bg:'rgba(59,130,246,0.08)',title:'Most Pending Year',val:highPendYear?highPendYear[0]:'N/A',desc:highPendYear?`${highPendYear[1].pending} pending in year ${highPendYear[0]}.`:'None'},
+    {icon:'💬',color:'#d946ef',bg:'rgba(217,70,239,0.08)',title:'Confirmation Rate',val:confTot?(confY/confTot*100).toFixed(1)+'%':'N/A',desc:confTot?`${confY} YES of ${confTot} total.`:'No confirmation data'},
+    {icon:'🔧',color:'#f59e0b',bg:'rgba(245,158,11,0.08)',title:'Correction Resolution',val:((corDone/corTot)*100).toFixed(1)+'%',desc:`${corDone} of ${corTot} corrections resolved.`},
+    {icon:'📊',color:'#7c3aed',bg:'rgba(124,58,237,0.08)',title:'Unique Departments',val:Object.keys(dMap).length,desc:`Across ${new Set(S.students.map(r=>r.year)).size} academic years`}
   ];
-  const r = 50, cx = 60, cy = 60;
-  const circ = 2*Math.PI*r;
-  let offset = 0;
-  let paths = '';
-  segments.forEach(s=>{
-    const pct = s.v/total;
-    const dash = pct*circ;
-    if (dash > 0) {
-      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.c}" stroke-width="18"
-        stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" opacity="0.9"/>`;
-      offset += dash;
-    }
-  });
-  // center text
-  paths += `<text x="60" y="56" text-anchor="middle" font-size="13" font-weight="900" fill="#2e1065" font-family="Outfit">${total}</text>
-    <text x="60" y="70" text-anchor="middle" font-size="7" fill="#6b5fa8" font-family="Outfit">STUDENTS</text>`;
-  document.getElementById('donutSvg').innerHTML = `<circle cx="60" cy="60" r="50" fill="none" stroke="#f5f3ff" stroke-width="18"/>` + paths;
-  document.getElementById('donutLegend').innerHTML = segments.map(s=>`
-    <div class="dl-item">
-      <div class="dl-dot" style="background:${s.c}"></div>
-      <span class="dl-lbl">${s.l}</span>
-      <span class="dl-val">${s.v} <span style="font-size:.72rem;color:var(--muted)">(${Math.round(s.v/total*100)}%)</span></span>
-    </div>`).join('');
+
+  $('insights-body').innerHTML=`<div class="insight-grid">${insights.map(i=>`
+    <div class="insight-card">
+      <div class="insight-header"><div class="insight-icon" style="background:${i.bg}">${i.icon}</div><div class="insight-title">${i.title}</div></div>
+      <div class="insight-val" style="color:${i.color}">${esc(String(i.val))}</div>
+      <div class="insight-desc">${i.desc}</div>
+    </div>`).join('')}</div>`;
+  renderDeptRankings();
+  renderCompletionHeatmap();
 }
 
-function renderStackedBar() {
-  const map = {};
-  students.forEach(s=>{
-    const d = s.programme||'Unknown';
-    if(!map[d])map[d]={t:0,ok:0,c:0,p:0};
-    map[d].t++; if(s.status==='OK')map[d].ok++; else if(s.status==='Correction')map[d].c++; else map[d].p++;
-  });
-  const entries = Object.entries(map);
-  if (!entries.length) { document.getElementById('stackedBar').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
-  const maxT = Math.max(...entries.map(([,v])=>v.t));
-  const bars = entries.map(([dept,v])=>{
-    const h = 80, hScale = maxT ? h*(v.t/maxT) : 0;
-    const hOk   = hScale * (v.ok/v.t);
-    const hCorr = hScale * (v.c/v.t);
-    const hPend = hScale * (v.p/v.t);
-    const lbl   = dept.split(' ')[0].slice(0,4).toUpperCase();
-    return `<div class="bar-col" title="${dept}: ${v.ok} OK, ${v.c} Correction, ${v.p} Pending">
-      <div class="bar-seg-wrap" style="height:${h}px">
-        <div class="bar-seg" style="height:${hPend}px;background:#d97706;opacity:.8"></div>
-        <div class="bar-seg" style="height:${hCorr}px;background:#dc2626;opacity:.85"></div>
-        <div class="bar-seg" style="height:${hOk}px;background:#059669;opacity:.9"></div>
-      </div>
-      <div class="bar-lbl">${lbl}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('stackedBar').innerHTML = `
-    <div style="margin-bottom:.6rem;display:flex;gap:.8rem;font-size:.72rem;flex-wrap:wrap">
-      <span><span style="display:inline-block;width:10px;height:10px;background:#059669;border-radius:2px;margin-right:3px"></span>OK</span>
-      <span><span style="display:inline-block;width:10px;height:10px;background:#dc2626;border-radius:2px;margin-right:3px"></span>Correction</span>
-      <span><span style="display:inline-block;width:10px;height:10px;background:#d97706;border-radius:2px;margin-right:3px"></span>Pending</span>
-    </div>
-    <div class="bar-chart">${bars}</div>`;
+function renderDeptRankings() {
+  const dMap=groupByAnalysis(S.students,'programme');
+  const sorted=Object.entries(dMap).sort((a,b)=>(b[1].submitted/b[1].total)-(a[1].submitted/a[1].total));
+  $('dept-rankings').innerHTML=`
+    <table class="rank-table">
+      <thead><tr><th>Rank</th><th>Department</th><th>Total</th><th>Submitted</th><th>Pending</th><th>Correction %</th><th>Completion</th></tr></thead>
+      <tbody>${sorted.map(([dept,d],i)=>{
+        const pct=(d.submitted/d.total*100).toFixed(1);
+        const corPct=(d.correctionYes/d.total*100).toFixed(1);
+        const rc=i===0?'rn-1':i===1?'rn-2':i===2?'rn-3':'rn-n';
+        return`<tr>
+          <td><span class="rank-num ${rc}">${i+1}</span></td>
+          <td style="font-weight:600">${esc(dept)}</td>
+          <td>${d.total}</td>
+          <td style="color:#10b981;font-weight:700">${d.submitted}</td>
+          <td style="color:#3b82f6;font-weight:700">${d.pending}</td>
+          <td><span style="font-size:0.72rem;font-weight:800;color:${+corPct>20?'#ef4444':'#10b981'}">${corPct}%</span></td>
+          <td style="min-width:140px"><div class="mini-bar-wrap"><div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div><div class="mini-bar-val">${pct}%</div></div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
 }
 
-function renderCorrReasons() {
-  const corrStudents = students.filter(s=>s.status==='Correction'&&s.correctionCourse);
-  if (!corrStudents.length) { document.getElementById('corrReasons').innerHTML='<div class="empty"><p>No corrections yet</p></div>'; return; }
-  const map = {};
-  corrStudents.forEach(s=>{ const k=s.correctionCourse||'Other'; map[k]=(map[k]||0)+1; });
-  const entries = Object.entries(map).sort(([,a],[,b])=>b-a).slice(0,6);
-  const maxV = entries[0][1];
-  document.getElementById('corrReasons').innerHTML = entries.map(([course,cnt])=>`
-    <div class="pi">
-      <div class="pi-hdr"><span style="font-size:.82rem">${course}</span><span class="badge b-corr" style="font-size:.65rem">${cnt}</span></div>
-      <div class="pb"><div class="pf red" style="width:${Math.round(cnt/maxV*100)}%"></div></div>
-    </div>`).join('');
-}
-
-function renderHourlyChart() {
-  const hrs = Array(24).fill(0);
-  students.filter(s=>s.submittedAt).forEach(s=>{
-    const h = parseInt(s.submittedAt.split(' ')[1]?.split(':')[0]||'0');
-    hrs[h]++;
+function renderCompletionHeatmap() {
+  const yMap=groupByAnalysis(S.students,'year');
+  const dMap={};
+  S.students.forEach(r=>{
+    const d=r.programme||'Unknown', y=r.year||'Unknown';
+    if(!dMap[d]) dMap[d]={};
+    if(!dMap[d][y]) dMap[d][y]={total:0,submitted:0};
+    dMap[d][y].total++;
+    if(r.submittedAt) dMap[d][y].submitted++;
   });
-  const peak = Math.max(...hrs,1);
-  // show only 7am–8pm for readability
-  const slots = Array.from({length:14},(_,i)=>i+7);
-  const bars = slots.map(h=>{
-    const cnt = hrs[h];
-    const ht  = Math.round(cnt/peak*70);
-    return `<div class="bar-col" title="${h}:00 — ${cnt} submissions">
-      <div class="bar-seg-wrap" style="height:70px">
-        <div class="bar-seg" style="height:${ht}px;background:linear-gradient(to top,var(--p600),var(--p300))"></div>
-      </div>
-      <div class="bar-lbl">${h}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('hourlyChart').innerHTML = `<div class="bar-chart" style="align-items:flex-end">${bars}</div>
-    <div style="font-size:.72rem;color:var(--muted);margin-top:.4rem;text-align:center">Hour of day (7am–8pm)</div>`;
-}
-
-function renderHeatmap() {
-  const years = ['I','II','III','IV'];
-  const depts = [...new Set(students.map(s=>s.programme).filter(Boolean))];
-  if (!depts.length) { document.getElementById('heatmapContainer').innerHTML='<div class="empty"><p>No data</p></div>'; return; }
-
-  const map = {};
-  students.forEach(s=>{
-    const k = `${s.year}||${s.programme}`;
-    if(!map[k])map[k]={t:0,d:0};
-    map[k].t++; if(s.status!=='Pending')map[k].d++;
-  });
-
-  const cellColor = pct => {
-    if (pct >= 80) return '#059669';
-    if (pct >= 60) return '#34d399';
-    if (pct >= 40) return '#fbbf24';
-    if (pct >= 20) return '#f87171';
-    return '#e5e7eb';
+  const years=Object.keys(yMap).sort();
+  const depts=Object.keys(dMap).sort();
+  if(!years.length||!depts.length){ $('completion-heatmap').innerHTML='<div class="empty-state"><div class="icon">📊</div><p>No data</p></div>'; return; }
+  const cellStyle=(pct)=>{
+    if(pct===null) return'background:#f9fafb;color:#d1d5db';
+    if(pct>=80) return'background:rgba(16,185,129,0.18);color:#065f46;font-weight:800';
+    if(pct>=50) return'background:rgba(124,58,237,0.12);color:#4c1d95;font-weight:700';
+    if(pct>0) return'background:rgba(245,158,11,0.15);color:#92400e;font-weight:700';
+    return'background:rgba(239,68,68,0.1);color:#991b1b;font-weight:700';
   };
-
-  let html = `<div style="display:inline-block;min-width:100%">
-    <div style="display:grid;grid-template-columns:120px ${depts.map(()=>'36px').join(' ')};gap:4px;margin-bottom:4px;align-items:center">
-      <div style="font-size:.68rem;color:var(--muted);font-weight:700">YEAR \\ DEPT</div>
-      ${depts.map(d=>`<div style="font-size:.62rem;color:var(--muted);font-weight:700;text-align:center;overflow:hidden;white-space:nowrap;width:36px" title="${d}">${d.split(' ').map(w=>w[0]).join('').slice(0,3)}</div>`).join('')}
-    </div>`;
-  years.forEach(yr=>{
-    html += `<div style="display:grid;grid-template-columns:120px ${depts.map(()=>'36px').join(' ')};gap:4px;align-items:center;margin-bottom:4px">
-      <div style="font-size:.78rem;font-weight:600;color:var(--text)">Year ${yr}</div>`;
-    depts.forEach(dept=>{
-      const k = `${yr}||${dept}`;
-      const v = map[k];
-      const pct = v ? Math.round(v.d/v.t*100) : 0;
-      const count = v ? `${v.d}/${v.t}` : '0/0';
-      html += `<div class="hm-cell" style="background:${cellColor(pct)};opacity:${v?1:.25}" title="${dept} Y${yr}: ${count} (${pct}%)"></div>`;
-    });
-    html += `</div>`;
-  });
-  html += `<div style="display:flex;align-items:center;gap:.6rem;margin-top:.8rem;font-size:.72rem;color:var(--muted)">
-    <span>0%</span>
-    <div style="display:flex;gap:2px">
-      ${['#e5e7eb','#f87171','#fbbf24','#34d399','#059669'].map(c=>`<div style="width:16px;height:10px;background:${c};border-radius:2px"></div>`).join('')}
+  $('completion-heatmap').innerHTML=`
+    <div class="heatmap-legend">
+      <div class="hlegend-item"><div class="hlegend-dot" style="background:rgba(16,185,129,0.2)"></div>≥80% (Excellent)</div>
+      <div class="hlegend-item"><div class="hlegend-dot" style="background:rgba(124,58,237,0.14)"></div>50–79% (Good)</div>
+      <div class="hlegend-item"><div class="hlegend-dot" style="background:rgba(245,158,11,0.17)"></div>&lt;50% (Needs Attention)</div>
+      <div class="hlegend-item"><div class="hlegend-dot" style="background:rgba(239,68,68,0.12)"></div>0%</div>
     </div>
-    <span>100%</span>
-  </div></div>`;
-  document.getElementById('heatmapContainer').innerHTML = html;
-}
-
-function renderPendingBreakdown() {
-  const pend = students.filter(s=>s.status==='Pending');
-  if (!pend.length) { document.getElementById('pendingBreakdown').innerHTML='<div class="empty"><p>🎉 No pending students!</p></div>'; return; }
-  const map = {};
-  pend.forEach(s=>{ const k=s.programme||'Unknown'; if(!map[k])map[k]=[]; map[k].push(s); });
-  const rows = Object.entries(map).sort(([,a],[,b])=>b.length-a.length)
-    .map(([dept,list],i)=>`<tr>
-      <td>${i+1}</td>
-      <td><strong>${dept}</strong></td>
-      <td><span class="badge b-pend">${list.length}</span></td>
-      <td style="font-size:.82rem;color:var(--muted)">${[...new Set(list.map(s=>s.year))].sort().map(y=>`Year ${y}`).join(', ')}</td>
-      <td style="font-size:.8rem;color:var(--muted)">${list.slice(0,2).map(s=>s.studentName).join(', ')}${list.length>2?` +${list.length-2} more`:''}</td>
-    </tr>`).join('');
-  document.getElementById('pendingBreakdown').innerHTML = `
-    <div class="tw"><table>
-      <thead><tr><th>#</th><th>Department</th><th>Pending Count</th><th>Years</th><th>Students (preview)</th></tr></thead>
-      <tbody>${rows}</tbody>
+    <div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:0.8rem;min-width:100%">
+      <thead><tr>
+        <th style="padding:0.55rem 0.9rem;text-align:left;background:rgba(245,240,255,0.7);color:var(--core);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:800;white-space:nowrap;border-bottom:1px solid rgba(139,92,246,0.12)">Department</th>
+        ${years.map(y=>`<th style="padding:0.55rem 0.9rem;background:rgba(245,240,255,0.7);color:var(--core);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.09em;font-weight:800;text-align:center;border-bottom:1px solid rgba(139,92,246,0.12)">${esc(y)}</th>`).join('')}
+      </tr></thead>
+      <tbody>${depts.map(d=>`<tr>
+        <td style="padding:0.55rem 0.9rem;font-weight:600;white-space:nowrap;border-bottom:1px solid rgba(139,92,246,0.05)">${esc(d)}</td>
+        ${years.map(y=>{
+          const cell=dMap[d][y];
+          if(!cell) return`<td style="padding:0.55rem 0.9rem;text-align:center;border-bottom:1px solid rgba(139,92,246,0.05);color:rgba(139,92,246,0.2)">—</td>`;
+          const pct=(cell.submitted/cell.total*100).toFixed(0);
+          return`<td style="padding:0.55rem 0.9rem;text-align:center;border-bottom:1px solid rgba(139,92,246,0.05);${cellStyle(+pct)}" title="${d}/${y}: ${pct}% (${cell.submitted}/${cell.total})">${pct}%</td>`;
+        }).join('')}
+      </tr>`).join('')}</tbody>
     </table></div>`;
 }
 
-// ══════════════════════════════════════════════════
-//  STUDENTS TABLE
-// ══════════════════════════════════════════════════
-function populateFilters() {
-  const depts = [...new Set(students.map(s=>s.programme).filter(Boolean))];
-  ['f-dept','r-dept'].forEach(id=>{
-    const sel = document.getElementById(id);
-    if(!sel) return;
-    sel.innerHTML='<option value="">All Departments</option>';
-    depts.forEach(d=>sel.innerHTML+=`<option>${d}</option>`);
+// CHART FACTORIES
+const PALETTE=['#7c3aed','#d946ef','#3b82f6','#10b981','#ef4444','#f59e0b','#4f46e5','#0d9488'];
+function mkDoughnut(id,labels,data,colors){ mkChart(id,'doughnut',labels,data,colors||PALETTE); }
+function mkPie(id,labels,data,colors){ mkChart(id,'pie',labels,data,colors||PALETTE); }
+function mkChart(id,type,labels,data,colors){
+  if(S.charts[id]) S.charts[id].destroy();
+  const ctx=$(id); if(!ctx) return;
+  S.charts[id]=new Chart(ctx,{type,data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans',size:11},padding:14,usePointStyle:true}}}}});
+}
+function mkBar(id,labels,data,color){
+  if(S.charts[id]) S.charts[id].destroy();
+  const ctx=$(id); if(!ctx) return;
+  const horiz=labels.length>6;
+  S.charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color||'#7c3aed',borderRadius:8,borderSkipped:false,hoverBackgroundColor:color?color:'#8b5cf6'}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:horiz?'y':'x',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}},y:{beginAtZero:true,ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}}}}});
+}
+function mkMultiBar(id,labels,datasets){
+  if(S.charts[id]) S.charts[id].destroy();
+  const ctx=$(id); if(!ctx) return;
+  S.charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:datasets.map(d=>({label:d.label,data:d.data,backgroundColor:d.color,borderRadius:6,borderSkipped:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans',size:11},usePointStyle:true,padding:12}}},scales:{x:{beginAtZero:true,ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}},y:{beginAtZero:true,ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}}}}});
+}
+function mkMultiBarH(id,labels,datasets){
+  if(S.charts[id]) S.charts[id].destroy();
+  const ctx=$(id); if(!ctx) return;
+  S.charts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:datasets.map(d=>({label:d.label,data:d.data,backgroundColor:d.color,borderRadius:6,borderSkipped:false}))},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans',size:11},usePointStyle:true,padding:12}}},scales:{x:{beginAtZero:true,ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}},y:{ticks:{font:{family:'Plus Jakarta Sans',size:10}}}}}});
+}
+function mkLine(id,labels,datasets){
+  if(S.charts[id]) S.charts[id].destroy();
+  const ctx=$(id); if(!ctx) return;
+  S.charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets:datasets.map(d=>({label:d.label,data:d.data,borderColor:d.color,backgroundColor:d.color+'18',fill:true,tension:0.45,pointRadius:5,pointHoverRadius:7,borderWidth:2.5}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans',size:11},usePointStyle:true,padding:12}}},scales:{x:{ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}},y:{beginAtZero:true,ticks:{font:{family:'Plus Jakarta Sans',size:10}},grid:{color:'rgba(139,92,246,0.06)'}}}}});
+}
+function mkRadar(id,labels,datasets){
+  if(S.charts[id]) S.charts[id].destroy();
+  const ctx=$(id); if(!ctx) return;
+  S.charts[id]=new Chart(ctx,{type:'radar',data:{labels,datasets:datasets.map(d=>({label:d.label,data:d.data,backgroundColor:d.color,borderColor:d.border,borderWidth:2,pointRadius:3}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans',size:11},usePointStyle:true,padding:12}}},scales:{r:{ticks:{font:{family:'Plus Jakarta Sans',size:9}},grid:{color:'rgba(139,92,246,0.1)'},angleLines:{color:'rgba(139,92,246,0.1)'},pointLabels:{font:{family:'Plus Jakarta Sans',size:10,weight:'600'}}}}}});
+}
+
+// TABLE HELPERS
+function buildAnalysisTable(headers,rows){
+  return`<div class="table-wrap"><table class="rank-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${row.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function fc(val,color){ return`<span style="color:${color};font-weight:800">${val}</span>`; }
+function pctBadge(pct){
+  const col=pct>=80?'#10b981':pct>=50?'#7c3aed':'#ef4444';
+  const bg=pct>=80?'rgba(16,185,129,0.1)':pct>=50?'rgba(124,58,237,0.1)':'rgba(239,68,68,0.1)';
+  return`<span style="background:${bg};color:${col};padding:0.2rem 0.6rem;border-radius:20px;font-size:0.72rem;font-weight:800">${pct}%</span>`;
+}
+function tile(mc,mbg,label,val,sub){
+  return`<div class="metric-tile" style="--mc:${mc};--mbg:${mbg};"><div class="mtile-label">${label}</div><div class="mtile-val">${val}</div><div class="mtile-sub">${sub}</div></div>`;
+}
+
+// STUDENTS TABLE
+function filterStudents(){
+  const q=v('stu-s').toLowerCase(),prog=v('stu-prog'),yr=v('stu-year'),st=v('stu-status');
+  S.stuF=S.students.filter(r=>{
+    const mQ=!q||(r.studentName||'').toLowerCase().includes(q)||(r.rollNumber||'').toLowerCase().includes(q)||(r.registerNo+'').includes(q);
+    return mQ&&(!prog||r.programme===prog)&&(!yr||r.year==yr)&&(!st||(st==='submitted'?!!r.submittedAt:!r.submittedAt));
   });
+  S.stuP=1;renderStudentsTable();
 }
-function applyFilters() {
-  const dept=document.getElementById('f-dept').value, year=document.getElementById('f-year').value,
-        status=document.getElementById('f-status').value, q=document.getElementById('f-search').value.toLowerCase();
-  renderStudents(students.filter(s=>{
-    if(dept&&s.programme!==dept)return false;
-    if(year&&s.year!==year)return false;
-    if(status&&s.status!==status)return false;
-    if(q&&!String(s.studentName||'').toLowerCase().includes(q)&&!String(s.registerNo||'').includes(q))return false;
-    return true;
-  }));
+function renderStudentsTable(){
+  const data=S.stuF,page=S.stuP;
+  const start=(page-1)*PER_PAGE,slice=data.slice(start,start+PER_PAGE);
+  show('stu-load',false);show('stu-wrap',true);
+  $('stu-tbody').innerHTML=!slice.length
+    ?`<tr><td colspan="10">${emptyState('🔍','No records found')}</td></tr>`
+    :slice.map((r,i)=>`<tr>
+      <td class="mono">${start+i+1}</td>
+      <td class="mono"><b>${esc(r.rollNumber)}</b></td>
+      <td class="mono">${esc(r.registerNo)}</td>
+      <td style="font-weight:600">${esc(r.studentName)}</td>
+      <td style="font-size:0.78rem">${esc(r.programme)}</td>
+      <td>${esc(r.year)}</td>
+      <td>${r.pageNumber||'—'}</td>
+      <td>${r.submittedAt?'<span class="badge bs">✓ Submitted</span>':'<span class="badge bi">⏳ Pending</span>'}</td>
+      <td class="mono" style="font-size:0.72rem">${fmtDate(r.submittedAt)}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="viewStudent('${esc(r.rollNumber)}')">View</button></td>
+    </tr>`).join('');
+  setText('stu-show',`${start+1}–${Math.min(start+PER_PAGE,data.length)}`);
+  setText('stu-tot',data.length);
+  renderPages('stu-pages',page,Math.ceil(data.length/PER_PAGE),p=>{S.stuP=p;renderStudentsTable();});
 }
-function getFilteredStudents() {
-  const dept=document.getElementById('f-dept').value, year=document.getElementById('f-year').value,
-        status=document.getElementById('f-status').value, q=document.getElementById('f-search').value.toLowerCase();
-  return students.filter(s=>{
-    if(dept&&s.programme!==dept)return false;
-    if(year&&s.year!==year)return false;
-    if(status&&s.status!==status)return false;
-    if(q&&!String(s.studentName||'').toLowerCase().includes(q)&&!String(s.registerNo||'').includes(q))return false;
-    return true;
+
+// CORRECTIONS TABLE
+function filterCorrections(){
+  const q=v('cor-s').toLowerCase(),prog=v('cor-prog'),st=v('cor-status');
+  S.corF=S.corrections.filter(r=>{
+    const mQ=!q||(r.studentName||'').toLowerCase().includes(q)||(r.rollNumber||'').toLowerCase().includes(q)||(r.registerNo+'').includes(q);
+    return mQ&&(!prog||r.programme===prog)&&(!st||r.status===st);
   });
+  S.corP=1;renderCorrectionsTable();
 }
-function renderStudents(list) {
-  document.getElementById('studCount').innerHTML = `Students <span>(${list.length})</span>`;
-  const tbody = document.getElementById('studBody');
-  if (!list.length) { tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="ei">🔍</div><p>No records match</p></div></td></tr>'; return; }
-  tbody.innerHTML = list.map((s,i)=>`<tr>
-    <td style="color:var(--muted);font-size:.8rem">${i+1}</td>
-    <td><strong style="font-size:.84rem">${s.rollNumber||'—'}</strong></td>
-    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${s.registerNo||'—'}</span></td>
-    <td style="font-weight:600">${s.studentName||'—'}</td>
-    <td style="color:var(--muted);font-size:.82rem">${s.programme||'—'}</td>
-    <td><span class="badge b-year">${s.year||'?'}</span></td>
-    <td style="font-size:.81rem;color:var(--muted)">${s.fileName||'—'}</td>
-    <td>${mkBadge(s.status)}</td>
-    <td style="font-size:.8rem;color:var(--muted);max-width:180px">
-      ${s.correctionDetails?`<span title="${s.correctionDetails}">${s.correctionDetails.slice(0,40)}${s.correctionDetails.length>40?'…':''}</span>`:'—'}
-    </td>
-    <td style="font-size:.78rem;color:var(--muted)">${s.submittedAt||'—'}</td>
+function renderCorrectionsTable(){
+  const data=S.corF,page=S.corP;
+  const start=(page-1)*PER_PAGE,slice=data.slice(start,start+PER_PAGE);
+  show('cor-load',false);show('cor-wrap',true);
+  $('cor-tbody').innerHTML=!slice.length
+    ?`<tr><td colspan="9">${emptyState('📭','No records found')}</td></tr>`
+    :slice.map((r,i)=>`<tr>
+      <td class="mono">${start+i+1}</td>
+      <td class="mono">${esc(r.registerNo)}</td>
+      <td class="mono">${esc(r.rollNumber)}</td>
+      <td style="font-weight:600">${esc(r.studentName)}</td>
+      <td style="font-size:0.78rem">${esc(r.programme)}</td>
+      <td style="font-size:0.82rem">${esc(r.correctionCourse||'—')}</td>
+      <td>${statusBadge(r.status)}</td>
+      <td class="mono" style="font-size:0.72rem">${fmtDate(r.submittedAt)}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="viewCorrection(${r.sNo},'${esc(r.registerNo)}','${esc(r.studentName)}','${esc(r.programme)}','${esc(r.correctionCourse)}','${esc(r.correctionDetails)}','${esc(r.status)}')">View</button></td>
+    </tr>`).join('');
+  setText('cor-show',`${start+1}–${Math.min(start+PER_PAGE,data.length)}`);
+  setText('cor-tot',data.length);
+  renderPages('cor-pages',page,Math.ceil(data.length/PER_PAGE),p=>{S.corP=p;renderCorrectionsTable();});
+}
+
+// CONFIRMATIONS TABLE
+function filterConfirmations(){
+  const q=v('conf-s').toLowerCase(),prog=v('conf-prog'),resp=v('conf-response');
+  S.confF=S.confirmations.filter(r=>{
+    const mQ=!q||(r.studentName||'').toLowerCase().includes(q)||(r.rollNumber||'').toLowerCase().includes(q)||(r.registerNo+'').includes(q);
+    return mQ&&(!prog||r.programme===prog)&&(!resp||r.response===resp);
+  });
+  S.confP=1;renderConfirmationsTable();
+}
+function renderConfirmationsTable(){
+  const data=S.confF,page=S.confP;
+  const start=(page-1)*PER_PAGE,slice=data.slice(start,start+PER_PAGE);
+  show('conf-load',false);show('conf-wrap',true);
+  $('conf-tbody').innerHTML=!slice.length
+    ?`<tr><td colspan="8">${emptyState('📭','No records found')}</td></tr>`
+    :slice.map((r,i)=>`<tr>
+      <td class="mono">${start+i+1}</td>
+      <td class="mono">${esc(r.registerNo)}</td>
+      <td class="mono">${esc(r.rollNumber)}</td>
+      <td style="font-weight:600">${esc(r.studentName)}</td>
+      <td style="font-size:0.78rem">${esc(r.programme)}</td>
+      <td>${r.response==='YES'?'<span class="badge bs">✓ YES</span>':'<span class="badge bd">✗ NO</span>'}</td>
+      <td style="font-size:0.82rem">${esc(r.correctionCourse||'—')}</td>
+      <td class="mono" style="font-size:0.72rem">${fmtDate(r.submittedAt)}</td>
+    </tr>`).join('');
+  setText('conf-show',`${start+1}–${Math.min(start+PER_PAGE,data.length)}`);
+  setText('conf-tot',data.length);
+  renderPages('conf-pages',page,Math.ceil(data.length/PER_PAGE),p=>{S.confP=p;renderConfirmationsTable();});
+}
+
+// FILE LINKS
+function renderFileLinks(){
+  show('fl-load',false);show('fl-wrap',true);
+  $('fl-tbody').innerHTML=!S.filelinks.length
+    ?`<tr><td colspan="5">${emptyState('📁','No file links')}</td></tr>`
+    :S.filelinks.map((r,i)=>`<tr>
+      <td class="mono">${i+1}</td>
+      <td><b>${esc(r.fileGroupName||'—')}</b></td>
+      <td class="mono" style="font-size:0.72rem">${esc(r.driveFileId||'—')}</td>
+      <td style="font-size:0.8rem">${esc(r.notes||'—')}</td>
+      <td>${r.driveFileId?`<a href="https://drive.google.com/file/d/${esc(r.driveFileId)}/view" target="_blank" class="btn btn-primary btn-sm">📂 Open</a>`:'—'}</td>
+    </tr>`).join('');
+}
+
+// ADMINS
+function renderAdmins(){
+  show('adm-load',false);show('adm-wrap',true);
+  $('adm-tbody').innerHTML=S.admins.map((r,i)=>`<tr>
+    <td class="mono">${i+1}</td>
+    <td><b>${esc(r.username)}</b></td>
+    <td><span class="badge ${r.role==='superadmin'?'bp':'bi'}">${esc(r.role||'admin')}</span></td>
+    <td style="font-size:0.8rem">${esc(r.notes||'—')}</td>
   </tr>`).join('');
 }
-function mkBadge(st) {
-  if(st==='OK')         return '<span class="badge b-ok">✅ Confirmed</span>';
-  if(st==='Correction') return '<span class="badge b-corr">⚠️ Correction</span>';
-  if(st==='Pending')    return '<span class="badge b-pend">⏳ Pending</span>';
-  return `<span class="badge b-pend">${st}</span>`;
+
+// AUDIT LOG
+function filterAudit(){
+  const q=v('aud-s').toLowerCase();
+  S.audF=S.auditlog.filter(r=>!q||(r.studentName||'').toLowerCase().includes(q)||(r.registerNo+'').includes(q)||(r.action||'').toLowerCase().includes(q));
+  S.audP=1;renderAuditTable();
 }
-function exportFiltered() {
-  const list = getFilteredStudents();
-  if (!list.length) { toast('No data to export'); return; }
-  exportCSVList(list, 'filtered');
-}
-
-// ══════════════════════════════════════════════════
-//  CORRECTIONS
-// ══════════════════════════════════════════════════
-function renderCorrections() {
-  const list = students.filter(s=>s.status==='Correction');
-  document.getElementById('corrCount').innerHTML = `Corrections <span>(${list.length})</span>`;
-
-  // Mini stats
-  const courses = {};
-  list.forEach(s=>{ const k=s.correctionCourse||'Other'; courses[k]=(courses[k]||0)+1; });
-  const topCourse = Object.entries(courses).sort(([,a],[,b])=>b-a)[0];
-  document.getElementById('corrStats').innerHTML = `
-    <div class="sc red"><div class="sc-lbl">Total Corrections</div><div class="sc-val red">${list.length}</div><div class="sc-sub">Requiring admin review</div></div>
-    <div class="sc orange"><div class="sc-lbl">Departments Affected</div><div class="sc-val orange">${new Set(list.map(s=>s.programme)).size}</div><div class="sc-sub">Unique departments</div></div>
-    <div class="sc blue"><div class="sc-lbl">Top Course Issue</div><div class="sc-val blue" style="font-size:1rem">${topCourse?topCourse[0].split(' ')[0]:'—'}</div><div class="sc-sub">${topCourse?`${topCourse[1]} reports`:'No data'}</div></div>`;
-
-  const tbody = document.getElementById('corrBody');
-  if (!list.length) { tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="ei">✅</div><p>No corrections — all clear!</p></div></td></tr>'; return; }
-  tbody.innerHTML = list.map((s,i)=>`<tr>
-    <td>${i+1}</td>
-    <td><span style="font-family:'JetBrains Mono',monospace;font-size:.79rem">${s.registerNo}</span></td>
-    <td><strong>${s.studentName}</strong></td>
-    <td style="font-size:.82rem">${s.rollNumber}</td>
-    <td style="font-size:.81rem;color:var(--muted)">${s.programme}</td>
-    <td><span class="badge b-year">${s.year||'?'}</span></td>
-    <td style="font-size:.82rem">${s.correctionCourse||'—'}</td>
-    <td style="font-size:.81rem;max-width:200px;overflow:hidden;text-overflow:ellipsis">
-      <span title="${s.correctionDetails}">${(s.correctionDetails||'—').slice(0,55)}${(s.correctionDetails||'').length>55?'…':''}</span>
-    </td>
-    <td style="font-size:.78rem;color:var(--muted)">${s.submittedAt||'—'}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick="viewCorr(${students.indexOf(s)})">View</button></td>
+function renderAuditTable(){
+  const data=S.audF,page=S.audP;
+  const start=(page-1)*PER_PAGE,slice=data.slice(start,start+PER_PAGE);
+  show('aud-load',false);show('aud-wrap',true);
+  $('aud-tbody').innerHTML=slice.map((r,i)=>`<tr>
+    <td class="mono">${start+i+1}</td>
+    <td class="mono" style="font-size:0.72rem">${fmtDate(r.timestamp)}</td>
+    <td><span class="badge bp">${esc(r.action||'—')}</span></td>
+    <td class="mono">${esc(r.registerNo||'—')}</td>
+    <td>${esc(r.studentName||'—')}</td>
   </tr>`).join('');
+  setText('aud-show',`${start+1}–${Math.min(start+PER_PAGE,data.length)}`);
+  setText('aud-tot',data.length);
+  renderPages('aud-pages',page,Math.ceil(data.length/PER_PAGE),p=>{S.audP=p;renderAuditTable();});
 }
 
-function viewCorr(idx) {
-  activeCorrIdx = idx;
-  const s = students[idx];
-  document.getElementById('corrModalBody').innerHTML = `
-    <div class="mr"><span class="lbl">Student</span><span class="val">${s.studentName}</span></div>
-    <div class="mr"><span class="lbl">Register No</span><span class="val" style="font-family:monospace">${s.registerNo}</span></div>
-    <div class="mr"><span class="lbl">Roll No</span><span class="val">${s.rollNumber}</span></div>
-    <div class="mr"><span class="lbl">Programme</span><span class="val">${s.programme}</span></div>
-    <div class="mr"><span class="lbl">Year</span><span class="val">${s.year}</span></div>
-    <div class="mr"><span class="lbl">Submitted</span><span class="val">${s.submittedAt||'—'}</span></div>
-    <div style="margin-top:1rem">
-      <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.3rem">Course / Field</div>
-      <div style="font-weight:700;color:var(--p700);font-size:.95rem">${s.correctionCourse||'—'}</div>
+// MODALS
+function viewStudent(roll){
+  const s=S.students.find(x=>x.rollNumber===roll);
+  if(!s){showToast('Student not found','error');return;}
+  $('modal-title').textContent='📚 Student Details';
+  $('modal-body').innerHTML=`
+    <div class="detail-grid">
+      ${drow('Roll Number',s.rollNumber)}${drow('Register No',s.registerNo)}
+      ${drow('Student Name',s.studentName)}${drow('Programme',s.programme)}
+      ${drow('Year',s.year)}${drow('Date of Birth',fmtDate(s.dob)||'—')}
+      ${drow('File Name',s.fileName||'—')}${drow('Page Number',s.pageNumber||'—')}
     </div>
-    <div style="margin-top:.9rem">
-      <div style="font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem">Correction Details</div>
-      <div class="cb">${s.correctionDetails||'—'}</div>
+    <div style="padding-top:1.2rem;border-top:1px solid rgba(139,92,246,0.1)">
+      <div class="flabel" style="margin-bottom:0.9rem">Submission Status</div>
+      <div style="display:flex;gap:0.9rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px;padding:1.1rem;background:rgba(124,58,237,0.06);border-radius:13px;border-left:4px solid var(--viv)">
+          <div style="font-size:0.62rem;color:var(--viv);font-weight:800;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:0.4rem">Status</div>
+          <div style="font-weight:800;color:var(--core)">${s.submittedAt?'✓ Submitted':'⏳ Pending'}</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding:1.1rem;background:rgba(16,185,129,0.07);border-radius:13px;border-left:4px solid #10b981">
+          <div style="font-size:0.62rem;color:#10b981;font-weight:800;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:0.4rem">Correction</div>
+          <div style="font-weight:800;color:#065f46">${s.correction||'Not Set'}</div>
+        </div>
+      </div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(139,92,246,0.1)">
+        <div class="flabel" style="margin-bottom:0.4rem">Submitted At</div>
+        <div class="mono" style="font-size:0.85rem;color:var(--core)">${fmtDate(s.submittedAt)||'—'}</div>
+      </div>
     </div>`;
-  document.getElementById('corrModal').classList.add('open');
+  $('modal').classList.add('active');
 }
-function closeModal() { document.getElementById('corrModal').classList.remove('open'); }
-function markResolved() {
-  if (activeCorrIdx>=0) {
-    students[activeCorrIdx].status='OK'; students[activeCorrIdx].correctionFlag='RESOLVED';
-    toast('Marked as resolved ✓'); closeModal(); renderCorrections(); updateDashboard();
-    if(document.getElementById('sec-analytics').classList.contains('active')) renderAnalytics();
+function viewCorrection(sNo,regNo,name,prog,course,details,status){
+  $('modal-title').textContent='✏️ Correction Details';
+  $('modal-body').innerHTML=`
+    <div class="detail-grid">
+      ${drow('Register No',regNo)}${drow('Student Name',name)}
+      ${drow('Programme',prog)}${drow('Correction Course',course||'—')}
+    </div>
+    <div style="margin:1.2rem 0;padding-top:1.2rem;border-top:1px solid rgba(139,92,246,0.1)">
+      <div class="flabel" style="margin-bottom:0.75rem">Correction Details</div>
+      <div style="background:rgba(124,58,237,0.05);padding:1rem 1.1rem;border-radius:12px;border-left:4px solid var(--viv);color:#1e0a3c;line-height:1.6;font-size:0.88rem">${esc(details||'No details provided')}</div>
+    </div>
+    <div>
+      <div class="flabel" style="margin-bottom:0.75rem">Update Status</div>
+      <div class="status-selector">
+        ${['Pending','Done','Reviewed'].map(st=>`<button class="status-btn ${st===status?'active':''}" onclick="updateStatus(${sNo},'${st}',this)">${st==='Pending'?'⏳':st==='Done'?'✅':'🔍'} ${st}</button>`).join('')}
+      </div>
+      <div style="font-size:0.82rem;color:rgba(76,29,149,0.5);margin-top:0.7rem">Current: <b style="color:var(--viv)">${esc(status||'Not Set')}</b></div>
+    </div>`;
+  $('modal').classList.add('active');
+}
+function updateStatus(sNo,newSt,btn){
+  document.querySelectorAll('.status-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  apiFetch('updateCorrectionStatus',{sNo,status:newSt})
+    .then(res=>{
+      if(res.success){showToast(`Status updated to ${newSt}`,'success');const c=S.corrections.find(x=>x.sNo==sNo);if(c)c.status=newSt;filterCorrections();}
+      else showToast(res.message||'Failed to update','error');
+    }).catch(e=>showToast(e.message,'error'));
+}
+function closeModal(){ $('modal').classList.remove('active'); }
+
+// EXPORTS
+function dlCSV(rows,headers,name){
+  const csv=[headers.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=name; a.click();
+  showToast('Exported!','success');
+}
+function exportStudents(){ dlCSV(S.stuF.map((r,i)=>[i+1,r.rollNumber,r.registerNo,`"${r.studentName}"`,`"${r.programme}"`,r.year,r.pageNumber||'',r.submittedAt?'Submitted':'Pending',r.submittedAt||'']),['#','Roll','Register','Name','Programme','Year','Pages','Status','SubmittedAt'],`students-${today()}.csv`); }
+function exportCorrections(){ dlCSV(S.corF.map((r,i)=>[i+1,r.registerNo,r.rollNumber,`"${r.studentName}"`,`"${r.programme}"`,`"${r.correctionCourse||''}"`,r.status||'',r.submittedAt||'']),['#','Register','Roll','Name','Programme','Course','Status','Submitted'],`corrections-${today()}.csv`); }
+function exportConfirmations(){ dlCSV(S.confF.map((r,i)=>[i+1,r.registerNo,r.rollNumber,`"${r.studentName}"`,`"${r.programme}"`,r.response||'',`"${r.correctionCourse||''}"`,r.submittedAt||'']),['#','Register','Roll','Name','Programme','Response','Course','Submitted'],`confirmations-${today()}.csv`); }
+function exportAudit(){ dlCSV(S.audF.map((r,i)=>[i+1,r.timestamp||'',`"${r.action||''}"`,r.registerNo||'',`"${r.studentName||''}"`]),['#','Timestamp','Action','Register','Name'],`audit-${today()}.csv`); }
+
+// PAGINATION
+function renderPages(id,cur,total,fn){
+  const el=$(id); if(!el||total<=1){if(el)el.innerHTML='';return;}
+  let html=`<button class="page-btn" ${cur===1?'disabled':''} onclick="(${fn})(${cur-1})">‹</button>`;
+  for(let i=1;i<=total;i++){
+    if(i===1||i===total||(i>=cur-2&&i<=cur+2)) html+=`<button class="page-btn ${i===cur?'active':''}" onclick="(${fn})(${i})">${i}</button>`;
+    else if(i===cur-3||i===cur+3) html+=`<span style="padding:0 0.15rem;color:rgba(139,92,246,0.35);font-weight:700">…</span>`;
   }
-}
-function exportCorrections() {
-  exportCSVList(students.filter(s=>s.status==='Correction'), 'corrections');
-}
-
-// ══════════════════════════════════════════════════
-//  FILE LINKS
-// ══════════════════════════════════════════════════
-function addLink() {
-  const g=document.getElementById('link-group').value.trim(), id=document.getElementById('link-id').value.trim();
-  if(!g||!id){toast('Both fields required');return;}
-  fileLinks[g]=id; localStorage.setItem('eduFileLinks',JSON.stringify(fileLinks));
-  renderFileLinksDisplay(); renderFileLinksTable();
-  document.getElementById('link-group').value=''; document.getElementById('link-id').value='';
-  toast('File link added ✓');
-}
-function removeLink(g) {
-  delete fileLinks[g]; localStorage.setItem('eduFileLinks',JSON.stringify(fileLinks));
-  renderFileLinksDisplay(); renderFileLinksTable(); toast('Link removed');
-}
-function renderFileLinksDisplay() {
-  const el=document.getElementById('fileLinksDisplay'); if(!el)return;
-  if(!Object.keys(fileLinks).length){el.innerHTML='<p style="color:var(--muted);font-size:.84rem;padding:.5rem 0">No file links yet</p>';return;}
-  el.innerHTML=Object.entries(fileLinks).map(([g,id])=>`
-    <div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .9rem;background:var(--p50);border:1px solid var(--p100);border-radius:10px;margin-bottom:.5rem">
-      <span style="font-weight:600;flex:1;font-size:.85rem">${g}</span>
-      <span style="font-family:monospace;font-size:.76rem;color:var(--muted);flex:2">${id}</span>
-      <button class="btn btn-danger btn-sm" onclick="removeLink('${g}')">✕</button>
-    </div>`).join('');
-}
-function renderFileLinksTable() {
-  const counts={}; students.forEach(s=>{if(s.fileName)counts[s.fileName]=(counts[s.fileName]||0)+1;});
-  const tbody=document.getElementById('fileLinksTable'); if(!tbody)return;
-  if(!Object.keys(fileLinks).length){tbody.innerHTML='<tr><td colspan="5"><div class="empty"><p>No files linked</p></div></td></tr>';return;}
-  tbody.innerHTML=Object.entries(fileLinks).map(([g,id])=>`<tr>
-    <td><strong>${g}</strong></td>
-    <td><span style="font-family:monospace;font-size:.77rem;color:var(--muted)">${id}</span></td>
-    <td><a href="https://drive.google.com/file/d/${id}/view" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Open ↗</a></td>
-    <td><span class="badge b-year">${counts[g]||0} students</span></td>
-    <td><button class="btn btn-danger btn-sm" onclick="removeLink('${g}')">Remove</button></td>
-  </tr>`).join('');
+  html+=`<button class="page-btn" ${cur===total?'disabled':''} onclick="(${fn})(${cur+1})">›</button>`;
+  el.innerHTML=html;
 }
 
-// ══════════════════════════════════════════════════
-//  UPLOAD
-// ══════════════════════════════════════════════════
-let uploadedRows = [];
-function handleDragOver(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
-function handleDragLeave(){document.getElementById('dropZone').classList.remove('dragover');}
-function handleDrop(e){e.preventDefault();handleDragLeave();const f=e.dataTransfer.files[0];if(f)readFile(f);}
-function handleFileSelect(e){const f=e.target.files[0];if(f)readFile(f);}
-function readFile(file) {
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try {
-      const wb=XLSX.read(e.target.result,{type:'binary'});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
-      uploadedRows=data; showUploadPreview(data);
-      showMsg('uploadMsg',`✅ File loaded — ${data.length} rows found.`,'success');
-    } catch { showMsg('uploadMsg','❌ Error reading file.','error'); }
-  };
-  reader.readAsBinaryString(file);
-}
-function showUploadPreview(data) {
-  const rows=data.slice(0,5), keys=Object.keys(rows[0]||{});
-  let html=`<table><thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead><tbody>`;
-  rows.forEach(r=>{html+=`<tr>${keys.map(k=>`<td style="font-size:.81rem">${r[k]}</td>`).join('')}</tr>`;});
-  html+='</tbody></table>';
-  document.getElementById('previewTable').innerHTML=html;
-  document.getElementById('uploadPreview').style.display='block';
-}
-async function pushToSheets() {
-  showMsg('uploadMsg','⏳ Pushing to Google Sheets…','info');
-  try {
-    const data=await gasPost({action:'bulkUpload',students:uploadedRows});
-    showMsg('uploadMsg',data.success?`✅ ${data.added||uploadedRows.length} students pushed!`:(data.message||'Failed'),data.success?'success':'error');
-    if(data.success) await refreshData();
-  } catch(e){ showMsg('uploadMsg',`⚠️ Backend unavailable — ${e.message}`,'error'); }
-}
-function addSingleStudent() {
-  const s={sNo:document.getElementById('s-sno').value,rollNumber:document.getElementById('s-roll').value,
-    registerNo:document.getElementById('s-reg').value,studentName:document.getElementById('s-name').value,
-    programme:document.getElementById('s-prog').value,dob:document.getElementById('s-dob').value,
-    fileName:document.getElementById('s-file').value,year:document.getElementById('s-year').value,
-    status:'Pending',correctionFlag:'',correctionDetails:'',correctionCourse:'',submittedAt:''};
-  if(!s.registerNo||!s.studentName){showMsg('singleMsg','❌ Register No and Name are required.','error');return;}
-  students.push(s); updateDashboard(); populateFilters();
-  showMsg('singleMsg',`✅ ${s.studentName} added locally. Pushing to backend…`,'success');
-  gasPost({action:'addStudent',...s})
-    .then(data=>showMsg('singleMsg',data.success?`✅ Saved to Google Sheets!`:`⚠️ Saved locally only.`,'success'))
-    .catch(()=>showMsg('singleMsg','⚠️ Backend unreachable — saved locally only.','error'));
+// TOAST
+function showToast(msg,type='info'){
+  const icons={success:'✅',error:'❌',info:'ℹ️',warning:'⚠️'};
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${icons[type]}</span><span>${msg}</span>`;
+  $('toasts').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(24px)';el.style.transition='all 0.3s';setTimeout(()=>el.remove(),300);},3500);
 }
 
-// ══════════════════════════════════════════════════
-//  REPORTS
-// ══════════════════════════════════════════════════
-function getReportData() {
-  const dept=document.getElementById('r-dept').value, year=document.getElementById('r-year').value, status=document.getElementById('r-status').value;
-  return students.filter(s=>{if(dept&&s.programme!==dept)return false;if(year&&s.year!==year)return false;if(status&&s.status!==status)return false;return true;});
+// HELPERS
+function $(id){return document.getElementById(id);}
+function v(id){return($(id)||{}).value||'';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function setText(id,t){const e=$(id);if(e)e.textContent=t;}
+function setW(id,w){const e=$(id);if(e)e.style.width=w;}
+function show(id,vis){const e=$(id);if(e)e.style.display=vis?'block':'none';}
+function today(){return new Date().toISOString().split('T')[0];}
+function uniq(arr){return[...new Set(arr)].filter(Boolean).sort();}
+function drow(k,val){return`<div class="ditem"><div class="dkey">${k}</div><div class="dval">${esc(val)}</div></div>`;}
+function emptyState(icon,msg){return`<div class="empty-state"><div class="icon">${icon}</div><p>${msg}</p></div>`;}
+function fmtDate(d){if(!d)return'—';try{return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return d;}}
+function groupBy(arr,key){return arr.reduce((acc,r)=>{const k=r[key]||'Unknown';if(!acc[k])acc[k]=[];acc[k].push(r);return acc;},{});}
+function groupByAnalysis(arr,key){
+  return arr.reduce((acc,r)=>{
+    const k=r[key]||'Unknown';
+    if(!acc[k])acc[k]={total:0,submitted:0,pending:0,correctionYes:0,correctionNo:0};
+    acc[k].total++;
+    if(r.submittedAt)acc[k].submitted++;
+    else acc[k].pending++;
+    if(r.correction==='YES')acc[k].correctionYes++;
+    else if(r.correction==='NO')acc[k].correctionNo++;
+    return acc;
+  },{});
 }
-function doReport(fmt) {
-  const data=getReportData(), type=document.getElementById('r-type').value;
-  if(!data.length){toast('No data to export');return;}
-  if(fmt==='pdf')exportPDF(data,type);
-  if(fmt==='excel')exportExcel(data);
-  if(fmt==='csv')exportCSVList(data,'report');
-  renderReportPreview(data);
-}
-function exportPDF(data,type) {
-  const {jsPDF}=window.jspdf, doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(46,16,101);
-  doc.text('Exam Preview — Student Verification Report',14,20);
-  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
-  doc.text(`Generated: ${new Date().toLocaleString('en-IN')} | Records: ${data.length}`,14,28);
-  doc.text(`OK: ${data.filter(s=>s.status==='OK').length} | Corrections: ${data.filter(s=>s.status==='Correction').length} | Pending: ${data.filter(s=>s.status==='Pending').length}`,14,34);
-  doc.setTextColor(0);
-  const headers=type==='corrections'?[['#','Reg No','Name','Programme','Year','Course','Details','Submitted']]:[['#','Roll No','Reg No','Name','Programme','Year','File','Status','Submitted']];
-  const rows=data.map((s,i)=>type==='corrections'?[i+1,s.registerNo,s.studentName,s.programme,s.year,s.correctionCourse||'—',(s.correctionDetails||'—').slice(0,60),s.submittedAt||'—']:[i+1,s.rollNumber,s.registerNo,s.studentName,s.programme,s.year,s.fileName,s.status,s.submittedAt||'—']);
-  doc.autoTable({head:headers,body:rows,startY:40,theme:'striped',headStyles:{fillColor:[76,29,149],textColor:255,fontStyle:'bold',fontSize:8},bodyStyles:{fontSize:7},alternateRowStyles:{fillColor:[245,243,255]}});
-  doc.save(`EduVerify_${type}_${new Date().toISOString().slice(0,10)}.pdf`);
-}
-function exportExcel(data) {
-  const hdr=['S.No','Roll No','Register No','Name','Programme','Year','File','Status','Correction','Course','Details','Submitted'];
-  const rows=data.map((s,i)=>[i+1,s.rollNumber,s.registerNo,s.studentName,s.programme,s.year,s.fileName,s.status,s.correctionFlag||'',s.correctionCourse||'',s.correctionDetails||'',s.submittedAt||'']);
-  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Students');
-  const map={};
-  students.forEach(s=>{if(!map[s.programme])map[s.programme]={t:0,ok:0,c:0,p:0};map[s.programme].t++;if(s.status==='OK')map[s.programme].ok++;else if(s.status==='Correction')map[s.programme].c++;else map[s.programme].p++;});
-  const sumHdr=['Department','Total','OK','Corrections','Pending','% Complete'];
-  const sumRows=Object.entries(map).map(([d,v])=>[d,v.t,v.ok,v.c,v.p,Math.round((v.ok+v.c)/v.t*100)+'%']);
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([sumHdr,...sumRows]),'Summary');
-  XLSX.writeFile(wb,`EduVerify_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
-function exportCSVList(data, name) {
-  const hdr=['S.No','Roll No','Register No','Name','Programme','Year','File','Status','Correction Details','Submitted'];
-  const rows=data.map((s,i)=>[i+1,s.rollNumber,s.registerNo,`"${s.studentName}"`,`"${s.programme}"`,s.year,s.fileName,s.status,`"${s.correctionDetails||''}"`,s.submittedAt||'']);
-  const csv=[hdr.join(','),...rows.map(r=>r.join(','))].join('\n');
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download=`EduVerify_${name}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
-}
-function renderReportPreview(data) {
-  document.getElementById('reportPreview').innerHTML=`
-    <p style="color:var(--muted);font-size:.84rem;margin-bottom:.9rem">Showing ${data.length} records</p>
-    <div class="tw"><table><thead><tr><th>#</th><th>Name</th><th>Reg No</th><th>Programme</th><th>Year</th><th>Status</th><th>Correction</th></tr></thead>
-    <tbody>${data.map((s,i)=>`<tr>
-      <td>${i+1}</td><td><strong>${s.studentName}</strong></td>
-      <td style="font-family:monospace;font-size:.79rem">${s.registerNo}</td>
-      <td style="font-size:.82rem">${s.programme}</td>
-      <td><span class="badge b-year">${s.year}</span></td>
-      <td>${mkBadge(s.status)}</td>
-      <td style="font-size:.8rem;color:var(--muted)">${s.correctionDetails?(s.correctionDetails.slice(0,45)+'…'):'—'}</td>
-    </tr>`).join('')}</tbody></table></div>`;
-}
+function populateFilters(progId,yearId,data){populateSel(progId,uniq(data.map(r=>r.programme)));populateSel(yearId,uniq(data.map(r=>r.year)));}
+function populateSel(id,opts){const el=$(id);if(!el)return;const cur=el.value;el.innerHTML='<option value="">All</option>'+opts.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');el.value=cur;}
+function statusBadge(v){const map={Pending:'bw',Done:'bs',Reviewed:'bi'};return`<span class="badge ${map[v]||'bp'}">${esc(v||'—')}</span>`;}
 
-// ══════════════════════════════════════════════════
-//  CONFIG
-// ══════════════════════════════════════════════════
-function getConfig(){try{return JSON.parse(localStorage.getItem('eduConfig')||'{}');}catch{return{};}}
-function saveConfig(){
-  const cfg={apiUrl:document.getElementById('cfg-url').value.trim()||GAS_URL,sheetId:document.getElementById('cfg-sheet').value.trim(),driveFolderId:document.getElementById('cfg-drive').value.trim()};
-  localStorage.setItem('eduConfig',JSON.stringify(cfg));
-  showMsg('configMsg','✅ Configuration saved!','success');
-}
-async function testConnection(){
-  showMsg('configMsg','🔌 Testing connection…','info');
-  try{const data=await gasGet({action:'getAll'},6000);
-    if(data?.success) showMsg('configMsg',`✅ Connected! ${data.count||0} students found.`,'success');
-    else showMsg('configMsg',`⚠️ Connected but: ${data?.message||'Unknown response'}`,'error');
-  }catch(e){showMsg('configMsg',`❌ Connection failed: ${e.message}`,'error');}
-}
-function buildSetupGuide(){
-  const steps=['Create a Google Sheet with tabs: <strong>Students, Corrections, Confirmations, Admin, FileLinks, AuditLog</strong>. Run <code>setupAllSheets()</code> from Apps Script.','Open <strong>Extensions → Apps Script</strong> and paste the backend code. Run <code>authorizeDriveNow()</code> once for Drive permissions.','Deploy as Web App: <strong>Deploy → New Deployment → Web App</strong>. Set <em>Execute as: Me</em>, <em>Access: Anyone</em>. Copy the URL.','Paste the URL into <strong>Configuration → Apps Script Web App URL</strong> and Save. Click <em>Test Connection</em> to verify.','Upload students via <strong>Upload → Bulk Upload</strong>. Required columns: <em>Roll Number, Register No, Student Name, Programme, DOB, File Name, Year</em>.','Upload PDFs to Google Drive, set sharing to <em>"Anyone with link can view"</em>, then link each group to its Drive File ID in <strong>Upload → Link PDFs</strong>.'];
-  document.getElementById('setupSteps').innerHTML=steps.map((s,i)=>`<div class="setup-step"><div class="sn">${i+1}</div><div class="st">${s}</div></div>`).join('');
-}
-
-// ══════════════════════════════════════════════════
-//  NAV
-// ══════════════════════════════════════════════════
-function go(id, btn) {
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
-  if(btn) btn.classList.add('active');
-  if(window.innerWidth<900) closeSidebar();
-  if(id==='students'){renderStudents(students);populateFilters();}
-  if(id==='corrections')renderCorrections();
-  if(id==='analytics')renderAnalytics();
-  if(id==='reports')populateFilters();
-  if(id==='files')renderFileLinksTable();
-}
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOvl').classList.toggle('show');}
-function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOvl').classList.remove('show');}
-
-// ══════════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════════
-function showMsg(id,text,type){const el=document.getElementById(id);if(!el)return;el.innerHTML=text;el.className='msg '+type;}
-let toastT;
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),3000);}
-function logout(){sessionStorage.clear();window.location.href='admin-login.html';}
-document.getElementById('corrModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+// INIT
+window.addEventListener('DOMContentLoaded',()=>{
+  initUser();
+  loadAllData();
+  // Close logout modal on overlay click
+  $('logoutModal').addEventListener('click',e=>{ if(e.target===$('logoutModal')) closeLogoutModal(); });
+});
 </script>
 </body>
 </html>
